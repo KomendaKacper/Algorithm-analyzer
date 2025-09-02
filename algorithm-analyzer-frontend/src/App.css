@@ -1,0 +1,51 @@
+.app-root {
+  height: 100vh;
+  width: 100vw;
+  background-color: #949494;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-header {
+  padding: 10px 24px;
+  flex-shrink: 0;
+}
+
+.app-container {
+  flex: 1;
+  padding: 0 24px 24px 24px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  min-height: 0;
+}
+
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.main-controls {
+  height: 40px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.graph-container {
+  padding: 16px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}

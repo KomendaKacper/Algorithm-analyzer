@@ -8,7 +8,6 @@ import com.example.algorithm_analyzer.entity.Graph;
 import com.example.algorithm_analyzer.entity.GraphGenerator;
 import com.example.algorithm_analyzer.entity.Node;
 import com.example.algorithm_analyzer.repositories.GraphRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
