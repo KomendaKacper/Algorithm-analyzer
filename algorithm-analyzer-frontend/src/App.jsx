@@ -25,14 +25,10 @@ export default function App() {
     }
   };
 
-  const handleGenerateRandom = async () => {
+  const handleGenerateRandom = async (graphParams) => {
     try {
       const res = await generateRandomGraph({
-        name: "Losowy graf",
-        numNodes: 20,
-        density: 0.4,
-        directed: true,
-        maxWeight: 10,
+        ...graphParams,
       });
 
       await loadGraphs();
@@ -46,7 +42,7 @@ export default function App() {
     <div className="app-root">
       <div className="app-header">
         <h1 className="text-xl font-bold text-white">
-          Algorithm Analyzer - Graphs
+          Algorithm Analyzer
         </h1>
       </div>
 
@@ -62,10 +58,9 @@ export default function App() {
             graph={selectedGraph}
             nodeColor="#3498db"
             nodeHighlightColor="#f1c40f"
-            nodeStrokeColor="#e67e22"
+            nodeStrokeColor="#f1c40f75"
             linkColor="#1a425cff"
-            linkHighlightColor="#5d501aff"
-            
+            linkHighlightColor="#fff0b6ff"
           />
         </div>
       </div>

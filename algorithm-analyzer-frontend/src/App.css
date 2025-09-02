@@ -26,7 +26,7 @@
 .controls-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 26px;
   padding: 16px;
   background-color: #e0e0e0;
   border-radius: 8px;
@@ -48,4 +48,65 @@
   flex: 1;
   overflow: hidden;
   min-height: 0;
+}
+
+.controls-generate-button {
+  height: 50px;
+  border-radius: 10px;
+}
+
+.controls-generate-button:hover {
+  background-color: #d3d3d3;
+  cursor: pointer;
+}
+
+.controls-select {
+  height: 50px;
+  padding: 10px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controls-select:hover {
+  background-color: #fbfbfb;
+}
+
+.controls-input {
+  height: 50px;
+  border-radius: 10px;
+  padding: 10px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.controls-label {
+  color: black;
+  font-size: large; 
+}
+
+.controls-checkbox-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+}
+
+.controls-checkbox-label {
+  font-size: large;
+  color: black;
+}
+
+.controls-checkbox {
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+}
+
+.controls-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }

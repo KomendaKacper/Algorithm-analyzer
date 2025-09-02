@@ -92,7 +92,7 @@ export default function GraphViewer({
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
       ctx.fillStyle = highlightNodes.has(node) ? nodeHighlightColor : nodeColor;
-      ctx.shadowBlur = highlightNodes.has(node) ? 10 : 0; // efekt „świecenia”
+      ctx.shadowBlur = highlightNodes.has(node) ? 20 : 0; // efekt „świecenia”
       ctx.shadowColor = highlightNodes.has(node)
         ? nodeHighlightColor
         : "transparent";
@@ -106,7 +106,6 @@ export default function GraphViewer({
         ctx.stroke();
       }
 
-      // reset blur, żeby nie wpływał na inne rysunki
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
     },
