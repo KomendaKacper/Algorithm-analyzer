@@ -27,16 +27,20 @@ export default function GraphControls({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleGenerate = () => {
-    if (!validate()) return;
-    onGenerateRandom({
-      name: graphName,
-      numNodes: Number(quantityOfNodes),
-      density: Number(graphDensity),
-      directed: isDirected,
-      maxWeight: Number(maxWeight),
-    });
-  };
+  const [minWeight, setMinWeight] = useState(1); // dodaj stan dla minWeight
+
+const handleGenerate = () => {
+  if (!validate()) return;
+  onGenerateRandom({
+    name: graphName,
+    nodeCount: Number(quantityOfNodes),       // zmieniono z numNodes
+    edgeProbability: Number(graphDensity),   // zmieniono z density
+    directed: isDirected,
+    minWeight: Number(minWeight),            // dodano brakujące pole
+    maxWeight: Number(maxWeight),
+  });
+};
+
 
   return (
     <div className="controls-container">

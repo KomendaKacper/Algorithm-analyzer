@@ -1,0 +1,105 @@
+import { useState, useEffect } from "react";
+
+export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlgorithm, result }) {
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
+  const [parameters, setParameters] = useState({});
+
+  useEffect(() => {
+  if (selectedAlgorithm) {
+    const initialParams = {};
+    selectedAlgorithm.parameters.forEach(param => {
+      if (param.type === "INTEGER") {
+        initialParams[param.name] = param.defaultValue ?? 0;
+      } else if (param.type === "DOUBLE") {
+        initialParams[param.name] = parseFloat(param.defaultValue ?? 0.0);
+      } else {
+        initialParams[param.name] = param.defaultValue ?? "";
+      }
+    });
+    setParameters(initialParams);
+  } else {
+    setParameters({});
+  }
+}, [selectedAlgorithm]);
+
+
+  const handleParamChange = (name, value, type) => {
+  let parsedValue = value;
+
+  if (type === "INTEGER") {
+    parsedValue = parseInt(value, 10);
+  } else if (type === "DOUBLE") {
+    parsedValue = parseFloat(value); // zawsze number
+    if (isNaN(parsedValue)) parsedValue = 0.0;
+  } else if (type === "BOOLEAN") {
+    parsedValue = Boolean(value);
+  }
+
+  setParameters(prev => ({ ...prev, [name]: parsedValue }));
+};
+
+
+  const handleExecute = () => {
+    if (!selectedAlgorithm || !selectedGraph) return;
+    onExecuteAlgorithm(selectedAlgorithm.name, parameters);
+  };
+
+  return (
+    <div className="algorithm-panel">
+      <h3>Algorytmy</h3>
+      <select
+        value={selectedAlgorithm?.name || ""}
+        onChange={(e) =>
+          setSelectedAlgorithm(algorithms.find(a => a.name === e.target.value))
+        }
+      >
+        <option value="">Wybierz algorytm</option>
+        {algorithms.map(algo => (
+          <option key={algo.name} value={algo.name}>{algo.displayName}</option>
+        ))}
+      </select>
+
+      {selectedAlgorithm && (
+        <div className="algorithm-parameters">
+          <h4>Parametry</h4>
+          {selectedAlgorithm.parameters.map(param => (
+            <div key={param.name} className="parameter-group">
+              <label>{param.displayName}</label>
+              {param.type === "BOOLEAN" ? (
+                <input
+                  type="checkbox"
+                  checked={parameters[param.name] || false}
+                  onChange={(e) => handleParamChange(param.name, e.target.checked, param.type)}
+                />
+              ) : (
+                <input
+                  type="number"
+                  value={parameters[param.name]}
+                  onChange={(e) => handleParamChange(param.name, e.target.value, param.type)}
+                  min={param.minValue}
+                  max={param.maxValue}
+                  step={param.type === "DOUBLE" ? "0.01" : "1"}
+                />
+              )}
+            </div>
+          ))}
+          <button onClick={handleExecute}>Wykonaj</button>
+        </div>
+      )}
+
+      {result && (
+        <div className="algorithm-result">
+          {result.success ? (
+            <div>
+              <p>Ścieżka: {result.path?.join(" → ")}</p>
+              <p>Długość: {result.pathLength?.toFixed(2)}</p>
+              <p>Czas: {result.executionDurationMs}ms</p>
+            </div>
+          ) : (
+            <p className="error">{result.errorMessage}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

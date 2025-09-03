@@ -2,7 +2,7 @@ package com.example.algorithm_analyzer.services;
 
 import com.example.algorithm_analyzer.dto.EdgeDTO;
 import com.example.algorithm_analyzer.dto.GraphDTO;
-import com.example.algorithm_analyzer.dto.GraphGeneratorRequest;
+import com.example.algorithm_analyzer.dto.RandomGraphRequest;
 import com.example.algorithm_analyzer.entity.Edge;
 import com.example.algorithm_analyzer.entity.Graph;
 import com.example.algorithm_analyzer.entity.GraphGenerator;
@@ -63,11 +63,11 @@ public class GraphService {
     }
 
     @Transactional
-    public GraphDTO generateRandomGraph(GraphGeneratorRequest request) {
+    public GraphDTO generateRandomGraph(RandomGraphRequest request) {
         Graph graph = GraphGenerator.generateRandomGraph(
                 request.getName(),
-                request.getNumNodes(),
-                request.getDensity(),
+                request.getNodeCount(),
+                request.getEdgeProbability(),
                 request.isDirected(),
                 request.getMaxWeight()
         );
@@ -97,5 +97,17 @@ public class GraphService {
         dto.setEdges(edges);
 
         return dto;
+    }
+
+    public Optional<Graph> findById(Long id) {
+        return graphRepository.findById(id);
+    }
+
+    public List<Graph> findAll() {
+        return graphRepository.findAll();
+    }
+
+    public Graph save(Graph graph) {
+        return graphRepository.save(graph);
     }
 }

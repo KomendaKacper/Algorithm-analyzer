@@ -3,10 +3,11 @@ package com.example.algorithm_analyzer.dto;
 import lombok.Data;
 
 @Data
-public class GraphGeneratorRequest {
+public class RandomGraphRequest {
     private String name;
-    private int numNodes;
-    private double density;
+    private int nodeCount;
+    private double edgeProbability;
     private boolean directed;
+    private double minWeight;
     private double maxWeight;
 }
