@@ -24,7 +24,6 @@ public class RandomGraphService {
         graph.setName(request.getName() != null ? request.getName() : "Graf losowy " + System.currentTimeMillis());
         graph.setDirected(request.isDirected());
 
-        // Tworzenie węzłów
         List<Node> nodes = new ArrayList<>();
         for (int i = 1; i <= request.getNodeCount(); i++) {
             Node node = new Node();
@@ -42,26 +41,12 @@ public class RandomGraphService {
                     if (!request.isDirected() && edgeExists(nodes.get(j), nodes.get(i))) {
                         continue;
                     }
-
-                    Edge edge = new Edge();
-                    edge.setFrom(nodes.get(i));
-                    edge.setTo(nodes.get(j));
-                    edge.setWeight(generateRandomWeight(request.getMinWeight(), request.getMaxWeight()));
-                    nodes.get(i).getOutgoingEdges().add(edge);
+                    createEdge(nodes.get(i), nodes.get(j), request);
                 }
             }
         }
 
         return graphRepository.save(graph);
-    }
-
-    private boolean edgeExists(Node from, Node to) {
-        return from.getOutgoingEdges().stream()
-                .anyMatch(edge -> edge.getTo().equals(to));
-    }
-
-    private double generateRandomWeight(double min, double max) {
-        return min + (max - min) * random.nextDouble();
     }
 
     public Graph generateConnectedGraph(RandomGraphRequest request) {
@@ -79,23 +64,22 @@ public class RandomGraphService {
             graph.getNodes().add(node);
         }
 
-        // Najpierw tworzymy minimalne drzewo spinające aby zapewnić spójność
+        // Minimalne drzewo spinające, aby zapewnić spójność
         List<Integer> connected = new ArrayList<>();
         List<Integer> unconnected = new ArrayList<>();
-        
+
         connected.add(0);
         for (int i = 1; i < nodes.size(); i++) {
             unconnected.add(i);
         }
 
-        // Łączymy każdy nieconnected węzeł z losowym connected węzłem
         while (!unconnected.isEmpty()) {
             int unconnectedIndex = random.nextInt(unconnected.size());
             int unconnectedNode = unconnected.get(unconnectedIndex);
             int connectedNode = connected.get(random.nextInt(connected.size()));
 
             createEdge(nodes.get(connectedNode), nodes.get(unconnectedNode), request);
-            
+
             connected.add(unconnectedNode);
             unconnected.remove(unconnectedIndex);
         }
@@ -103,7 +87,7 @@ public class RandomGraphService {
         // Dodaj dodatkowe losowe krawędzie
         for (int i = 0; i < nodes.size(); i++) {
             for (int j = 0; j < nodes.size(); j++) {
-                if (i != j && random.nextDouble() < request.getEdgeProbability() * 0.5) { // Mniejsze prawdopodobieństwo dla dodatkowych krawędzi
+                if (i != j && random.nextDouble() < request.getEdgeProbability() * 0.5) {
                     if (!request.isDirected() && edgeExists(nodes.get(j), nodes.get(i))) {
                         continue;
                     }
@@ -123,5 +107,28 @@ public class RandomGraphService {
         edge.setTo(to);
         edge.setWeight(generateRandomWeight(request.getMinWeight(), request.getMaxWeight()));
         from.getOutgoingEdges().add(edge);
+
+        // Jeśli graf nieskierowany, dodaj odwrotną krawędź
+        if (!request.isDirected()) {
+            Edge reverse = new Edge();
+            reverse.setFrom(to);
+            reverse.setTo(from);
+            reverse.setWeight(edge.getWeight());
+            to.getOutgoingEdges().add(reverse);
+
+            System.out.println("Dodano krawędź: " + from.getNodeId() + " -> " + to.getNodeId() +
+                    " oraz odwrotną " + to.getNodeId() + " -> " + from.getNodeId());
+        } else {
+            System.out.println("Dodano krawędź: " + from.getNodeId() + " -> " + to.getNodeId());
+        }
+    }
+
+    private boolean edgeExists(Node from, Node to) {
+        return from.getOutgoingEdges().stream()
+                .anyMatch(edge -> edge.getTo().equals(to));
+    }
+
+    private double generateRandomWeight(double min, double max) {
+        return min + (max - min) * random.nextDouble();
     }
 }

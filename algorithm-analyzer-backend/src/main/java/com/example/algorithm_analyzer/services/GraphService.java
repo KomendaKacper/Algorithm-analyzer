@@ -5,9 +5,9 @@ import com.example.algorithm_analyzer.dto.GraphDTO;
 import com.example.algorithm_analyzer.dto.RandomGraphRequest;
 import com.example.algorithm_analyzer.entity.Edge;
 import com.example.algorithm_analyzer.entity.Graph;
-import com.example.algorithm_analyzer.entity.GraphGenerator;
 import com.example.algorithm_analyzer.entity.Node;
 import com.example.algorithm_analyzer.repositories.GraphRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,20 +57,6 @@ public class GraphService {
                 fromNode.getOutgoingEdges().add(edge);
             }
         }
-
-        Graph saved = graphRepository.save(graph);
-        return toDTO(saved);
-    }
-
-    @Transactional
-    public GraphDTO generateRandomGraph(RandomGraphRequest request) {
-        Graph graph = GraphGenerator.generateRandomGraph(
-                request.getName(),
-                request.getNodeCount(),
-                request.getEdgeProbability(),
-                request.isDirected(),
-                request.getMaxWeight()
-        );
 
         Graph saved = graphRepository.save(graph);
         return toDTO(saved);

@@ -37,6 +37,7 @@ export default function GraphViewer({
         nodeMap.get(source.toString()).links.push(link);
         nodeMap.get(source.toString()).neighbors.add(edge.target.toString());
         nodeMap.get(edge.target.toString())?.neighbors.add(source.toString());
+        console.log(nodeMap);
         return link;
       })
     );
