@@ -21,4 +21,5 @@ public class AlgorithmResult {
     private List<String> path;
     private Double pathLength;
     private Map<String, Object> statistics;
+    private List<AcoIterationResult> iterationResults;
 }

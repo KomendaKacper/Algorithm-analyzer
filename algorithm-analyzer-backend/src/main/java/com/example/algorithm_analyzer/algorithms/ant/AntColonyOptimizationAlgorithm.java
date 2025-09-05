@@ -1,6 +1,7 @@
 package com.example.algorithm_analyzer.algorithms.ant;
 
 import com.example.algorithm_analyzer.algorithms.Algorithm;
+import com.example.algorithm_analyzer.dto.AcoIterationResult;
 import com.example.algorithm_analyzer.dto.AlgorithmParameterDefinition;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
 import com.example.algorithm_analyzer.entity.Edge;
@@ -35,8 +36,8 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                 new AlgorithmParameterDefinition("endNodeId", "Węzeł końcowy", ParameterType.NODE_ID, null, null, null, "ID węzła końcowego", true),
                 new AlgorithmParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 10, 1, 100, "Liczba mrówek w kolonii", true),
                 new AlgorithmParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 100, 1, 1000, "Maksymalna liczba iteracji", true),
-                new AlgorithmParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 1.0, 0.1, 5.0, "Waga feromonów", true),
-                new AlgorithmParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 2.0, 0.1, 5.0, "Waga feromonów", true),
+                new AlgorithmParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 0.7, 0.1, 1.0, "Waga feromonów", true),
+                new AlgorithmParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.1, 0.1, 1.0, "Waga feromonów", true),
                 new AlgorithmParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.1, 0.01, 0.9, "Tempo parowania feromonów", true),
                 new AlgorithmParameterDefinition("pheromoneDeposit", "Depozyt feromonów", ParameterType.DOUBLE, 1.0, 0.1, 10.0, "Ilość feromonów odkładanych przez mrówkę", true)
                 );
@@ -92,6 +93,7 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             result.setStatistics(statistics);
             result.setPath(acoResult.getShortestPath());
             result.setPathLength(acoResult.getShortestDistance());
+            result.setIterationResults(acoResult.getIterationResults());
             result.setSuccess(true);
         } catch (Exception e) {
             log.error("Błąd podczas wykonywania algorytmu ACO", e);
@@ -119,23 +121,67 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         double bestDistance = Double.MAX_VALUE;
         int bestFoundAt = -1;
 
+        List<AcoIterationResult> iterationResults = new ArrayList<>();
+
         for (int iter = 0; iter < iterations; iter++) {
+            List<String> bestPathThisIteration = null;
+            double bestDistanceThisIteration = Double.MAX_VALUE;
+
             for (int ant = 0; ant < antCount; ant++) {
                 List<String> path = constructPath(startNode, endNode, nodes, pheromones, alpha, beta);
                 if (path != null && !path.isEmpty()) {
                     double distance = calculatePathDistance(path, graph);
+
+                    // aktualizacja najlepszego globalnego wyniku
                     if (distance < bestDistance) {
                         bestDistance = distance;
                         bestPath = new ArrayList<>(path);
                         bestFoundAt = iter;
                     }
+
+                    // aktualizacja najlepszego wyniku tej iteracji
+                    if (distance < bestDistanceThisIteration) {
+                        bestDistanceThisIteration = distance;
+                        bestPathThisIteration = new ArrayList<>(path);
+                    }
+
                     updatePheromones(pheromones, path, distance, pheromoneDeposit);
                 }
             }
+
             evaporatePheromones(pheromones, evaporationRate);
+
+            // Dodanie najlepszego wyniku z tej iteracji
+            iterationResults.add(new AcoIterationResult(iter,
+                    bestPathThisIteration != null ? bestPathThisIteration : null,
+                    bestDistanceThisIteration));
         }
-        return new AcoResult(bestPath, bestDistance, bestFoundAt, pheromones);
+        return new AcoResult(bestPath, bestDistance, bestFoundAt, pheromones, iterationResults);
     }
+
+    private static class AcoResult {
+        private final List<String> shortestPath;
+        private final double shortestDistance;
+        private final int iterationsToFind;
+        private final Map<String, Double> finalPheromones;
+        private final List<AcoIterationResult> iterationResults;
+
+        public AcoResult(List<String> shortestPath, double shortestDistance, int iterationsToFind,
+                         Map<String, Double> finalPheromones, List<AcoIterationResult> iterationResults) {
+            this.shortestPath = shortestPath;
+            this.shortestDistance = shortestDistance;
+            this.iterationsToFind = iterationsToFind;
+            this.finalPheromones = finalPheromones;
+            this.iterationResults = iterationResults;
+        }
+
+        public List<String> getShortestPath() { return shortestPath; }
+        public double getShortestDistance() { return shortestDistance; }
+        public int getIterationsToFind() { return iterationsToFind; }
+        public Map<String, Double> getFinalPheromones() { return finalPheromones; }
+        public List<AcoIterationResult> getIterationResults() { return iterationResults; }
+    }
+
 
     private Map<String, Double> initializePheromones(Graph graph) {
         Map<String, Double> pheromones = new HashMap<>();
@@ -174,30 +220,32 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
         if (availableEdges.isEmpty()) return null;
 
-    double totalProbability = 0;
-    Map<Edge, Double> probabilities = new HashMap<>();
-
-    for (Edge edge: availableEdges) {
-    String key = current.getNodeId() + "-" + edge.getTo().getNodeId();
-    double pheromone = pheromones.getOrDefault(key, 1.0);
-    double heuristic = 1.0 / (edge.getWeight() + 0.001);
-    double probability = Math.pow(pheromone, alpha) * Math.pow(heuristic, beta);
-    probabilities.put(edge, probability);
-    }
-
-    double random = Math.random() * totalProbability;
-    double cumulative = 0;
-
-    for (Map.Entry<Edge, Double> entry: probabilities.entrySet()) {
-        cumulative += entry.getValue();
-        if (random <= cumulative) {
-            return entry.getKey().getTo();
+        // Oblicz prawdopodobieństwa
+        Map<Edge, Double> probabilities = new HashMap<>();
+        double totalProbability = 0;
+        for (Edge edge : availableEdges) {
+            String key = current.getNodeId() + "-" + edge.getTo().getNodeId();
+            double pheromone = pheromones.getOrDefault(key, 1.0);
+            double heuristic = 1.0 / (edge.getWeight() + 0.001);
+            double probability = Math.pow(pheromone, alpha) * Math.pow(heuristic, beta);
+            probabilities.put(edge, probability);
+            totalProbability += probability;
         }
-    }
-    return availableEdges.get(0).getTo();
-}
 
-private double calculatePathDistance(List<String> path, Graph graph) {
+        // Wybór węzła zgodnie z prawdopodobieństwami
+        double random = Math.random() * totalProbability;
+        double cumulative = 0;
+        for (Map.Entry<Edge, Double> entry : probabilities.entrySet()) {
+            cumulative += entry.getValue();
+            if (random <= cumulative) {
+                return entry.getKey().getTo();
+            }
+        }
+        return availableEdges.get(new Random().nextInt(availableEdges.size())).getTo();
+    }
+
+
+    private double calculatePathDistance(List<String> path, Graph graph) {
         double distance = 0;
         for (int i = 0; i < path.size() - 1; i++) {
             Integer fromId = Integer.parseInt(path.get(i));
@@ -234,25 +282,5 @@ private void updatePheromones(Map<String, Double> pheromones, List<String> path,
 private void evaporatePheromones(Map<String, Double> pheromones, double evaporationRate) {
         pheromones.replaceAll((key, value) -> value * (1 - evaporationRate));
 }
-
-    private static class AcoResult {
-        private final List<String> shortestPath;
-        private final double shortestDistance;
-        private final int iterationsToFind;
-        private final Map<String, Double> finalPheromones;
-
-        public AcoResult(List<String> shortestPath, double shortestDistance, int iterationsToFind, Map<String, Double> finalPheromones) {
-            this.shortestPath = shortestPath;
-            this.shortestDistance = shortestDistance;
-            this.iterationsToFind = iterationsToFind;
-            this.finalPheromones = finalPheromones;
-        }
-
-        public List<String> getShortestPath() { return shortestPath; }
-        public double getShortestDistance() { return shortestDistance; }
-        public int getIterationsToFind() { return iterationsToFind; }
-        public Map<String, Double> getFinalPheromones() { return finalPheromones; }
-    }
-
 }
 

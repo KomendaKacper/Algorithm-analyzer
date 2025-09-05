@@ -1,43 +1,35 @@
 import { useState, useEffect } from "react";
 
 export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlgorithm, result }) {
+  
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
   const [parameters, setParameters] = useState({});
 
   useEffect(() => {
-  if (selectedAlgorithm) {
-    const initialParams = {};
-    selectedAlgorithm.parameters.forEach(param => {
-      if (param.type === "INTEGER") {
-        initialParams[param.name] = param.defaultValue ?? 0;
-      } else if (param.type === "DOUBLE") {
-        initialParams[param.name] = parseFloat(param.defaultValue ?? 0.0);
-      } else {
-        initialParams[param.name] = param.defaultValue ?? "";
-      }
-    });
-    setParameters(initialParams);
-  } else {
-    setParameters({});
-  }
-}, [selectedAlgorithm]);
-
+    if (selectedAlgorithm) {
+      const initialParams = {};
+      selectedAlgorithm.parameters.forEach(param => {
+        if (param.type === "INTEGER") {
+          initialParams[param.name] = param.defaultValue ?? 0;
+        } else if (param.type === "DOUBLE") {
+          initialParams[param.name] = parseFloat(param.defaultValue ?? 0.0);
+        } else {
+          initialParams[param.name] = param.defaultValue ?? "";
+        }
+      });
+      setParameters(initialParams);
+    } else {
+      setParameters({});
+    }
+  }, [selectedAlgorithm]);
 
   const handleParamChange = (name, value, type) => {
-  let parsedValue = value;
-
-  if (type === "INTEGER") {
-    parsedValue = parseInt(value, 10);
-  } else if (type === "DOUBLE") {
-    parsedValue = parseFloat(value); // zawsze number
-    if (isNaN(parsedValue)) parsedValue = 0.0;
-  } else if (type === "BOOLEAN") {
-    parsedValue = Boolean(value);
-  }
-
-  setParameters(prev => ({ ...prev, [name]: parsedValue }));
-};
-
+    let parsedValue = value;
+    if (type === "INTEGER") parsedValue = parseInt(value, 10);
+    if (type === "DOUBLE") parsedValue = parseFloat(value);
+    if (type === "BOOLEAN") parsedValue = Boolean(value);
+    setParameters(prev => ({ ...prev, [name]: parsedValue }));
+  };
 
   const handleExecute = () => {
     if (!selectedAlgorithm || !selectedGraph) return;
@@ -55,7 +47,7 @@ export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlg
       >
         <option value="">Wybierz algorytm</option>
         {algorithms.map(algo => (
-          <option key={algo.name} value={algo.name}>{algo.displayName}</option>
+          <option key={algo.name} value={algo.name}>{algo.name}</option>
         ))}
       </select>
 
@@ -94,6 +86,31 @@ export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlg
               <p>Ścieżka: {result.path?.join(" → ")}</p>
               <p>Długość: {result.pathLength?.toFixed(2)}</p>
               <p>Czas: {result.executionDurationMs}ms</p>
+
+              {result?.iterationResults && result.iterationResults.length > 0 && (
+  <>
+    <h4>Postęp w iteracjach</h4>
+    <table border="1" cellPadding="5">
+      <thead>
+        <tr>
+          <th>Iteracja</th>
+          <th>Najlepsza ścieżka</th>
+          <th>Długość</th>
+        </tr>
+      </thead>
+      <tbody>
+        {result.iterationResults.map((ir, idx) => (
+          <tr key={idx}>
+            <td>{ir.iteration}</td>
+            <td>{ir.bestPath?.join(" → ") || "-"}</td>
+            <td>{ir.bestDistance.toFixed(2)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>
+)}
+
             </div>
           ) : (
             <p className="error">{result.errorMessage}</p>
