@@ -37,7 +37,6 @@ export default function GraphViewer({
         nodeMap.get(source.toString()).links.push(link);
         nodeMap.get(source.toString()).neighbors.add(edge.target.toString());
         nodeMap.get(edge.target.toString())?.neighbors.add(source.toString());
-        console.log(nodeMap);
         return link;
       })
     );
@@ -82,13 +81,20 @@ export default function GraphViewer({
     const newHighlightNodes = new Set();
     const newHighlightLinks = new Set();
 
+    console.log("Hover node:", node?.id);
+
     if (node) {
       newHighlightNodes.add(node);
 
       node.links.forEach((link) => {
         if (!graph.directed || link.source === node.id) {
-          newHighlightLinks.add(link);
-          newHighlightNodes.add(nodeMap.get(link.target.toString()));
+          const sourceId =
+            typeof link.source === "object" ? link.source.id : link.source;
+          const targetId =
+            typeof link.target === "object" ? link.target.id : link.target;
+          const linkKey = `${sourceId}-${targetId}`;
+          newHighlightLinks.add(linkKey);
+          newHighlightNodes.add(nodeMap.get(targetId.toString()));
         }
       });
 
@@ -99,6 +105,7 @@ export default function GraphViewer({
       }
     }
 
+    console.log("Final highlightLinks Set:", newHighlightLinks);
     setHighlightNodes(newHighlightNodes);
     setHighlightLinks(newHighlightLinks);
   };
@@ -108,9 +115,14 @@ export default function GraphViewer({
     const newHighlightLinks = new Set();
 
     if (link) {
-      newHighlightLinks.add(link);
-      newHighlightNodes.add(nodeMap.get(link.source));
-      newHighlightNodes.add(nodeMap.get(link.target));
+      const sourceId =
+        typeof link.source === "object" ? link.source.id : link.source;
+      const targetId =
+        typeof link.target === "object" ? link.target.id : link.target;
+      const linkKey = `${sourceId}-${targetId}`;
+      newHighlightLinks.add(linkKey);
+      newHighlightNodes.add(nodeMap.get(sourceId.toString()));
+      newHighlightNodes.add(nodeMap.get(targetId.toString()));
     }
 
     setHighlightNodes(newHighlightNodes);
@@ -180,14 +192,15 @@ export default function GraphViewer({
       const targetId =
         typeof link.target === "object" ? link.target.id : link.target;
       const linkKey1 = `${sourceId}-${targetId}`;
-      const linkKey2 = `${targetId}-${sourceId}`; // dla nieskierowanego grafu
+      const linkKey2 = `${targetId}-${sourceId}`;
 
       if (
         pathHighlight.pathLinks.has(linkKey1) ||
         pathHighlight.pathLinks.has(linkKey2)
       )
         return "#2ca02c";
-      if (highlightLinks.has(link)) return linkHighlightColor;
+      if (highlightLinks.has(linkKey1) || highlightLinks.has(linkKey2))
+        return linkHighlightColor;
       return linkColor;
     },
     [highlightLinks, linkColor, linkHighlightColor, pathHighlight.pathLinks]
