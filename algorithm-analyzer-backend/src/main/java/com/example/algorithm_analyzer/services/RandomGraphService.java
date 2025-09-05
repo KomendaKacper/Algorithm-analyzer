@@ -103,10 +103,12 @@ public class RandomGraphService {
 
     private void createEdge(Node from, Node to, RandomGraphRequest request) {
         Edge edge = new Edge();
-        edge.setFrom(from);
-        edge.setTo(to);
-        edge.setWeight(generateRandomWeight(request.getMinWeight(), request.getMaxWeight()));
-        from.getOutgoingEdges().add(edge);
+        if (!edgeExists(to, from)) {
+            edge.setFrom(from);
+            edge.setTo(to);
+            edge.setWeight(generateRandomWeight(request.getMinWeight(), request.getMaxWeight()));
+            from.getOutgoingEdges().add(edge);
+        }
 
         // Jeśli graf nieskierowany, dodaj odwrotną krawędź
         if (!request.isDirected()) {

@@ -1,5 +1,5 @@
 import ForceGraph2D from "react-force-graph-2d";
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo } from "react";
 
 export default function GraphViewer({
   graph,
@@ -8,10 +8,11 @@ export default function GraphViewer({
   nodeStrokeColor = "#333",
   linkColor = "#999",
   linkHighlightColor = "#ff7f0e",
-  highlightPath = [], // Nowa prop dla wyróżnienia ścieżki algorytmu
+  highlightPath = [], // ścieżka algorytmu
 }) {
   if (!graph) return <p>Ładowanie grafu...</p>;
 
+  // Tworzenie węzłów i krawędzi
   const { nodes, links, nodeMap } = useMemo(() => {
     const nodeMap = new Map();
     const nodes =
@@ -49,7 +50,7 @@ export default function GraphViewer({
   const [highlightNodes, setHighlightNodes] = useState(new Set());
   const [highlightLinks, setHighlightLinks] = useState(new Set());
 
-  // Wyróżnienie ścieżki znalezionej przez algorytm
+  // Ścieżka algorytmu
   const pathHighlight = useMemo(() => {
     const pathNodes = new Set(highlightPath.map((id) => id.toString()));
     const pathLinks = new Set();
@@ -59,35 +60,22 @@ export default function GraphViewer({
       const target = highlightPath[i + 1].toString();
       pathLinks.add(`${source}-${target}`);
       if (!graph.directed) {
-        pathLinks.add(`${target}-${source}`); // dla nieskierowanego grafu
+        pathLinks.add(`${target}-${source}`); // dla nieskierowanego
       }
     }
 
     return { pathNodes, pathLinks };
   }, [highlightPath, graph.directed]);
 
-  useEffect(() => {
-    // Zaloguj wszystkie linki, które powinny być podświetlone
-    const logPathLinks = [];
-    for (let i = 0; i < highlightPath.length - 1; i++) {
-      const source = highlightPath[i].toString();
-      const target = highlightPath[i + 1].toString();
-      logPathLinks.push({ source, target });
-    }
-    console.log("Best path links:", logPathLinks);
-  }, [highlightPath]);
-
+  // Hover na wierzchołku
   const handleNodeHover = (node) => {
     const newHighlightNodes = new Set();
     const newHighlightLinks = new Set();
-
-    console.log("Hover node:", node?.id);
 
     if (node) {
       newHighlightNodes.add(node);
 
       node.links.forEach((link) => {
-        if (!graph.directed || link.source === node.id) {
           const sourceId =
             typeof link.source === "object" ? link.source.id : link.source;
           const targetId =
@@ -95,7 +83,6 @@ export default function GraphViewer({
           const linkKey = `${sourceId}-${targetId}`;
           newHighlightLinks.add(linkKey);
           newHighlightNodes.add(nodeMap.get(targetId.toString()));
-        }
       });
 
       if (!graph.directed) {
@@ -104,12 +91,11 @@ export default function GraphViewer({
         );
       }
     }
-
-    console.log("Final highlightLinks Set:", newHighlightLinks);
     setHighlightNodes(newHighlightNodes);
     setHighlightLinks(newHighlightLinks);
   };
 
+  // Hover na krawędzi
   const handleLinkHover = (link) => {
     const newHighlightNodes = new Set();
     const newHighlightLinks = new Set();
@@ -129,6 +115,7 @@ export default function GraphViewer({
     setHighlightLinks(newHighlightLinks);
   };
 
+  // Rysowanie węzła
   const paintRing = useCallback(
     (node, ctx) => {
       const isHighlighted = highlightNodes.has(node);
@@ -140,12 +127,10 @@ export default function GraphViewer({
       let shadowColor = "transparent";
 
       if (isInPath) {
-        radius = 3;
-        fillColor = "#2ca02c"; // Zielony dla ścieżki algorytmu
+        fillColor = "#2ca02c"; // zielony
         shadowBlur = 15;
         shadowColor = "#2ca02c";
       } else if (isHighlighted) {
-        radius = 3;
         fillColor = nodeHighlightColor;
         shadowBlur = 20;
         shadowColor = nodeHighlightColor;
@@ -165,65 +150,69 @@ export default function GraphViewer({
         ctx.lineWidth = isInPath ? 1 : 0.5;
         ctx.stroke();
       }
+
+      // etykieta
       const label = node.id;
-      const fontSize = 3;
-      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.font = `3px Sans-Serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillStyle = "white"; // kontrast na kolorowym tle
+      ctx.fillStyle = "white";
       ctx.fillText(label, node.x, node.y);
 
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
     },
-    [
-      highlightNodes,
-      nodeColor,
-      nodeHighlightColor,
-      nodeStrokeColor,
-      pathHighlight.pathNodes,
-    ]
+    [highlightNodes, nodeColor, nodeHighlightColor, nodeStrokeColor, pathHighlight.pathNodes]
   );
 
+  // Kolorowanie krawędzi
   const getLinkColor = useCallback(
     (link) => {
       const sourceId =
         typeof link.source === "object" ? link.source.id : link.source;
       const targetId =
         typeof link.target === "object" ? link.target.id : link.target;
-      const linkKey1 = `${sourceId}-${targetId}`;
-      const linkKey2 = `${targetId}-${sourceId}`;
+      const linkKey = `${sourceId}-${targetId}`;
 
-      if (
-        pathHighlight.pathLinks.has(linkKey1) ||
-        pathHighlight.pathLinks.has(linkKey2)
-      )
-        return "#2ca02c";
-      if (highlightLinks.has(linkKey1) || highlightLinks.has(linkKey2))
-        return linkHighlightColor;
+      if (pathHighlight.pathLinks.has(linkKey)) return "#2ca02c";
+
+      if (!graph.directed) {
+        const reverseKey = `${targetId}-${sourceId}`;
+        if (highlightLinks.has(linkKey) || highlightLinks.has(reverseKey)) {
+          return linkHighlightColor;
+        }
+      } else {
+        if (highlightLinks.has(linkKey)) return linkHighlightColor;
+      }
+
       return linkColor;
     },
-    [highlightLinks, linkColor, linkHighlightColor, pathHighlight.pathLinks]
+    [highlightLinks, linkColor, linkHighlightColor, pathHighlight.pathLinks, graph.directed]
   );
 
+  // Grubość krawędzi
   const getLinkWidth = useCallback(
     (link) => {
       const sourceId =
         typeof link.source === "object" ? link.source.id : link.source;
       const targetId =
         typeof link.target === "object" ? link.target.id : link.target;
-      const linkKey1 = `${sourceId}-${targetId}`;
-      const linkKey2 = `${targetId}-${sourceId}`; // dla nieskierowanego grafu
+      const linkKey = `${sourceId}-${targetId}`;
 
-      if (
-        pathHighlight.pathLinks.has(linkKey1) ||
-        pathHighlight.pathLinks.has(linkKey2)
-      )
-        return 8;
-      if (highlightLinks.has(link)) return 3;
+      if (pathHighlight.pathLinks.has(linkKey)) return 8;
+
+      if (!graph.directed) {
+        const reverseKey = `${targetId}-${sourceId}`;
+        if (highlightLinks.has(linkKey) || highlightLinks.has(reverseKey)) {
+          return 3;
+        }
+      } else {
+        if (highlightLinks.has(linkKey)) return 3;
+      }
+
       return 1;
     },
-    [highlightLinks, pathHighlight.pathLinks]
+    [highlightLinks, pathHighlight.pathLinks, graph.directed]
   );
 
   return (
@@ -255,10 +244,10 @@ export default function GraphViewer({
           const midX = (start.x + end.x) / 2;
           const midY = (start.y + end.y) / 2;
 
-          // Wyświetl wagę krawędzi
+          // Waga krawędzi
           ctx.save();
           ctx.font = "3px Sans-Serif";
-          ctx.fillStyle = pathHighlight.pathLinks.has(link)
+          ctx.fillStyle = pathHighlight.pathLinks.has(`${start.id}-${end.id}`)
             ? "#1f5f1f"
             : "grey";
           ctx.textAlign = "center";
@@ -266,8 +255,9 @@ export default function GraphViewer({
           ctx.fillText(Math.round(link.weight * 100) / 100, midX, midY);
           ctx.restore();
 
-          // Dodatkowe podświetlenie dla hover
-          if (highlightLinks.has(link) && !pathHighlight.pathLinks.has(link)) {
+          // Hover na krawędzi (tylko jeśli nie jest ścieżką)
+          const linkKey = `${start.id}-${end.id}`;
+          if (highlightLinks.has(linkKey) && !pathHighlight.pathLinks.has(linkKey)) {
             ctx.save();
             ctx.strokeStyle = linkHighlightColor;
             ctx.globalAlpha = 0.3;
