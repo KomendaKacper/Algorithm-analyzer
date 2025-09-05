@@ -58,10 +58,13 @@ export default function GraphViewer({
       const source = highlightPath[i].toString();
       const target = highlightPath[i + 1].toString();
       pathLinks.add(`${source}-${target}`);
+      if (!graph.directed) {
+        pathLinks.add(`${target}-${source}`); // dla nieskierowanego grafu
+      }
     }
 
     return { pathNodes, pathLinks };
-  }, [highlightPath]);
+  }, [highlightPath, graph.directed]);
 
   useEffect(() => {
     // Zaloguj wszystkie linki, które powinny być podświetlone
@@ -75,50 +78,52 @@ export default function GraphViewer({
   }, [highlightPath]);
 
   const handleNodeHover = (node) => {
-  const newHighlightNodes = new Set();
-  const newHighlightLinks = new Set();
+    const newHighlightNodes = new Set();
+    const newHighlightLinks = new Set();
 
-  if (node) {
-    newHighlightNodes.add(node);
+    if (node) {
+      newHighlightNodes.add(node);
 
-    node.links.forEach((link) => {
-      if (!graph.directed || link.source === node.id) {
-        newHighlightLinks.add(link);
-        newHighlightNodes.add(nodeMap.get(link.target.toString()));
+      node.links.forEach((link) => {
+        if (!graph.directed || link.source === node.id) {
+          newHighlightLinks.add(link);
+          newHighlightNodes.add(nodeMap.get(link.target.toString()));
+        }
+      });
+
+      if (!graph.directed) {
+        node.neighbors.forEach((neighborId) =>
+          newHighlightNodes.add(nodeMap.get(neighborId))
+        );
       }
-    });
-
-    if (!graph.directed) {
-      node.neighbors.forEach((neighborId) => newHighlightNodes.add(nodeMap.get(neighborId)));
     }
-  }
 
-  setHighlightNodes(newHighlightNodes);
-  setHighlightLinks(newHighlightLinks);
-};
+    setHighlightNodes(newHighlightNodes);
+    setHighlightLinks(newHighlightLinks);
+  };
 
-const handleLinkHover = (link) => {
-  const newHighlightNodes = new Set();
-  const newHighlightLinks = new Set();
+  const handleLinkHover = (link) => {
+    const newHighlightNodes = new Set();
+    const newHighlightLinks = new Set();
 
-  if (link) {
-    newHighlightLinks.add(link);
-    newHighlightNodes.add(nodeMap.get(link.source));
-    newHighlightNodes.add(nodeMap.get(link.target));
-  }
+    if (link) {
+      newHighlightLinks.add(link);
+      newHighlightNodes.add(nodeMap.get(link.source));
+      newHighlightNodes.add(nodeMap.get(link.target));
+    }
 
-  setHighlightNodes(newHighlightNodes);
-  setHighlightLinks(newHighlightLinks);
-};
+    setHighlightNodes(newHighlightNodes);
+    setHighlightLinks(newHighlightLinks);
+  };
 
   const paintRing = useCallback(
     (node, ctx) => {
       const isHighlighted = highlightNodes.has(node);
       const isInPath = pathHighlight.pathNodes.has(node.id);
 
-      let radius = 2;
+      let radius = 3;
       let fillColor = nodeColor;
-      let shadowBlur = 0;
+      let shadowBlur = 10;
       let shadowColor = "transparent";
 
       if (isInPath) {
@@ -127,7 +132,7 @@ const handleLinkHover = (link) => {
         shadowBlur = 15;
         shadowColor = "#2ca02c";
       } else if (isHighlighted) {
-        radius = 2.1;
+        radius = 3;
         fillColor = nodeHighlightColor;
         shadowBlur = 20;
         shadowColor = nodeHighlightColor;
@@ -147,6 +152,13 @@ const handleLinkHover = (link) => {
         ctx.lineWidth = isInPath ? 1 : 0.5;
         ctx.stroke();
       }
+      const label = node.id;
+      const fontSize = 3;
+      ctx.font = `${fontSize}px Sans-Serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "white"; // kontrast na kolorowym tle
+      ctx.fillText(label, node.x, node.y);
 
       ctx.shadowBlur = 0;
       ctx.shadowColor = "transparent";
@@ -161,29 +173,44 @@ const handleLinkHover = (link) => {
   );
 
   const getLinkColor = useCallback(
-  (link) => {
-    const linkKey = `${typeof link.source === "object" ? link.source.id : link.source}-${
-      typeof link.target === "object" ? link.target.id : link.target
-    }`;
-    if (pathHighlight.pathLinks.has(linkKey)) return "#2ca02c";
-    if (highlightLinks.has(link)) return linkHighlightColor;
-    return linkColor;
-  },
-  [highlightLinks, linkColor, linkHighlightColor, pathHighlight.pathLinks]
-);
+    (link) => {
+      const sourceId =
+        typeof link.source === "object" ? link.source.id : link.source;
+      const targetId =
+        typeof link.target === "object" ? link.target.id : link.target;
+      const linkKey1 = `${sourceId}-${targetId}`;
+      const linkKey2 = `${targetId}-${sourceId}`; // dla nieskierowanego grafu
 
-const getLinkWidth = useCallback(
-  (link) => {
-    const linkKey = `${typeof link.source === "object" ? link.source.id : link.source}-${
-      typeof link.target === "object" ? link.target.id : link.target
-    }`;
-    if (pathHighlight.pathLinks.has(linkKey)) return 8;
-    if (highlightLinks.has(link)) return 3;
-    return 1;
-  },
-  [highlightLinks, pathHighlight.pathLinks]
-);
+      if (
+        pathHighlight.pathLinks.has(linkKey1) ||
+        pathHighlight.pathLinks.has(linkKey2)
+      )
+        return "#2ca02c";
+      if (highlightLinks.has(link)) return linkHighlightColor;
+      return linkColor;
+    },
+    [highlightLinks, linkColor, linkHighlightColor, pathHighlight.pathLinks]
+  );
 
+  const getLinkWidth = useCallback(
+    (link) => {
+      const sourceId =
+        typeof link.source === "object" ? link.source.id : link.source;
+      const targetId =
+        typeof link.target === "object" ? link.target.id : link.target;
+      const linkKey1 = `${sourceId}-${targetId}`;
+      const linkKey2 = `${targetId}-${sourceId}`; // dla nieskierowanego grafu
+
+      if (
+        pathHighlight.pathLinks.has(linkKey1) ||
+        pathHighlight.pathLinks.has(linkKey2)
+      )
+        return 8;
+      if (highlightLinks.has(link)) return 3;
+      return 1;
+    },
+    [highlightLinks, pathHighlight.pathLinks]
+  );
 
   return (
     <div>
@@ -198,7 +225,6 @@ const getLinkWidth = useCallback(
             pathIndex ? ` (Krok ${pathIndex})` : ""
           }\nGraph: ${node.graphName}`;
         }}
-        nodeAutoColorBy="id"
         linkDirectionalArrowLength={graph.directed ? 3 : 0}
         linkDirectionalArrowRelPos={1}
         linkWidth={getLinkWidth}
