@@ -1,4 +1,5 @@
 import { useState } from "react";
+import InputField from "../uiComponents/InputField";
 
 export default function GraphControls({
   graphs,
@@ -29,18 +30,17 @@ export default function GraphControls({
 
   const [minWeight, setMinWeight] = useState(1); // dodaj stan dla minWeight
 
-const handleGenerate = () => {
-  if (!validate()) return;
-  onGenerateRandom({
-    name: graphName,
-    nodeCount: Number(quantityOfNodes),       // zmieniono z numNodes
-    edgeProbability: Number(graphDensity),   // zmieniono z density
-    directed: isDirected,
-    minWeight: Number(minWeight),            // dodano brakujące pole
-    maxWeight: Number(maxWeight),
-  });
-};
-
+  const handleGenerate = () => {
+    if (!validate()) return;
+    onGenerateRandom({
+      name: graphName,
+      nodeCount: Number(quantityOfNodes), // zmieniono z numNodes
+      edgeProbability: Number(graphDensity), // zmieniono z density
+      directed: isDirected,
+      minWeight: Number(minWeight), // dodano brakujące pole
+      maxWeight: Number(maxWeight),
+    });
+  };
 
   return (
     <div className="controls-container">
@@ -61,69 +61,59 @@ const handleGenerate = () => {
         ))}
       </select>
       <div className="controls-inputs">
-        <div>
-          <label className="controls-label">Nazwa grafu</label>
-          <input
-            type="text"
-            placeholder="Nazwa grafu.."
-            className="controls-input"
-            value={graphName}
-            onChange={(e) => setGraphName(e.target.value)}
-          />
-          {errors.graphName && (
-            <p className="controls-error">{errors.graphName}</p>
-          )}
-        </div>
-        <div>
-          <label className="controls-label">Liczba węzłów</label>
-          <input
-            type="number"
-            placeholder="Liczba węzłów.."
-            className="controls-input"
-            value={quantityOfNodes}
-            onChange={(e) => setQuantityOfNodes(e.target.value)}
-          />
-          {errors.quantityOfNodes && (
-            <p className="controls-error">{errors.quantityOfNodes}</p>
-          )}
-        </div>
-        <div>
-          <label className="controls-label">Zagęszczenie krawędzi [0,1]</label>
-          <input
-            type="number"
-            placeholder="Zagęszczenie krawędzi.."
-            className="controls-input"
-            value={graphDensity}
-            onChange={(e) => setGraphDensity(e.target.value)}
-            step="0.1"
-          />
-          {errors.graphDensity && (
-            <p className="controls-error">{errors.graphDensity}</p>
-          )}
-        </div>
-        <div>
-          <label className="controls-label">Maksymalna waga krawędzi</label>
-          <input
-            type="number"
-            placeholder="Maksymalna waga krawędzi.."
-            className="controls-input"
-            value={maxWeight}
-            onChange={(e) => setMaxWeight(e.target.value)}
-          />
-          {errors.maxWeight && (
-            <p className="controls-error">{errors.maxWeight}</p>
-          )}
-        </div>
-        <div className="controls-checkbox-container">
-          <label className="controls-checkbox-label">Czy skierowany?</label>
-          <input
-            type="checkbox"
-            id="isDirected"
-            className="controls-checkbox"
-            name="isDirected"
-            onChange={(e) => setIsDirected(e.target.checked)}
-          />
-        </div>
+        <InputField
+          label="Nazwa grafu"
+          type="text"
+          placeholder="Nazwa grafu.."
+          value={graphName}
+          onChange={setGraphName}
+          error={errors.graphName}
+        />
+
+        <InputField
+          label="Liczba węzłów"
+          type="number"
+          placeholder="Liczba węzłów.."
+          value={quantityOfNodes}
+          onChange={setQuantityOfNodes}
+          error={errors.quantityOfNodes}
+        />
+
+        <InputField
+          label="Zagęszczenie krawędzi [0,1]"
+          type="number"
+          placeholder="Zagęszczenie krawędzi.."
+          value={graphDensity}
+          onChange={setGraphDensity}
+          error={errors.graphDensity}
+          step="0.1"
+          min="0"
+          max="1"
+        />
+
+        <InputField
+          label="Minimalna waga krawędzi"
+          type="number"
+          placeholder="Minimalna waga krawędzi.."
+          value={minWeight}
+          onChange={setMinWeight}
+        />
+
+        <InputField
+          label="Maksymalna waga krawędzi"
+          type="number"
+          placeholder="Maksymalna waga krawędzi.."
+          value={maxWeight}
+          onChange={setMaxWeight}
+          error={errors.maxWeight}
+        />
+
+        <InputField
+          label="Czy graf skierowany?"
+          checkbox
+          value={isDirected}
+          onChange={setIsDirected}
+        />
       </div>
     </div>
   );

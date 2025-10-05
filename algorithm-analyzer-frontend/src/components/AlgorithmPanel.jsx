@@ -1,14 +1,19 @@
 import { useState, useEffect } from "react";
+import InputField from "../uiComponents/InputField";
 
-export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlgorithm, result }) {
-  
+export default function AlgorithmPanel({
+  algorithms,
+  selectedGraph,
+  onExecuteAlgorithm,
+  result,
+}) {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
   const [parameters, setParameters] = useState({});
 
   useEffect(() => {
-    if (selectedAlgorithm) {
+    if (selectedAlgorithm && Array.isArray(selectedAlgorithm.parameters)) {
       const initialParams = {};
-      selectedAlgorithm.parameters.forEach(param => {
+      selectedAlgorithm.parameters.forEach((param) => {
         if (param.type === "INTEGER") {
           initialParams[param.name] = param.defaultValue ?? 0;
         } else if (param.type === "DOUBLE") {
@@ -28,7 +33,7 @@ export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlg
     if (type === "INTEGER") parsedValue = parseInt(value, 10);
     if (type === "DOUBLE") parsedValue = parseFloat(value);
     if (type === "BOOLEAN") parsedValue = Boolean(value);
-    setParameters(prev => ({ ...prev, [name]: parsedValue }));
+    setParameters((prev) => ({ ...prev, [name]: parsedValue }));
   };
 
   const handleExecute = () => {
@@ -42,42 +47,29 @@ export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlg
       <select
         value={selectedAlgorithm?.name || ""}
         onChange={(e) =>
-          setSelectedAlgorithm(algorithms.find(a => a.name === e.target.value))
+          setSelectedAlgorithm(
+            algorithms.find((a) => a.name === e.target.value)
+          )
         }
       >
         <option value="">Wybierz algorytm</option>
-        {algorithms.map(algo => (
-          <option key={algo.name} value={algo.name}>{algo.name}</option>
+        {algorithms.map((algo) => (
+          <option key={algo.name} value={algo.name}>
+            {algo.name}
+          </option>
         ))}
       </select>
 
-      {selectedAlgorithm && (
-        <div className="algorithm-parameters">
-          <h4>Parametry</h4>
-          {selectedAlgorithm.parameters.map(param => (
-            <div key={param.name} className="parameter-group">
-              <label>{param.displayName}</label>
-              {param.type === "BOOLEAN" ? (
-                <input
-                  type="checkbox"
-                  checked={parameters[param.name] || false}
-                  onChange={(e) => handleParamChange(param.name, e.target.checked, param.type)}
-                />
-              ) : (
-                <input
-                  type="number"
-                  value={parameters[param.name]}
-                  onChange={(e) => handleParamChange(param.name, e.target.value, param.type)}
-                  min={param.minValue}
-                  max={param.maxValue}
-                  step={param.type === "DOUBLE" ? "0.01" : "1"}
-                />
-              )}
-            </div>
-          ))}
-          <button onClick={handleExecute}>Wykonaj</button>
-        </div>
-      )}
+      {selectedAlgorithm?.parameters?.map((param) => (
+        <InputField
+          key={param.name}
+          label={param.displayName}
+          param={param}
+          value={parameters[param.name]}
+          onChange={handleParamChange}
+        />
+      ))}
+      <button onClick={handleExecute}>Wykonaj</button>
 
       {result && (
         <div className="algorithm-result">
@@ -87,33 +79,33 @@ export default function AlgorithmPanel({ algorithms, selectedGraph, onExecuteAlg
               <p>Długość: {result.pathLength?.toFixed(2)}</p>
               <p>Czas: {result.executionDurationMs}ms</p>
 
-              {result?.iterationResults && result.iterationResults.length > 0 && (
-  <>
-    <h4>Postęp w iteracjach</h4>
-    <table border="1" cellPadding="5">
-      <thead>
-        <tr>
-          <th>Iteracja</th>
-          <th>Najlepsza ścieżka</th>
-          <th>Długość</th>
-        </tr>
-      </thead>
-      <tbody>
-        {result.iterationResults.map((ir, idx) => (
-          <tr key={idx}>
-            <td>{ir.iteration}</td>
-            <td>{ir.bestPath?.join(" → ") || "-"}</td>
-            <td>{ir.bestDistance.toFixed(2)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </>
-)}
-
+              {result?.iterationResults &&
+                result.iterationResults.length > 0 && (
+                  <>
+                    <h4>Postęp w iteracjach</h4>
+                    <table border="1" cellPadding="5">
+                      <thead>
+                        <tr>
+                          <th>Iteracja</th>
+                          <th>Najlepsza ścieżka</th>
+                          <th>Długość</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {result.iterationResults.map((ir, idx) => (
+                          <tr key={idx}>
+                            <td>{ir.iteration}</td>
+                            <td>{ir.bestPath?.join(" → ") || "-"}</td>
+                            <td>{ir.bestDistance.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
             </div>
           ) : (
-            <p className="error">{result.errorMessage}</p>
+            <p className="error"></p>
           )}
         </div>
       )}

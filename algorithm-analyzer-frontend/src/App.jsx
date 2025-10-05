@@ -7,6 +7,8 @@ import { getAlgorithms, executeAlgorithm } from "./api/algorithmApi";
 import { useGraphTransform } from "./hooks/useGraphTransform";
 import "./App.css";
 
+import Shuffle from "./uiComponents/ShuffleHeader.jsx";
+
 export default function App() {
   const [graphs, setGraphs] = useState([]);
   const [selectedGraphSummary, setSelectedGraphSummary] = useState(null);
@@ -70,66 +72,78 @@ export default function App() {
   };
 
   const handleGenerateRandom = async (graphParams) => {
-  try {
-    console.log("Payload wysyłany do backendu:", {
-  name: graphParams.name || "Losowy graf",
-  nodeCount: graphParams.nodeCount,
-  edgeProbability: graphParams.edgeProbability,
-  directed: graphParams.directed ?? false,
-  minWeight: graphParams.minWeight,
-  maxWeight: graphParams.maxWeight,
-});
+    try {
+      console.log("Payload wysyłany do backendu:", {
+        name: graphParams.name || "Losowy graf",
+        nodeCount: graphParams.nodeCount,
+        edgeProbability: graphParams.edgeProbability,
+        directed: graphParams.directed ?? false,
+        minWeight: graphParams.minWeight,
+        maxWeight: graphParams.maxWeight,
+      });
 
-    const res = await generateRandomGraph({
-      name: graphParams.name || "Losowy graf",
-      nodeCount: graphParams.nodeCount,
-      edgeProbability: graphParams.edgeProbability,
-      directed: graphParams.directed ?? false,
-      minWeight: graphParams.minWeight,
-      maxWeight: graphParams.maxWeight,
-    });
+      const res = await generateRandomGraph({
+        name: graphParams.name || "Losowy graf",
+        nodeCount: graphParams.nodeCount,
+        edgeProbability: graphParams.edgeProbability,
+        directed: graphParams.directed ?? false,
+        minWeight: graphParams.minWeight,
+        maxWeight: graphParams.maxWeight,
+      });
 
-    await loadGraphs();
-    setSelectedGraphSummary(res.data);
-  } catch (err) {
-    console.error("Błąd generowania grafu:", err);
-  }
-};
-
-
+      await loadGraphs();
+      setSelectedGraphSummary(res.data);
+    } catch (err) {
+      console.error("Błąd generowania grafu:", err);
+    }
+  };
 
   const handleExecuteAlgorithm = async (algorithmName, parameters) => {
     if (!selectedGraphSummary) return;
 
     try {
-      const res = await executeAlgorithm(algorithmName, selectedGraphSummary.id, parameters);
+      const res = await executeAlgorithm(
+        algorithmName,
+        selectedGraphSummary.id,
+        parameters
+      );
       setAlgorithmResult(res.data);
     } catch (err) {
       console.error("Błąd wykonywania algorytmu:", err);
       setAlgorithmResult({
         success: false,
-        errorMessage: err.response?.data?.message || err.message
+        errorMessage: err.response?.data?.message || err.message,
       });
     }
   };
 
   return (
     <div className="app-root">
-      <div className="app-header">
-        <h1 className="text-xl font-bold text-black">
-          Algorithm Analyzer
-        </h1>
-      </div>
-
       <div className="app-container">
         <div className="controls-panel">
+          <div className="header-container">
+            <Shuffle
+              text="Algorithm Analyzer"
+              shuffleDirection="right"
+              duration={3}
+              animationMode="random"
+              shuffleTimes={1}
+              ease="power3.out"
+              stagger={0.03}
+              threshold={0.1}
+              triggerOnce={false}
+              triggerOnHover={false}
+              respectReducedMotion={true}
+            />
+          </div>
+
           <GraphControls
             graphs={graphs}
             selectedGraph={selectedGraphSummary}
             onSelectGraph={handleSelectGraph}
             onGenerateRandom={handleGenerateRandom}
           />
-          
+
           <AlgorithmPanel
             algorithms={algorithms}
             selectedGraph={selectedGraphDetails}
@@ -140,9 +154,7 @@ export default function App() {
 
         <div className="graph-container">
           {isLoadingGraph ? (
-            <div className="loading-message">
-              Ładowanie grafu...
-            </div>
+            <div className="loading-message">Ładowanie grafu...</div>
           ) : (
             <GraphViewer
               graph={transformedGraph}
@@ -162,9 +174,16 @@ export default function App() {
           <h3>Wyniki algorytmu</h3>
           {algorithmResult.success ? (
             <div>
-              <p><strong>Ścieżka:</strong> {algorithmResult.path?.join(' → ')}</p>
-              <p><strong>Długość:</strong> {algorithmResult.pathLength?.toFixed(2)}</p>
-              <p><strong>Czas:</strong> {algorithmResult.executionDurationMs}ms</p>
+              <p>
+                <strong>Ścieżka:</strong> {algorithmResult.path?.join(" → ")}
+              </p>
+              <p>
+                <strong>Długość:</strong>{" "}
+                {algorithmResult.pathLength?.toFixed(2)}
+              </p>
+              <p>
+                <strong>Czas:</strong> {algorithmResult.executionDurationMs}ms
+              </p>
             </div>
           ) : (
             <p className="error">Błąd: {algorithmResult.errorMessage}</p>

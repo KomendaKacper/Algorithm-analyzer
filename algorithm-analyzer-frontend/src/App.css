@@ -9,9 +9,10 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  background: #f8f9fa;   /* <<< własne tło */
+  background: #f8f9fa;   
   border-right: 1px solid #ddd;
-  z-index: 2;            /* <<< nad grafem */
+  z-index: 2;            
+  height: 100vh
 }
 
 
@@ -32,10 +33,15 @@
   color: #666;
 }
 
+.controls-container {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
 .algorithm-panel {
   background: #f8f9fa;
   padding: 20px;
-  border-top: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .algorithm-section {
@@ -67,6 +73,12 @@
   font-size: 14px;
 }
 
+.algorithm-parameters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .parameters-section h4 {
   margin-bottom: 10px;
 }
@@ -75,7 +87,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .parameter-group label {
@@ -134,4 +145,54 @@
 
 .result-panel .error {
   color: #dc3545;
+}
+
+.shuffle-parent {
+  display: inline-block;
+  white-space: normal;
+  word-wrap: break-word;
+  will-change: transform;
+  line-height: 1; /* keep line height consistent before/after split to avoid jump */
+  font-size: 2rem;
+  font-family: 'Press Start 2P', sans-serif;
+  text-transform: uppercase;
+  visibility: hidden; /* hidden until initialized to avoid flash/jump */
+}
+
+.shuffle-parent.is-ready {
+  visibility: visible;
+}
+
+.shuffle-char-wrapper {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: baseline;
+  position: relative;
+}
+
+.shuffle-char-wrapper > span {
+  display: inline-flex;
+  will-change: transform;
+}
+
+.shuffle-char {
+  line-height: 1;
+  display: inline-block;
+  text-align: center;
+}
+
+.header-container {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.controls-input-group {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+}
+
+.controls-input {
+  width: 40px;
 }
