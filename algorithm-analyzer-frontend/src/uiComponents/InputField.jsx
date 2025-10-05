@@ -1,11 +1,10 @@
-import React from "react";
+import "../App.css";
 
 export default function InputField({
   label,
   type = "text",
   value,
   onChange,
-  placeholder = "",
   error = "",
   step,
   min,
@@ -13,29 +12,31 @@ export default function InputField({
   checkbox = false,
 }) {
   return (
-    <div className="input-group">
-      <label>{label}</label>
+    <div>
+      <div className="input-group">
+        <label>{label}</label>
 
-      {checkbox ? (
-        <input
-          type="checkbox"
-          checked={!!value}
-          onChange={(e) => onChange(e.target.checked)}
-          className="input-field"
-        />
-      ) : (
-        <input
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="controls-input"
-          step={step}
-          min={min}
-          max={max}
-        />
-      )}
+        {checkbox ? (
+          <input
+            type="checkbox"
+            checked={!!value}
+            onChange={(e) => onChange(e.target.checked)}
+            className="input-field"
+          />
+        ) : (
+          <input
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className={`controls-input ${error ? "input-error" : ""}`}
+            step={step}
+            min={min}
+            max={max}
+          />
+        )}
+      </div>
 
-      {error && <p className="controls-error">{error}</p>}
+      {error && <p className="input-error-text">{error}</p>}
     </div>
   );
 }

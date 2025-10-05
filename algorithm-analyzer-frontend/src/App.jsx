@@ -16,6 +16,9 @@ export default function App() {
   const [algorithmResult, setAlgorithmResult] = useState(null);
   const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
+  // 🔽 nowy stan widoczności panelu
+  const [isResultVisible, setIsResultVisible] = useState(true);
+
   const transformedGraph = useGraphTransform(selectedGraphDetails);
 
   useEffect(() => {
@@ -96,12 +99,14 @@ export default function App() {
         parameters
       );
       setAlgorithmResult(res.data);
+      setIsResultVisible(true); // 🔽 automatycznie pokaż po obliczeniu
     } catch (err) {
       console.error("Błąd wykonywania algorytmu:", err);
       setAlgorithmResult({
         success: false,
         errorMessage: err.response?.data?.message || err.message,
       });
+      setIsResultVisible(true);
     }
   };
 
@@ -155,30 +160,23 @@ export default function App() {
             />
           )}
         </div>
-        <AlgorithmResultPanel result={algorithmResult} />
-      </div>
 
-      {algorithmResult && (
-        <div className="result-panel-bottom">
-          <h3>Wyniki algorytmu</h3>
-          {algorithmResult.success ? (
-            <div>
-              <p>
-                <strong>Ścieżka:</strong> {algorithmResult.path?.join(" → ")}
-              </p>
-              <p>
-                <strong>Długość:</strong>{" "}
-                {algorithmResult.pathLength?.toFixed(2)}
-              </p>
-              <p>
-                <strong>Czas:</strong> {algorithmResult.executionDurationMs}ms
-              </p>
-            </div>
-          ) : (
-            <p className="error">Błąd: {algorithmResult.errorMessage}</p>
-          )}
+        {/* 🔽 przycisk rozwijania/zwijania */}
+        {algorithmResult && (
+          <div className="result-toggle">
+          <button
+            onClick={() => setIsResultVisible(!isResultVisible)}
+            className="toggle-button"
+          >
+            {isResultVisible ? "▲ Ukryj wynik" : "▼ Pokaż wynik"}
+          </button>
         </div>
-      )}
+        )}
+        
+
+        {/* 🔽 sekcja wyniku, chowana/rozwijana */}
+        {isResultVisible && <AlgorithmResultPanel result={algorithmResult} />}
+      </div>
     </div>
   );
 }
