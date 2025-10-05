@@ -43,12 +43,13 @@ export default function GraphControls({
   };
 
   return (
-    <div className="controls-container">
-      <button onClick={handleGenerate} className="controls-generate-button">
+    <div className="panel">
+      <h3>Grafy</h3>
+      <button onClick={handleGenerate} className="panel-button">
         Generuj losowy graf
       </button>
       <select
-        className="controls-select"
+        className="panel-select"
         onChange={(e) =>
           onSelectGraph(graphs.find((g) => g.id === parseInt(e.target.value)))
         }
@@ -60,11 +61,9 @@ export default function GraphControls({
           </option>
         ))}
       </select>
-      <div className="controls-inputs">
         <InputField
           label="Nazwa grafu"
           type="text"
-          placeholder="Nazwa grafu.."
           value={graphName}
           onChange={setGraphName}
           error={errors.graphName}
@@ -73,7 +72,6 @@ export default function GraphControls({
         <InputField
           label="Liczba węzłów"
           type="number"
-          placeholder="Liczba węzłów.."
           value={quantityOfNodes}
           onChange={setQuantityOfNodes}
           error={errors.quantityOfNodes}
@@ -82,7 +80,6 @@ export default function GraphControls({
         <InputField
           label="Zagęszczenie krawędzi [0,1]"
           type="number"
-          placeholder="Zagęszczenie krawędzi.."
           value={graphDensity}
           onChange={setGraphDensity}
           error={errors.graphDensity}
@@ -94,7 +91,6 @@ export default function GraphControls({
         <InputField
           label="Minimalna waga krawędzi"
           type="number"
-          placeholder="Minimalna waga krawędzi.."
           value={minWeight}
           onChange={setMinWeight}
         />
@@ -102,7 +98,6 @@ export default function GraphControls({
         <InputField
           label="Maksymalna waga krawędzi"
           type="number"
-          placeholder="Maksymalna waga krawędzi.."
           value={maxWeight}
           onChange={setMaxWeight}
           error={errors.maxWeight}
@@ -115,6 +110,5 @@ export default function GraphControls({
           onChange={setIsDirected}
         />
       </div>
-    </div>
   );
 }

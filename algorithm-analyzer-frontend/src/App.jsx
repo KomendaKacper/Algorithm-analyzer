@@ -5,9 +5,8 @@ import AlgorithmPanel from "./components/AlgorithmPanel";
 import { getGraphs, getGraph, generateRandomGraph } from "./api/graphApi";
 import { getAlgorithms, executeAlgorithm } from "./api/algorithmApi";
 import { useGraphTransform } from "./hooks/useGraphTransform";
-import "./App.css";
-
 import Shuffle from "./uiComponents/ShuffleHeader.jsx";
+import AlgorithmResultPanel from "./components/AlgorithmResultPanel.jsx";
 
 export default function App() {
   const [graphs, setGraphs] = useState([]);
@@ -17,7 +16,6 @@ export default function App() {
   const [algorithmResult, setAlgorithmResult] = useState(null);
   const [isLoadingGraph, setIsLoadingGraph] = useState(false);
 
-  // Transform Spring Boot graph data to your existing format
   const transformedGraph = useGraphTransform(selectedGraphDetails);
 
   useEffect(() => {
@@ -60,7 +58,6 @@ export default function App() {
     try {
       const res = await getAlgorithms();
       setAlgorithms(res.data);
-      console.log(algorithms);
     } catch (err) {
       console.error("Błąd ładowania algorytmów:", err);
     }
@@ -68,20 +65,11 @@ export default function App() {
 
   const handleSelectGraph = (graph) => {
     setSelectedGraphSummary(graph);
-    setAlgorithmResult(null); // Wyczyść poprzednie wyniki
+    setAlgorithmResult(null);
   };
 
   const handleGenerateRandom = async (graphParams) => {
     try {
-      console.log("Payload wysyłany do backendu:", {
-        name: graphParams.name || "Losowy graf",
-        nodeCount: graphParams.nodeCount,
-        edgeProbability: graphParams.edgeProbability,
-        directed: graphParams.directed ?? false,
-        minWeight: graphParams.minWeight,
-        maxWeight: graphParams.maxWeight,
-      });
-
       const res = await generateRandomGraph({
         name: graphParams.name || "Losowy graf",
         nodeCount: graphParams.nodeCount,
@@ -167,10 +155,11 @@ export default function App() {
             />
           )}
         </div>
+        <AlgorithmResultPanel result={algorithmResult} />
       </div>
 
       {algorithmResult && (
-        <div className="result-panel">
+        <div className="result-panel-bottom">
           <h3>Wyniki algorytmu</h3>
           {algorithmResult.success ? (
             <div>

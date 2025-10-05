@@ -42,9 +42,9 @@ export default function AlgorithmPanel({
   };
 
   return (
-    <div className="algorithm-panel">
+    <div className="panel">
       <h3>Algorytmy</h3>
-      <select
+      <select className="panel-select"
         value={selectedAlgorithm?.name || ""}
         onChange={(e) =>
           setSelectedAlgorithm(
@@ -66,49 +66,10 @@ export default function AlgorithmPanel({
           label={param.displayName}
           param={param}
           value={parameters[param.name]}
-          onChange={handleParamChange}
+          onChange={(value) => handleParamChange(param.name, value, param.type)}
         />
       ))}
-      <button onClick={handleExecute}>Wykonaj</button>
-
-      {result && (
-        <div className="algorithm-result">
-          {result.success ? (
-            <div>
-              <p>Ścieżka: {result.path?.join(" → ")}</p>
-              <p>Długość: {result.pathLength?.toFixed(2)}</p>
-              <p>Czas: {result.executionDurationMs}ms</p>
-
-              {result?.iterationResults &&
-                result.iterationResults.length > 0 && (
-                  <>
-                    <h4>Postęp w iteracjach</h4>
-                    <table border="1" cellPadding="5">
-                      <thead>
-                        <tr>
-                          <th>Iteracja</th>
-                          <th>Najlepsza ścieżka</th>
-                          <th>Długość</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {result.iterationResults.map((ir, idx) => (
-                          <tr key={idx}>
-                            <td>{ir.iteration}</td>
-                            <td>{ir.bestPath?.join(" → ") || "-"}</td>
-                            <td>{ir.bestDistance.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </>
-                )}
-            </div>
-          ) : (
-            <p className="error"></p>
-          )}
-        </div>
-      )}
+      <button onClick={handleExecute} className="panel-button">Wykonaj</button>
     </div>
   );
 }
