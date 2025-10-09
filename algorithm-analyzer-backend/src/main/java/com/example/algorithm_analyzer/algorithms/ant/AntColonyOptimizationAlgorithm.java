@@ -32,13 +32,11 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
     @Override
     public List<AlgorithmParameterDefinition> getParameterDefinitions() {
         return Arrays.asList(
-                new AlgorithmParameterDefinition("startNodeId", "Węzeł startowy", ParameterType.NODE_ID, null, null, null, "ID węzła startowego", true),
-                new AlgorithmParameterDefinition("endNodeId", "Węzeł końcowy", ParameterType.NODE_ID, null, null, null, "ID węzła końcowego", true),
-                new AlgorithmParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 10, 1, 100, "Liczba mrówek w kolonii", true),
-                new AlgorithmParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 100, 1, 1000, "Maksymalna liczba iteracji", true),
+                new AlgorithmParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 20, 1, 100, "Liczba mrówek w kolonii", true),
+                new AlgorithmParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 200, 1, 1000, "Maksymalna liczba iteracji", true),
                 new AlgorithmParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 0.7, 0.1, 1.0, "Waga feromonów", true),
-                new AlgorithmParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.1, 0.1, 1.0, "Waga feromonów", true),
-                new AlgorithmParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.1, 0.01, 0.9, "Tempo parowania feromonów", true),
+                new AlgorithmParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.3, 0.1, 1.0, "Waga feromonów", true),
+                new AlgorithmParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.2, 0.01, 0.9, "Tempo parowania feromonów", true),
                 new AlgorithmParameterDefinition("pheromoneDeposit", "Depozyt feromonów", ParameterType.DOUBLE, 1.0, 0.1, 10.0, "Ilość feromonów odkładanych przez mrówkę", true)
                 );
     }
@@ -54,10 +52,13 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         AlgorithmResult result = new AlgorithmResult();
         result.setAlgorithmName(getName());
         result.setExecutionTime(LocalDateTime.now());
+        Random generator = new Random();
 
         try {
-            Integer startNodeId = (Integer) parameters.get("startNodeId");
-            Integer endNodeId = (Integer) parameters.get("endNodeId");
+            List<Node> nodeList = new ArrayList<>(graph.getNodes());
+            Node startNode = nodeList.get(generator.nextInt(nodeList.size()));
+            Integer startNodeId = startNode.getNodeId();
+
             Integer antCount = (Integer) parameters.get("antCount");
             Integer iterations = (Integer) parameters.get("iterations");
             Double alpha = (Double) parameters.get("alpha");
@@ -65,18 +66,15 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             Double evaporationRate = (Double) parameters.get("evaporationRate");
             Double pheromoneDeposit = (Double) parameters.get("pheromoneDeposit");
 
-            if (startNodeId == null || endNodeId == null) {
+            if (startNodeId == null) {
                 throw new IllegalArgumentException("Start i end node są wymagane");
             }
 
-            Node startNode = findNodeById(graph, startNodeId);
-            Node endNode = findNodeById(graph, endNodeId);
-
-            if (startNode == null || endNode == null) {
+            if (startNode == null) {
                 throw new IllegalArgumentException("Nie można znaleźć węzła startowego lub końcowego");
             }
 
-            AcoResult acoResult = runACO(graph, startNode, endNode, antCount, iterations, alpha, beta, evaporationRate, pheromoneDeposit);
+            AcoResult acoResult = runACO(graph, startNode, antCount, iterations, alpha, beta, evaporationRate, pheromoneDeposit);
 
             Map<String, Object> results = new HashMap<>();
             results.put("shortestPath", acoResult.getShortestPath());
@@ -96,23 +94,15 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             result.setIterationResults(acoResult.getIterationResults());
             result.setSuccess(true);
         } catch (Exception e) {
-            log.error("Błąd podczas wykonywania algorytmu ACO", e);
             result.setSuccess(false);
             result.setErrorMessage(e.getMessage());
         }
 
-        result.setExecutionDurationms(System.currentTimeMillis() - startTime);
+        result.setExecutionDurationMs(System.currentTimeMillis() - startTime);
         return result;
     }
 
-    private Node findNodeById(Graph graph, Integer nodeId) {
-        return graph.getNodes().stream()
-                .filter(node -> nodeId.equals(node.getNodeId()))
-                .findFirst()
-                .orElse(null);
-    }
-
-    private AcoResult runACO(Graph graph, Node startNode, Node endNode, int antCount, int iterations,
+    private AcoResult runACO(Graph graph, Node startNode, int antCount, int iterations,
                              double alpha, double beta, double evaporationRate, double pheromoneDeposit) {
         List<Node> nodes = new ArrayList<>(graph.getNodes());
         Map<String, Double> pheromones = initializePheromones(graph);
@@ -120,15 +110,17 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         List<String> bestPath = null;
         double bestDistance = Double.MAX_VALUE;
         int bestFoundAt = -1;
+        int graphSize = graph.getNodes().size();
 
         List<AcoIterationResult> iterationResults = new ArrayList<>();
 
         for (int iter = 0; iter < iterations; iter++) {
+            long startTime = System.nanoTime();
             List<String> bestPathThisIteration = null;
             double bestDistanceThisIteration = Double.MAX_VALUE;
 
             for (int ant = 0; ant < antCount; ant++) {
-                List<String> path = constructPath(startNode, endNode, nodes, pheromones, alpha, beta);
+                List<String> path = constructPath(startNode, nodes, pheromones, alpha, beta, graphSize);
                 if (path != null && !path.isEmpty()) {
                     double distance = calculatePathDistance(path, graph);
 
@@ -151,10 +143,12 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
             evaporatePheromones(pheromones, evaporationRate);
 
+            long elapsed = System.nanoTime() - startTime;
+            double elapsedMillis = elapsed / 1_000_000.0;
             // Dodanie najlepszego wyniku z tej iteracji
             iterationResults.add(new AcoIterationResult(iter,
                     bestPathThisIteration != null ? bestPathThisIteration : null,
-                    bestDistanceThisIteration));
+                    bestDistanceThisIteration, elapsedMillis));
         }
         return new AcoResult(bestPath, bestDistance, bestFoundAt, pheromones, iterationResults);
     }
@@ -194,35 +188,57 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         return pheromones;
     }
 
-    private List<String> constructPath(Node start, Node end, List<Node> nodes, Map<String, Double> pheromones, double alpha, double beta) {
+    private List<String> constructPath(Node start, List<Node> nodes, Map<String, Double> pheromones,
+                                       double alpha, double beta, int graphSize) {
         List<String> path = new ArrayList<>();
-        Set<Integer> visited = new HashSet<>();
+        Set<Integer> visited = new LinkedHashSet<>();
         Node current = start;
 
         path.add(current.getNodeId().toString());
         visited.add(current.getNodeId());
 
-        while(!current.equals(end) && path.size() < nodes.size()) {
-            Node next = selectNextNode(current, visited, pheromones, alpha, beta);
-            if (next == null) break;
+        // Odwiedź wszystkie węzły (oprócz startu, który już jest odwiedzony)
+        while (visited.size() < graphSize) {
+            Node next = selectNextNode(current, visited, pheromones, alpha, beta, graphSize, start);
+            if (next == null) {
+                return null; // Ścieżka niepełna - odrzuć
+            }
 
             path.add(next.getNodeId().toString());
             visited.add(next.getNodeId());
             current = next;
         }
-        return current.equals(end) ? path : null;
+        Edge returnEdge = current.getOutgoingEdges().stream()
+                .filter(edge -> edge.getTo().getNodeId().equals(start.getNodeId()))
+                .findFirst()
+                .orElse(null);
+
+        if (returnEdge == null) {
+            return null; // Nie można wrócić do startu - odrzuć
+        }
+
+        // Dodaj powrót do węzła startowego (zamknięcie cyklu)
+        path.add(start.getNodeId().toString());
+
+        return path;
     }
 
-    private Node selectNextNode(Node current, Set<Integer> visited, Map<String, Double> pheromones, double alpha, double beta) {
+    private Node selectNextNode(Node current, Set<Integer> visited, Map<String, Double> pheromones,
+                                double alpha, double beta, int graphSize, Node startNode) {
+        // Wybierz krawędzie do nieodwiedzonych węzłów
+        // (węzeł startowy może być wybrany TYLKO jeśli odwiedziliśmy już wszystkie inne)
         List<Edge> availableEdges = current.getOutgoingEdges().stream()
                 .filter(edge -> !visited.contains(edge.getTo().getNodeId()))
                 .collect(Collectors.toList());
 
-        if (availableEdges.isEmpty()) return null;
+        if (availableEdges.isEmpty()) {
+            return null;
+        }
 
         // Oblicz prawdopodobieństwa
         Map<Edge, Double> probabilities = new HashMap<>();
         double totalProbability = 0;
+
         for (Edge edge : availableEdges) {
             String key = current.getNodeId() + "-" + edge.getTo().getNodeId();
             double pheromone = pheromones.getOrDefault(key, 1.0);
@@ -232,18 +248,20 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             totalProbability += probability;
         }
 
-        // Wybór węzła zgodnie z prawdopodobieństwami
+        // Wybór węzła zgodnie z prawdopodobieństwami (roulette wheel selection)
         double random = Math.random() * totalProbability;
         double cumulative = 0;
+
         for (Map.Entry<Edge, Double> entry : probabilities.entrySet()) {
             cumulative += entry.getValue();
             if (random <= cumulative) {
                 return entry.getKey().getTo();
             }
         }
+
+        // Fallback - nie powinno się zdarzyć, ale dla pewności
         return availableEdges.get(new Random().nextInt(availableEdges.size())).getTo();
     }
-
 
     private double calculatePathDistance(List<String> path, Graph graph) {
         double distance = 0;

@@ -13,10 +13,12 @@ public class AcoIterationResult {
     private int iteration;
     private List<String> bestPath;
     private double bestDistance;
+    private double executionDurationMs;
 
-    public AcoIterationResult(int iteration, List<String> bestPath, double bestDistance) {
+    public AcoIterationResult(int iteration, List<String> bestPath, double bestDistance, double executionDurationMs) {
         this.iteration = iteration;
         this.bestPath = bestPath;
         this.bestDistance = bestDistance;
+        this.executionDurationMs = executionDurationMs;
     }
 }

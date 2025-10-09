@@ -44,7 +44,7 @@ export default function AlgorithmPanel({
     }
   };
 
-  const handleParamChange = (name, rawValue, type, min, max) => {
+  const handleParamChange = (name, rawValue, type, min, max, step) => {
     // rawValue pochodzi z inputa jako string (InputField przekazuje e.target.value)
     // pozwalamy na pusty string, żeby użytkownik mógł kasować/edytować
     if (type === "BOOLEAN") {
@@ -172,7 +172,7 @@ export default function AlgorithmPanel({
           label={param.displayName}
           type={param.type === "DOUBLE" || param.type === "INTEGER" ? "number" : "text"}
           value={parameters[param.name]}
-          step={param.type === "DOUBLE" ? 0.01 : 1}
+          step={param.type === "DOUBLE" ? 0.1 : 1}
           min={param.minValue}
           max={param.maxValue}
           placeholder={param.description}

@@ -24,21 +24,28 @@ public class GraphController {
     @GetMapping
     public ResponseEntity<List<GraphSummary>> getAllGraphs() {
         List<Graph> graphs = graphService.findAll();
+
         List<GraphSummary> summaries = graphs.stream()
-                .map(this::createGraphSummary)
-                .collect(Collectors.toList());
+                .map(g -> new GraphSummary(
+                        g.getId(),
+                        g.getName(),
+                        g.isDirected(),
+                        g.getNodes().size(),
+                        g.getNodes().stream().mapToInt(n -> n.getOutgoingEdges().size()).sum()
+                ))
+                .toList();
+
         return ResponseEntity.ok(summaries);
     }
 
+
     @GetMapping("/{id}")
     public ResponseEntity<GraphDetails> getGraph(@PathVariable Long id) {
-        Optional<Graph> graph = graphService.findById(id);
-        if (graph.isPresent()) {
-            GraphDetails details = createGraphDetails(graph.get());
-            return ResponseEntity.ok(details);
-        }
-        return ResponseEntity.notFound().build();
+        return graphService.findById(id)
+                .map(graph -> ResponseEntity.ok(createGraphDetails(graph)))
+                .orElse(ResponseEntity.notFound().build());
     }
+
 
     @GetMapping("/{id}/nodes")
     public ResponseEntity<List<Integer>> getGraphNodes(@PathVariable Long id) {

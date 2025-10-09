@@ -25,6 +25,7 @@ export default function AlgorithmResultPanel({ result }) {
                     <th>Iteracja</th>
                     <th>Najlepsza ścieżka</th>
                     <th>Długość</th>
+                    <th>Czas trwania iteracji</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -33,6 +34,7 @@ export default function AlgorithmResultPanel({ result }) {
                       <td>{ir.iteration}</td>
                       <td>{ir.bestPath?.join(" → ") || "-"}</td>
                       <td>{ir.bestDistance.toFixed(2)}</td>
+                      <td>{ir.executionDurationMs} ms</td>
                     </tr>
                   ))}
                 </tbody>

@@ -14,7 +14,7 @@ import java.util.Map;
 public class AlgorithmResult {
     private String algorithmName;
     private LocalDateTime executionTime;
-    private long executionDurationms;
+    private long executionDurationMs;
     private boolean success;
     private String errorMessage;
     private Map<String, Object> results;

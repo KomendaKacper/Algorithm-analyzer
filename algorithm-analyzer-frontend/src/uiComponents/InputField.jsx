@@ -19,14 +19,14 @@ export default function InputField({
         {checkbox ? (
           <input
             type="checkbox"
-            checked={!!value}
+            checked={!!value} // zawsze boolean
             onChange={(e) => onChange(e.target.checked)}
             className="input-field"
           />
         ) : (
           <input
             type={type}
-            value={value}
+            value={value ?? ""} // jeśli undefined, ustaw ""
             onChange={(e) => onChange(e.target.value)}
             className={`controls-input ${error ? "input-error" : ""}`}
             step={step}
