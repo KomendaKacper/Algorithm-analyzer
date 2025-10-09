@@ -1,3 +1,4 @@
+/* 🔹 Główne kontenery */
 .app-container {
   display: flex;
   height: calc(100vh - 60px);
@@ -32,10 +33,10 @@
   color: #666;
 }
 
-.result-panel-top {
+/* 🔹 Panele wyników */
+.result-panel-top,
+.result-panel-bottom {
   position: absolute;
-  top: 20px;
-  right: 20px;
   background: white;
   padding: 15px;
   border-radius: 8px;
@@ -46,18 +47,14 @@
   z-index: 10;
 }
 
+.result-panel-top {
+  top: 20px;
+  right: 20px;
+}
+
 .result-panel-bottom {
-  position: absolute;
   bottom: 20px;
   right: 20px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  min-width: 250px;
-  max-height: 400px;   
-  overflow-y: auto;    
-  z-index: 10;
 }
 
 .result-panel h3 {
@@ -69,6 +66,7 @@
   color: #dc3545;
 }
 
+/* 🔹 Nagłówki i panele */
 .header-container {
   padding: 20px;
   border-bottom: 1px solid #e9ecef;
@@ -83,6 +81,7 @@
   padding: 10px;
 }
 
+/* 🔹 Shuffle Header */
 .shuffle-parent {
   display: inline-block;
   white-space: normal;
@@ -117,6 +116,7 @@
   text-align: center;
 }
 
+/* 🔹 Inputs */
 .controls-input {
   width: 40px;
   height: 24px;
@@ -142,12 +142,197 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-3px);
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🔹 Dynamiczne przesuwalne panele */
+.draggable-panel {
+  position: fixed;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15),
+              0 2px 8px rgba(0,0,0,0.1);
+  z-index: 1000;
+  transition: box-shadow 0.2s ease;
+  animation: panelFadeIn 0.3s ease-out;
+}
+
+.draggable-panel:hover {
+  box-shadow: 0 12px 48px rgba(0,0,0,0.25),
+              0 4px 12px rgba(0,0,0,0.15);
+}
+
+.draggable-panel.dragging {
+  box-shadow: 0 16px 64px rgba(0,0,0,0.3),
+              0 8px 24px rgba(0,0,0,0.2);
+  transition: none;
+}
+
+/* 🔹 Nagłówek panelu */
+.panel-header {
+  cursor: move;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px 10px 0 0;
+}
+
+.panel-header:active {
+  cursor: grabbing;
+}
+
+.panel-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.panel-title-icon {
+  font-size: 18px;
+}
+
+/* 🔹 Przycisk zamykania */
+.panel-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.panel-close-btn:hover {
+  background: rgba(231, 76, 60, 0.9);
+  transform: scale(1.05);
+}
+
+.panel-close-btn:active {
+  transform: scale(0.95);
+}
+
+/* 🔹 Zawartość panelu */
+.panel-content {
+  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  user-select: text;
+  cursor: auto;
+  background: #fafafa;
+}
+
+/* Scrollbar styling */
+.panel-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 0 10px 0;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+  background: #3498db;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+  background: #2980b9;
+}
+
+/* 🔹 Warianty kolorystyczne i szerokości */
+.draggable-panel.panel-table {
+  width: min(90vw, 600px); /* węższy */
+  border: 2px solid #3498db;
+}
+
+.draggable-panel.panel-table .panel-header {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.draggable-panel.panel-charts {
+  width: min(90vw, 1400px); /* szerszy */
+  border: 2px solid #9b59b6;
+}
+
+.draggable-panel.panel-charts .panel-header {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+
+.draggable-panel.panel-charts .panel-content::-webkit-scrollbar-thumb {
+  background: #9b59b6;
+}
+
+.draggable-panel.panel-charts .panel-content::-webkit-scrollbar-thumb:hover {
+  background: #8e44ad;
+}
+
+/* 🔹 Animacja pojawienia się panelu */
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: scale(0.9) translateY(-20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 🔹 Responsywność */
+@media (max-width: 768px) {
+  .draggable-panel.panel-table,
+  .draggable-panel.panel-charts {
+    width: 95vw;
+    max-height: 70vh;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .panel-header {
+    padding: 10px 12px;
   }
+
+  .panel-title {
+    font-size: 14px;
+  }
+
+  .panel-content {
+    padding: 12px;
+  }
+}
+
+/* 🔹 Przycisk wyników */
+.result-button {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 10px;
+}
+
+.result-button:last-child {
+  margin-right: 0;
+}
+
+.result-button:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%);
+  transform: scale(1.05);
+}
+
+.result-button:active {
+  transform: scale(0.95);
 }

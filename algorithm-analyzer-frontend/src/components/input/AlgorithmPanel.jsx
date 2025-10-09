@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import InputField from "../uiComponents/InputField";
+import InputField from "../../uiComponents/InputField";
 
 export default function AlgorithmPanel({
   algorithms,

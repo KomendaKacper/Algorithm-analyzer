@@ -33,7 +33,7 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
     public List<AlgorithmParameterDefinition> getParameterDefinitions() {
         return Arrays.asList(
                 new AlgorithmParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 20, 1, 100, "Liczba mrówek w kolonii", true),
-                new AlgorithmParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 200, 1, 1000, "Maksymalna liczba iteracji", true),
+                new AlgorithmParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 1000, 1, 10000, "Maksymalna liczba iteracji", true),
                 new AlgorithmParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 0.7, 0.1, 1.0, "Waga feromonów", true),
                 new AlgorithmParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.3, 0.1, 1.0, "Waga feromonów", true),
                 new AlgorithmParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.2, 0.01, 0.9, "Tempo parowania feromonów", true),
