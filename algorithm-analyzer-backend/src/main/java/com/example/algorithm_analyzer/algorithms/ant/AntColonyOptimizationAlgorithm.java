@@ -116,13 +116,19 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
         for (int iter = 0; iter < iterations; iter++) {
             long startTime = System.nanoTime();
+
             List<String> bestPathThisIteration = null;
             double bestDistanceThisIteration = Double.MAX_VALUE;
+            double worstDistanceThisIteration = Double.MIN_VALUE;
+            double totalDistance = 0.0;
+            int validAnts = 0;
 
             for (int ant = 0; ant < antCount; ant++) {
                 List<String> path = constructPath(startNode, nodes, pheromones, alpha, beta, graphSize);
                 if (path != null && !path.isEmpty()) {
                     double distance = calculatePathDistance(path, graph);
+                    validAnts++;
+                    totalDistance += distance;
 
                     // aktualizacja najlepszego globalnego wyniku
                     if (distance < bestDistance) {
@@ -137,21 +143,34 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                         bestPathThisIteration = new ArrayList<>(path);
                     }
 
+                    // aktualizacja najgorszego wyniku tej iteracji
+                    if (distance > worstDistanceThisIteration) {
+                        worstDistanceThisIteration = distance;
+                    }
+
                     updatePheromones(pheromones, path, distance, pheromoneDeposit);
                 }
             }
 
             evaporatePheromones(pheromones, evaporationRate);
 
-            long elapsed = System.nanoTime() - startTime;
-            double elapsedMillis = elapsed / 1_000_000.0;
-            // Dodanie najlepszego wyniku z tej iteracji
-            iterationResults.add(new AcoIterationResult(iter,
+            double avgDistanceThisIteration = validAnts > 0 ? totalDistance / validAnts : Double.NaN;
+
+            double elapsedMillis = (System.nanoTime() - startTime) / 1_000_000.0;
+
+            iterationResults.add(new AcoIterationResult(
+                    iter,
                     bestPathThisIteration != null ? bestPathThisIteration : null,
-                    bestDistanceThisIteration, elapsedMillis));
+                    bestDistanceThisIteration,
+                    worstDistanceThisIteration,
+                    avgDistanceThisIteration,
+                    elapsedMillis
+            ));
         }
+
         return new AcoResult(bestPath, bestDistance, bestFoundAt, pheromones, iterationResults);
     }
+
 
     private static class AcoResult {
         private final List<String> shortestPath;
