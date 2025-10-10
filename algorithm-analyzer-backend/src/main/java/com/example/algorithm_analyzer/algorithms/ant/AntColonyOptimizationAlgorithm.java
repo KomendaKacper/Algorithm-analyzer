@@ -104,13 +104,13 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
     private AcoResult runACO(Graph graph, Node startNode, int antCount, int iterations,
                              double alpha, double beta, double evaporationRate, double pheromoneDeposit) {
+
         List<Node> nodes = new ArrayList<>(graph.getNodes());
         Map<String, Double> pheromones = initializePheromones(graph);
 
-        List<String> bestPath = null;
-        double bestDistance = Double.MAX_VALUE;
-        int bestFoundAt = -1;
-        int graphSize = graph.getNodes().size();
+        List<String> bestPathGlobal = null;
+        double bestDistanceGlobal = Double.MAX_VALUE;
+        int lastImprovementIter = -1;  // 🔹 iteracja ostatniej poprawy
 
         List<AcoIterationResult> iterationResults = new ArrayList<>();
 
@@ -122,39 +122,65 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             double worstDistanceThisIteration = Double.MIN_VALUE;
             double totalDistance = 0.0;
             int validAnts = 0;
+            int constraintViolationsThisIteration = 0;
+
+            List<List<String>> allValidPaths = new ArrayList<>();
 
             for (int ant = 0; ant < antCount; ant++) {
-                List<String> path = constructPath(startNode, nodes, pheromones, alpha, beta, graphSize);
-                if (path != null && !path.isEmpty()) {
-                    double distance = calculatePathDistance(path, graph);
-                    validAnts++;
-                    totalDistance += distance;
+                List<String> path = constructPath(startNode, nodes, pheromones, alpha, beta, nodes.size());
 
-                    // aktualizacja najlepszego globalnego wyniku
-                    if (distance < bestDistance) {
-                        bestDistance = distance;
-                        bestPath = new ArrayList<>(path);
-                        bestFoundAt = iter;
-                    }
-
-                    // aktualizacja najlepszego wyniku tej iteracji
-                    if (distance < bestDistanceThisIteration) {
-                        bestDistanceThisIteration = distance;
-                        bestPathThisIteration = new ArrayList<>(path);
-                    }
-
-                    // aktualizacja najgorszego wyniku tej iteracji
-                    if (distance > worstDistanceThisIteration) {
-                        worstDistanceThisIteration = distance;
-                    }
-
-                    updatePheromones(pheromones, path, distance, pheromoneDeposit);
+                if (path == null || path.size() != nodes.size() + 1) {
+                    constraintViolationsThisIteration++;
+                    continue;
                 }
+
+                double distance = calculatePathDistance(path, graph);
+                validAnts++;
+                totalDistance += distance;
+                allValidPaths.add(path);
+
+                // Najlepszy globalny
+                if (distance < bestDistanceGlobal) {
+                    bestDistanceGlobal = distance;
+                    bestPathGlobal = new ArrayList<>(path);
+                    lastImprovementIter = iter; // 🔹 zapamiętujemy iterację poprawy
+                }
+
+                // Najlepszy tej iteracji
+                if (distance < bestDistanceThisIteration) {
+                    bestDistanceThisIteration = distance;
+                    bestPathThisIteration = new ArrayList<>(path);
+                }
+
+                // Najgorszy tej iteracji
+                if (distance > worstDistanceThisIteration) {
+                    worstDistanceThisIteration = distance;
+                }
+
+                updatePheromones(pheromones, path, distance, pheromoneDeposit);
             }
 
             evaporatePheromones(pheromones, evaporationRate);
 
             double avgDistanceThisIteration = validAnts > 0 ? totalDistance / validAnts : Double.NaN;
+
+            // 🔹 Diversity – średnia liczba różnic między ścieżkami
+            double diversityThisIteration = 0.0;
+            int pathCount = allValidPaths.size();
+            if (pathCount > 1) {
+                double sumDiff = 0;
+                int comparisons = 0;
+                for (int i = 0; i < pathCount; i++) {
+                    for (int j = i + 1; j < pathCount; j++) {
+                        sumDiff += pathDifference(allValidPaths.get(i), allValidPaths.get(j));
+                        comparisons++;
+                    }
+                }
+                diversityThisIteration = comparisons > 0 ? sumDiff / comparisons : 0;
+            }
+
+            // 🔹 Stagnation – liczba iteracji od ostatniej poprawy najlepszego globalnego wyniku
+            int stagnationCounter = iter - lastImprovementIter;
 
             double elapsedMillis = (System.nanoTime() - startTime) / 1_000_000.0;
 
@@ -164,12 +190,26 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                     bestDistanceThisIteration,
                     worstDistanceThisIteration,
                     avgDistanceThisIteration,
-                    elapsedMillis
+                    elapsedMillis,
+                    constraintViolationsThisIteration,
+                    diversityThisIteration,
+                    stagnationCounter
             ));
         }
 
-        return new AcoResult(bestPath, bestDistance, bestFoundAt, pheromones, iterationResults);
+        return new AcoResult(bestPathGlobal, bestDistanceGlobal, lastImprovementIter, pheromones, iterationResults);
     }
+
+    // Funkcja pomocnicza licząca “odległość” między dwoma ścieżkami (np. liczba węzłów na różnych pozycjach)
+    private double pathDifference(List<String> path1, List<String> path2) {
+        if (path1.size() != path2.size()) return Double.MAX_VALUE;
+        int diff = 0;
+        for (int i = 0; i < path1.size(); i++) {
+            if (!path1.get(i).equals(path2.get(i))) diff++;
+        }
+        return diff;
+    }
+
 
 
     private static class AcoResult {

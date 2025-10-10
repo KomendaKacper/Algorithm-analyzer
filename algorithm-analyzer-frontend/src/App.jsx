@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useState, useEffect } from "react";
 import GraphControls from "./components/input/GraphControls";
 import GraphViewer from "./components/view/GraphViewer";
@@ -8,11 +9,8 @@ import { useGraphTransform } from "./hooks/useGraphTransform";
 import Shuffle from "./uiComponents/ShuffleHeader.jsx";
 import AlgorithmResultPanel from "./components/result/AlgorithmResultPanel.jsx";
 import AcoIterationTable from "./components/result/AcoIterationTable.jsx";
-import AcoIterationCharts from "./components/result/AcoIterationCharts.jsx";
-import { GapChart } from "./components/result/GapChart.jsx";
-import { ImprovementRateChart } from "./components/result/ImprovementRateChart.jsx";
-import { EfficiencyChart } from "./components/result/EfficiencyChart.jsx";
-
+import { MetricChart } from "./components/result/charts/MetricChart.jsx";
+import { DistanceChart } from "./components/result/charts/DistanceChart.jsx";
 
 export default function App() {
   const [graphs, setGraphs] = useState([]);
@@ -111,7 +109,26 @@ export default function App() {
 
   const addPanel = (type, data) => {
     const id = Date.now();
-    setOpenPanels((prev) => [...prev, { id, type, data }]);
+
+    // 🔹 Konwersja danych z defensywną obsługą null dla constraintViolations
+    const numericData = (data.data || data).map((item) => ({
+      ...item,
+      bestDistance: Number(item.bestDistance),
+      worstDistance: Number(item.worstDistance),
+      averageDistance: Number(item.averageDistance),
+      executionDurationMs: Number(item.executionDurationMs),
+      gap: item.gap != null ? Number(item.gap) : undefined,
+      constraintViolations:
+        item.constraintViolations != null ? Number(item.constraintViolations) : 0,
+      diversity: Number(item.diversity),
+      stagnation: Number(item.stagnation),
+    }));
+
+    setOpenPanels((prev) => [
+      ...prev,
+      { id, type, data: { ...data, data: numericData } },
+    ]);
+
     setPanelPositions((prev) => ({
       ...prev,
       [id]: {
@@ -130,7 +147,6 @@ export default function App() {
     });
   };
 
-  // Drag tylko po nagłówku
   const startDrag = (e, id) => {
     e.preventDefault();
     const startX = e.clientX;
@@ -230,10 +246,10 @@ export default function App() {
                 {panel.type === "charts-distance" && "Wykres dystansów"}
                 {panel.type === "charts-time" && "Wykres czasu"}
                 {panel.type === "charts-gap" && "Różnica"}
-                {panel.type === "charts-improvement" && "Tempo poprawy"}
-                {panel.type === "charts-efficiency" && "Efektywność"}
+                {panel.type === "charts-violations" && "Naruszenia ograniczeń"}
+                {panel.type === "charts-diversity" && "Różnorodność [%]"}
+                {panel.type === "charts-stagnation" && "Zastój iteracji"}
               </span>
-
               <button
                 className="panel-close-btn"
                 onClick={() => removePanel(panel.id)}
@@ -243,23 +259,69 @@ export default function App() {
             </div>
             <div className="panel-content">
               {panel.type === "table" && (
-                <AcoIterationTable data={panel.data} />
+                <AcoIterationTable data={panel.data.data || panel.data} />
               )}
               {panel.type === "charts-distance" && (
-                <AcoIterationCharts data={panel.data} showTime={false} />
+                <DistanceChart
+                  data={panel.data.data || panel.data}
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showAverage={false} // 🔹 usuwa średnią
+                />
               )}
               {panel.type === "charts-time" && (
-                <AcoIterationCharts data={panel.data} showDistance={false} />
+                <MetricChart
+                  data={panel.data.data}
+                  dataKey="executionDurationMs"
+                  name="Czas [ms]"
+                  color="#3498DB"
+                  trendColor="#2ECC71"
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showTrend={true}
+                />
               )}
-              {panel.type === "charts-convergence" && (
-                <ConvergenceChart data={panel.data} />
+              {panel.type === "charts-gap" && (
+                <MetricChart
+                  data={panel.data.data}
+                  dataKey="gap"
+                  name="Różnica"
+                  color="#9C27B0"
+                  trendColor="#E91E63"
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showTrend={true}
+                />
               )}
-              {panel.type === "charts-gap" && <GapChart data={panel.data} />}
-              {panel.type === "charts-improvement" && (
-                <ImprovementRateChart data={panel.data} />
+              {panel.type === "charts-violations" && (
+                <MetricChart
+                  data={panel.data.data}
+                  dataKey="constraintViolations"
+                  name="Naruszenia ograniczeń"
+                  color="#FF9800"
+                  trendColor="#FFB74D"
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showTrend={true}
+                />
               )}
-              {panel.type === "charts-efficiency" && (
-                <EfficiencyChart data={panel.data} />
+              {panel.type === "charts-diversity" && (
+                <MetricChart
+                  data={panel.data.data}
+                  dataKey="diversity"
+                  name="Różnorodność [%]"
+                  color="#3F51B5"
+                  trendColor="#7986CB"
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showTrend={true}
+                />
+              )}
+              {panel.type === "charts-stagnation" && (
+                <MetricChart
+                  data={panel.data.data}
+                  dataKey="stagnation"
+                  name="Zastój iteracji"
+                  color="#E91E63"
+                  trendColor="#F06292"
+                  algorithmName={panel.data.algorithmName || "ACO"}
+                  showTrend={true}
+                />
               )}
             </div>
           </div>
