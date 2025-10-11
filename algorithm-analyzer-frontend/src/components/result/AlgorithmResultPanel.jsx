@@ -24,7 +24,7 @@ export default function AlgorithmResultPanel({ result, addPanel }) {
 
             {/* 🔹 Wykresy podstawowe */}
             <button className="result-button" onClick={() => addPanel("charts-distance", result.iterationResults)}>
-              Najlepszy dystans
+              Wykresy dystansów
             </button>
 
             {/* 🔹 Nowe metryki ACO */}
@@ -35,7 +35,7 @@ export default function AlgorithmResultPanel({ result, addPanel }) {
               Różnorodność ścieżek
             </button>
             <button className="result-button" onClick={() => addPanel("charts-stagnation", result.iterationResults)}>
-              Brak poprawy globalnej
+              Zastój iteracji
             </button>
           </div>
         </div>
