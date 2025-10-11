@@ -408,8 +408,11 @@
 }
 
 .result-toggle {
-  position: relative; /* albo absolute, jeśli chcesz go w rogu */
-  z-index: 20; /* większe niż panel wyników */
-  margin-bottom: 10px;
-  padding: 25px;
+  position: fixed;         /* fixed do przyczepienia w określonym miejscu */
+  top: 20px;               /* odległość od góry */
+  right: 20px;             /* odległość od prawej */
+  z-index: 20; 
+  display: inline-block;   /* dopasowuje szerokość i wysokość do treści */
+  padding: 8px 16px;       /* mniejszy padding */
+  height: auto;            /* automatyczna wysokość */
 }

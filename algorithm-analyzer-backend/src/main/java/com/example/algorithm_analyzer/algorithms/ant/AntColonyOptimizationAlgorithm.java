@@ -102,6 +102,8 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         return result;
     }
 
+    // Zmodyfikowana metoda runACO z śledzeniem feromonów w każdej iteracji
+
     private AcoResult runACO(Graph graph, Node startNode, int antCount, int iterations,
                              double alpha, double beta, double evaporationRate, double pheromoneDeposit) {
 
@@ -110,7 +112,7 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
         List<String> bestPathGlobal = null;
         double bestDistanceGlobal = Double.MAX_VALUE;
-        int lastImprovementIter = -1;  // 🔹 iteracja ostatniej poprawy
+        int lastImprovementIter = -1;
 
         List<AcoIterationResult> iterationResults = new ArrayList<>();
 
@@ -139,20 +141,17 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                 totalDistance += distance;
                 allValidPaths.add(path);
 
-                // Najlepszy globalny
                 if (distance < bestDistanceGlobal) {
                     bestDistanceGlobal = distance;
                     bestPathGlobal = new ArrayList<>(path);
-                    lastImprovementIter = iter; // 🔹 zapamiętujemy iterację poprawy
+                    lastImprovementIter = iter;
                 }
 
-                // Najlepszy tej iteracji
                 if (distance < bestDistanceThisIteration) {
                     bestDistanceThisIteration = distance;
                     bestPathThisIteration = new ArrayList<>(path);
                 }
 
-                // Najgorszy tej iteracji
                 if (distance > worstDistanceThisIteration) {
                     worstDistanceThisIteration = distance;
                 }
@@ -164,7 +163,6 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
             double avgDistanceThisIteration = validAnts > 0 ? totalDistance / validAnts : Double.NaN;
 
-            // 🔹 Diversity – średnia liczba różnic między ścieżkami
             double diversityThisIteration = 0.0;
             int pathCount = allValidPaths.size();
             if (pathCount > 1) {
@@ -179,10 +177,14 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                 diversityThisIteration = comparisons > 0 ? sumDiff / comparisons : 0;
             }
 
-            // 🔹 Stagnation – liczba iteracji od ostatniej poprawy najlepszego globalnego wyniku
             int stagnationCounter = iter - lastImprovementIter;
-
             double elapsedMillis = (System.nanoTime() - startTime) / 1_000_000.0;
+
+            // 🔹 Kopia aktualnego stanu feromonów dla tej iteracji
+            Map<String, Double> pheromoneSnapshot = new HashMap<>(pheromones);
+
+            // 🔹 Oblicz statystyki rozkładu feromonów
+            Map<String, Object> pheromoneStats = calculatePheromoneStatistics(pheromones);
 
             iterationResults.add(new AcoIterationResult(
                     iter,
@@ -193,13 +195,39 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
                     elapsedMillis,
                     constraintViolationsThisIteration,
                     diversityThisIteration,
-                    stagnationCounter
+                    stagnationCounter,
+                    pheromoneSnapshot,      // 🔹 pełna mapa feromonów
+                    pheromoneStats          // 🔹 statystyki rozkładu
             ));
         }
 
         return new AcoResult(bestPathGlobal, bestDistanceGlobal, lastImprovementIter, pheromones, iterationResults);
     }
 
+    // 🔹 Nowa metoda pomocnicza do obliczania statystyk feromonów
+    private Map<String, Object> calculatePheromoneStatistics(Map<String, Double> pheromones) {
+        Map<String, Object> stats = new HashMap<>();
+
+        if (pheromones.isEmpty()) {
+            stats.put("min", 0.0);
+            stats.put("max", 0.0);
+            stats.put("average", 0.0);
+            stats.put("total", 0.0);
+            return stats;
+        }
+
+        DoubleSummaryStatistics summary = pheromones.values().stream()
+                .mapToDouble(Double::doubleValue)
+                .summaryStatistics();
+
+        stats.put("min", summary.getMin());
+        stats.put("max", summary.getMax());
+        stats.put("average", summary.getAverage());
+        stats.put("total", summary.getSum());
+        stats.put("count", summary.getCount());
+
+        return stats;
+    }
     // Funkcja pomocnicza licząca “odległość” między dwoma ścieżkami (np. liczba węzłów na różnych pozycjach)
     private double pathDifference(List<String> path1, List<String> path2) {
         if (path1.size() != path2.size()) return Double.MAX_VALUE;

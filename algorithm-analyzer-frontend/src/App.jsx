@@ -95,29 +95,40 @@ export default function App() {
     }
   };
 
-  const handleExecuteAlgorithm = async (algorithmName, parameters) => {
-    if (!selectedGraphSummary) return;
+const handleExecuteAlgorithm = async (algorithmName, parameters) => {
+  if (!selectedGraphSummary) return;
 
-    setIsAlgorithmRunning(true);
-    setShowFallingText(false);
+  setIsAlgorithmRunning(true);
+  setIsResultVisible(false); // 🔹 ukryj wyniki na czas działania
 
-    try {
-      const res = await executeAlgorithm(
-        algorithmName,
-        selectedGraphSummary.id,
-        parameters
-      );
+  try {
+    const res = await executeAlgorithm(
+      algorithmName,
+      selectedGraphSummary.id,
+      parameters
+    );
+
+    // 🔹 1. uruchamiamy spadanie napisu (kończymy "running")
+    setIsAlgorithmRunning(false);
+
+    // 🔹 2. po chwili (np. 1.2s) pokazujemy wyniki
+    setTimeout(() => {
       setAlgorithmResult(res.data);
       setIsResultVisible(true);
-    } catch (err) {
-      console.error("Algorithm execution error:", err);
-      setAlgorithmResult({ success: false, errorMessage: err.message });
-      setIsResultVisible(true);
-    } finally {
-      setShowFallingText(true);
-      setTimeout(() => setIsAlgorithmRunning(false), 4000);
-    }
-  };
+    }, 2000);
+  } catch (err) {
+    console.error("Algorithm execution error:", err);
+    setAlgorithmResult({ success: false, errorMessage: err.message });
+
+    // również zakończ overlay (żeby tekst spadł)
+    setIsAlgorithmRunning(false);
+
+    // i po chwili pokaż błąd
+    setTimeout(() => setIsResultVisible(true), 1200);
+  }
+};
+
+
 
   const addPanel = (type, data) => {
     const id = Date.now();

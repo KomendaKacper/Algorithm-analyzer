@@ -211,15 +211,15 @@ export default function GraphViewer({
         typeof link.target === "object" ? link.target.id : link.target;
       const linkKey = `${sourceId}-${targetId}`;
 
-      if (pathHighlight.pathLinks.has(linkKey)) return 8;
+      if (pathHighlight.pathLinks.has(linkKey)) return 1;
 
       if (!graph.directed) {
         const reverseKey = `${targetId}-${sourceId}`;
         if (highlightLinks.has(linkKey) || highlightLinks.has(reverseKey)) {
-          return 3;
+          return 1;
         }
       } else {
-        if (highlightLinks.has(linkKey)) return 3;
+        if (highlightLinks.has(linkKey)) return 1;
       }
 
       return 0.1;

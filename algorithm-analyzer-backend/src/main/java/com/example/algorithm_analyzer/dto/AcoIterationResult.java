@@ -1,29 +1,34 @@
 package com.example.algorithm_analyzer.dto;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
+@Data
 @NoArgsConstructor
-@Getter
-@Setter
+@AllArgsConstructor
 public class AcoIterationResult {
-    private int iteration;
+    private Integer iteration;
     private List<String> bestPath;
-    private double bestDistance;
-    private double worstDistance;
-    private double averageDistance;
-    private double executionDurationMs;
-    private int constraintViolations;   // liczba niedopuszczalnych rozwiązań
-    private double diversity;           // średnia odległość między rozwiązaniami
-    private int stagnation;             // liczba iteracji bez poprawy najlepszego wyniku
+    private Double bestDistance;
+    private Double worstDistance;
+    private Double averageDistance;
+    private Double executionDurationMs;
+    private Integer constraintViolations;
+    private Double diversity;
+    private Integer stagnation;
 
+    // 🔹 Nowe pola dla śledzenia feromonów
+    private Map<String, Double> pheromoneSnapshot;  // pełny rozkład feromonów w tej iteracji
+    private Map<String, Object> pheromoneStats;     // statystyki: min, max, average, total
 
-    public AcoIterationResult(int iteration, List<String> bestPath, double bestDistance,
-                              double worstDistance, double averageDistance, double executionDurationMs,
-                              int constraintViolations, double diversity, int stagnation) {
+    // Konstruktor bez feromonów (dla kompatybilności wstecznej)
+    public AcoIterationResult(Integer iteration, List<String> bestPath, Double bestDistance,
+                              Double worstDistance, Double averageDistance, Double executionDurationMs,
+                              Integer constraintViolations, Double diversity, Integer stagnation) {
         this.iteration = iteration;
         this.bestPath = bestPath;
         this.bestDistance = bestDistance;
