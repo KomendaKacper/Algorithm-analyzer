@@ -1,12 +1,17 @@
+// src/components/result/AlgorithmResultPanel.jsx
 import React from "react";
 
-export default function AlgorithmResultPanel({ result, addPanel }) {
+export default function AlgorithmResultPanel({ result, addPanel, onShowPheromones }) {
   if (!result) return null;
 
   const shortestDistance =
     result.results?.shortestDistance !== undefined
       ? Number(result.results.shortestDistance).toFixed(2)
       : "-";
+
+  const hasPheromoneData = result.iterationResults?.some(
+    iter => iter.pheromoneSnapshot
+  );
 
   return (
     <div className="result-panel result-panel-top">
@@ -37,6 +42,21 @@ export default function AlgorithmResultPanel({ result, addPanel }) {
             <button className="result-button" onClick={() => addPanel("charts-stagnation", result.iterationResults)}>
               Zastój iteracji
             </button>
+
+            {/* 🔹 Wizualizacja feromonów */}
+            {hasPheromoneData && (
+              <button 
+                className="result-button"
+                style={{ 
+                  background: "linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)" 
+                }}
+                onClick={() => {
+                  onShowPheromones(result.iterationResults);
+                }}
+              >
+                🐜 Wizualizacja feromonów
+              </button>
+            )}
           </div>
         </div>
       )}

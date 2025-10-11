@@ -6,6 +6,7 @@ export default function ResultPanelWrapper({
   isResultVisible,
   setIsResultVisible,
   addPanel,
+  onShowPheromones,
 }) {
   if (!algorithmResult) return null;
 
@@ -21,7 +22,11 @@ export default function ResultPanelWrapper({
       </div>
 
       {isResultVisible && (
-        <AlgorithmResultPanel result={algorithmResult} addPanel={addPanel} />
+        <AlgorithmResultPanel 
+          result={algorithmResult} 
+          addPanel={addPanel}
+          onShowPheromones={onShowPheromones}
+        />
       )}
     </>
   );

@@ -8,11 +8,12 @@ export default function GraphViewer({
   nodeStrokeColor = "#333",
   linkColor = "#999",
   linkHighlightColor = "#ff7f0e",
-  highlightPath = [], // ścieżka algorytmu
+  highlightPath = [],
+  pheromoneData = null,
+  showPheromones = false
 }) {
   if (!graph) return <p>Ładowanie grafu...</p>;
 
-  // Tworzenie węzłów i krawędzi
   const { nodes, links, nodeMap } = useMemo(() => {
     const nodeMap = new Map();
     const nodes =
@@ -50,6 +51,34 @@ export default function GraphViewer({
   const [highlightNodes, setHighlightNodes] = useState(new Set());
   const [highlightLinks, setHighlightLinks] = useState(new Set());
 
+  // Normalizacja feromonów (najwyższy poziom = 1.0)
+  const { normalizedPheromones, maxPheromone } = useMemo(() => {
+    if (!showPheromones || !pheromoneData || typeof pheromoneData !== 'object') {
+      return { normalizedPheromones: {}, maxPheromone: 0 };
+    }
+
+    try {
+      const values = Object.values(pheromoneData);
+      if (values.length === 0) {
+        return { normalizedPheromones: {}, maxPheromone: 0 };
+      }
+
+      const max = Math.max(...values.filter(v => typeof v === 'number' && !isNaN(v)), 0.001);
+      
+      const normalized = {};
+      Object.entries(pheromoneData).forEach(([key, value]) => {
+        if (typeof value === 'number' && !isNaN(value)) {
+          normalized[key] = value / max;
+        }
+      });
+
+      return { normalizedPheromones: normalized, maxPheromone: max };
+    } catch (error) {
+      console.error("Error normalizing pheromones:", error);
+      return { normalizedPheromones: {}, maxPheromone: 0 };
+    }
+  }, [pheromoneData, showPheromones]);
+
   // Ścieżka algorytmu
   const pathHighlight = useMemo(() => {
     const pathNodes = new Set(highlightPath.map((id) => id.toString()));
@@ -60,14 +89,13 @@ export default function GraphViewer({
       const target = highlightPath[i + 1].toString();
       pathLinks.add(`${source}-${target}`);
       if (!graph.directed) {
-        pathLinks.add(`${target}-${source}`); // dla nieskierowanego
+        pathLinks.add(`${target}-${source}`);
       }
     }
 
     return { pathNodes, pathLinks };
   }, [highlightPath, graph.directed]);
 
-  // Hover na wierzchołku
   const handleNodeHover = (node) => {
     const newHighlightNodes = new Set();
     const newHighlightLinks = new Set();
@@ -95,7 +123,6 @@ export default function GraphViewer({
     setHighlightLinks(newHighlightLinks);
   };
 
-  // Hover na krawędzi
   const handleLinkHover = (link) => {
     const newHighlightNodes = new Set();
     const newHighlightLinks = new Set();
@@ -115,7 +142,6 @@ export default function GraphViewer({
     setHighlightLinks(newHighlightLinks);
   };
 
-  // Rysowanie węzła
   const paintRing = useCallback(
     (node, ctx) => {
       const isHighlighted = highlightNodes.has(node);
@@ -127,7 +153,7 @@ export default function GraphViewer({
       let shadowColor = "transparent";
 
       if (isInPath) {
-        fillColor = "#2ca02c"; // zielony
+        fillColor = "#2ca02c";
         shadowBlur = 15;
         shadowColor = "#2ca02c";
       } else if (isHighlighted) {
@@ -151,7 +177,6 @@ export default function GraphViewer({
         ctx.stroke();
       }
 
-      // etykieta
       const label = node.id;
       ctx.font = `2px Sans-Serif`;
       ctx.textAlign = "center";
@@ -171,17 +196,33 @@ export default function GraphViewer({
     ]
   );
 
-  // Kolorowanie krawędzi
+  // Kolor krawędzi z uwzględnieniem feromonów
   const getLinkColor = useCallback(
     (link) => {
+      if (!link) return linkColor;
+      
       const sourceId =
         typeof link.source === "object" ? link.source.id : link.source;
       const targetId =
         typeof link.target === "object" ? link.target.id : link.target;
       const linkKey = `${sourceId}-${targetId}`;
 
+      // Priorytet 1: Ścieżka algorytmu
       if (pathHighlight.pathLinks.has(linkKey)) return "#2ca02c";
 
+      // Priorytet 2: Feromon
+      if (showPheromones && normalizedPheromones && normalizedPheromones[linkKey] !== undefined) {
+        const intensity = normalizedPheromones[linkKey];
+        if (!isNaN(intensity) && intensity >= 0 && intensity <= 1) {
+          // Gradient od żółtego (0) przez pomarańczowy do czerwonego (1)
+          const red = 255;
+          const green = Math.floor(255 * (1 - intensity * 0.8));
+          const blue = 0;
+          return `rgb(${red}, ${green}, ${blue})`;
+        }
+      }
+
+      // Priorytet 3: Highlight po hover
       if (!graph.directed) {
         const reverseKey = `${targetId}-${sourceId}`;
         if (highlightLinks.has(linkKey) || highlightLinks.has(reverseKey)) {
@@ -199,12 +240,16 @@ export default function GraphViewer({
       linkHighlightColor,
       pathHighlight.pathLinks,
       graph.directed,
+      showPheromones,
+      normalizedPheromones
     ]
   );
 
-  // Grubość krawędzi
+  // Grubość krawędzi z uwzględnieniem feromonów
   const getLinkWidth = useCallback(
     (link) => {
+      if (!link) return 0.1;
+      
       const sourceId =
         typeof link.source === "object" ? link.source.id : link.source;
       const targetId =
@@ -212,6 +257,14 @@ export default function GraphViewer({
       const linkKey = `${sourceId}-${targetId}`;
 
       if (pathHighlight.pathLinks.has(linkKey)) return 1;
+
+      // Feromon zwiększa grubość
+      if (showPheromones && normalizedPheromones && normalizedPheromones[linkKey] !== undefined) {
+        const intensity = normalizedPheromones[linkKey];
+        if (!isNaN(intensity) && intensity >= 0 && intensity <= 1) {
+          return 0.2 + intensity * 1.5; // od 0.2 do 1.7
+        }
+      }
 
       if (!graph.directed) {
         const reverseKey = `${targetId}-${sourceId}`;
@@ -224,7 +277,7 @@ export default function GraphViewer({
 
       return 0.1;
     },
-    [highlightLinks, pathHighlight.pathLinks, graph.directed]
+    [highlightLinks, pathHighlight.pathLinks, graph.directed, showPheromones, normalizedPheromones]
   );
 
   const fgRef = useRef();
@@ -242,6 +295,21 @@ export default function GraphViewer({
             pathIndex ? ` (Krok ${pathIndex})` : ""
           }\nGraph: ${node.graphName}`;
         }}
+        linkLabel={(link) => {
+          if (!link) return "";
+          
+          const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+          const targetId = typeof link.target === "object" ? link.target.id : link.target;
+          const linkKey = `${sourceId}-${targetId}`;
+          
+          const pheromoneLevel = showPheromones && pheromoneData && pheromoneData[linkKey]
+            ? pheromoneData[linkKey].toFixed(3)
+            : null;
+          
+          return `${sourceId} → ${targetId}\nWaga: ${link.weight || "?"}${
+            pheromoneLevel ? `\nFeromon: ${pheromoneLevel}` : ""
+          }`;
+        }}
         linkDirectionalArrowLength={graph.directed ? 3 : 0}
         linkDirectionalArrowRelPos={1}
         linkWidth={getLinkWidth}
@@ -250,14 +318,13 @@ export default function GraphViewer({
         onNodeHover={handleNodeHover}
         onLinkHover={handleLinkHover}
         linkCanvasObjectMode={() => "after"}
-
         ref={fgRef}
         cooldownTicks={1}
         onEngineStop={() => fgRef.current.zoomToFit(30)}
-        d3AlphaDecay={0.02} // wolniejsze stabilizowanie
+        d3AlphaDecay={0.02}
         d3VelocityDecay={0.8}
         d3Force={(forceEngine) => {
-          forceEngine.force("charge").strength(-120); // mocniejsze odpychanie węzłów
+          forceEngine.force("charge").strength(-120);
           return forceEngine;
         }}
       />
