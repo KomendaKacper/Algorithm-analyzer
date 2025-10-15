@@ -19,7 +19,7 @@ export default function AlgorithmResultPanel({ result, addPanel, onShowPheromone
       {result.success && (
         <div>
           <p><strong>Ścieżka:</strong> {result.path?.join(" → ")}</p>
-          <p><strong>Najlepszy dystans:</strong> {shortestDistance}</p>
+          <p><strong>Najlepszy dystans:</strong> {result.results.bestFitness}</p>
 
           <div style={{ marginBottom: "10px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {/* 🔹 Tabela */}

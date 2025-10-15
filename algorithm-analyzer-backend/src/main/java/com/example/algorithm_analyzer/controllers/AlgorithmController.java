@@ -28,9 +28,10 @@ public class AlgorithmController {
         return ResponseEntity.ok(algorithmService.getAllAlgorithms());
     }
 
-    @PostMapping("/{algorithmName}/execute")
+    @PostMapping("/{algorithmName}/{problemName}/execute")
     public ResponseEntity<AlgorithmResult> executeAlgorithm(
             @PathVariable String algorithmName,
+            @PathVariable String problemName,
             @RequestParam Long graphId,
             @RequestBody Map<String, Object> parameters) {
 
@@ -42,7 +43,10 @@ public class AlgorithmController {
             return ResponseEntity.badRequest().body(errorResult);
         }
 
-        // Parsowanie parametrów na odpowiednie typy
+        // dodaj problemName do mapy parametrów,
+        // żeby serwis/algorytm miał nadal do niego dostęp
+        parameters.put("problemName", problemName);
+
         Map<String, Object> parsedParameters = parameters.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -51,11 +55,9 @@ public class AlgorithmController {
                             String key = entry.getKey();
                             if ("startNodeId".equals(key) || "endNodeId".equals(key)
                                     || "antCount".equals(key) || "iterations".equals(key)) {
-                                // Integer
                                 return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
                             }
                             if ("alpha".equals(key) || "beta".equals(key) || "evaporationRate".equals(key) || "pheromoneDeposit".equals(key)) {
-                                // Double (zawsze rzutujemy Number na double)
                                 return value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
                             }
                             if ("someBooleanParam".equals(key)) {
@@ -68,15 +70,4 @@ public class AlgorithmController {
         AlgorithmResult result = algorithmService.executeAlgorithm(algorithmName, graph.get(), parsedParameters);
         return ResponseEntity.ok(result);
     }
-
-    @GetMapping("/categories")
-    public ResponseEntity<List<String>> getCategories() {
-        List<String> categories = algorithmService.getAllAlgorithms().stream()
-                .map(AlgorithmInfo::getCategory)
-                .distinct()
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(categories);
-    }
-
-
 }

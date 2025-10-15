@@ -12,6 +12,5 @@ import java.util.List;
 public class AlgorithmInfo {
     private String name;
     private String description;
-    private String category;
-    private List<AlgorithmParameterDefinition> parameters;
+    private List<ParameterDefinition> parameters;
 }

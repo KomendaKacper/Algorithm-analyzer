@@ -6,5 +6,7 @@ public enum ParameterType {
     BOOLEAN,
     STRING,
     SELECT,
-    NODE_ID
-}
+    NODE_ID,
+    LIST,   // 🔹 nowy typ dla List
+    MAP
+    }

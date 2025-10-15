@@ -22,13 +22,19 @@ export default function App() {
   const [panelPositions, setPanelPositions] = useState({});
   const [isResultVisible, setIsResultVisible] = useState(true);
   const [isAlgorithmRunning, setIsAlgorithmRunning] = useState(false);
-  
+
   // 🔹 Nowe stany dla feromonów
   const [pheromoneIterations, setPheromoneIterations] = useState([]);
   const [currentPheromoneIteration, setCurrentPheromoneIteration] = useState(0);
   const [showPheromones, setShowPheromones] = useState(false);
 
   const transformedGraph = useGraphTransform(selectedGraphDetails);
+
+  const [currentTask, setCurrentTask] = useState({
+    type: null, // "algorithm" lub "problem"
+    name: null,
+    parameters: {},
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,9 +174,9 @@ export default function App() {
   // 🔹 Obsługa wizualizacji feromonów
   const handleShowPheromones = (iterationResults) => {
     const pheromones = iterationResults
-      .filter(iter => iter.pheromoneSnapshot)
-      .map(iter => iter.pheromoneSnapshot);
-    
+      .filter((iter) => iter.pheromoneSnapshot)
+      .map((iter) => iter.pheromoneSnapshot);
+
     if (pheromones.length === 0) {
       alert("Brak danych o feromonach w wynikach algorytmu");
       return;
@@ -186,9 +192,10 @@ export default function App() {
   };
 
   // Pobierz dane feromonów dla aktualnej iteracji
-  const currentPheromoneData = showPheromones && pheromoneIterations.length > 0
-    ? pheromoneIterations[currentPheromoneIteration]
-    : null;
+  const currentPheromoneData =
+    showPheromones && pheromoneIterations.length > 0
+      ? pheromoneIterations[currentPheromoneIteration]
+      : null;
 
   const maxPheromoneIterations = pheromoneIterations.length - 1;
 
@@ -202,11 +209,16 @@ export default function App() {
           handleGenerateRandom={handleGenerateRandom}
           algorithms={algorithms}
           selectedGraphDetails={selectedGraphDetails}
-          handleExecuteAlgorithm={handleExecuteAlgorithm}
           algorithmResult={algorithmResult}
+          currentTask={currentTask}
+          setCurrentTask={setCurrentTask}
+          isAlgorithmRunning={isAlgorithmRunning}
+          setIsAlgorithmRunning={setIsAlgorithmRunning}
+          setAlgorithmResult={setAlgorithmResult}
+          setIsResultVisible={setIsResultVisible}
         />
 
-        <GraphContainer
+        {/* <GraphContainer
           graph={transformedGraph}
           algorithmResult={algorithmResult}
           isLoading={isLoadingGraph}
@@ -216,7 +228,7 @@ export default function App() {
           onIterationChange={handlePheromoneIterationChange}
           showPheromones={showPheromones}
           onClosePheromones={() => setShowPheromones(false)}
-        />
+        /> */}
 
         <ResultPanelWrapper
           algorithmResult={algorithmResult}
@@ -234,9 +246,7 @@ export default function App() {
         removePanel={removePanel}
       />
 
-      <AlgorithmOverlay
-        isAlgorithmRunning={isAlgorithmRunning}
-      />
+      <AlgorithmOverlay isAlgorithmRunning={isAlgorithmRunning} />
     </div>
   );
 }

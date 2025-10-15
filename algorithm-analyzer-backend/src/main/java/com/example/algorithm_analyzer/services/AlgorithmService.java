@@ -27,7 +27,6 @@ public class AlgorithmService {
                 .map(algorithm -> new AlgorithmInfo(
                         algorithm.getName(),
                         algorithm.getDescription(),
-                        algorithm.getCategory(),
                         algorithm.getParameterDefinitions()
                 ))
                 .collect(Collectors.toList());
