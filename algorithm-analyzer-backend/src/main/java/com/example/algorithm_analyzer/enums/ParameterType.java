@@ -8,5 +8,6 @@ public enum ParameterType {
     SELECT,
     NODE_ID,
     LIST,   // 🔹 nowy typ dla List
-    MAP
+    MAP,
+    MATRIX
     }

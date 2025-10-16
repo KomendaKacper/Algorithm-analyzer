@@ -5,7 +5,6 @@ export default function AlgorithmPanel({
   algorithms,
   currentTask,
   setCurrentTask,
-  selectedGraph,
   selectedProblemName,
 }) {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
@@ -29,12 +28,12 @@ export default function AlgorithmPanel({
     setParameters(initialParams);
 
     setTimeout(() => {
-      setCurrentTask((prev) => ({
+      setCurrentTask({
         type: "algorithm",
         name: selectedAlgorithm.name,
         problemName: selectedProblemName,
         parameters: initialParams,
-      }));
+      });
     }, 0);
   }, [selectedAlgorithm, selectedProblemName, setCurrentTask]);
 
@@ -45,7 +44,7 @@ export default function AlgorithmPanel({
 
     const newParams = { ...parameters, [name]: v };
     setParameters(newParams);
-    
+
     setCurrentTask((prevTask) => ({
       ...prevTask,
       parameters: newParams,

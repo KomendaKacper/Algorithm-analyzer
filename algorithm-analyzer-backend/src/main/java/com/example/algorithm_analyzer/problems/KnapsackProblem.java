@@ -6,52 +6,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-/**
- * Problem plecakowy (0/1 Knapsack) – wersja duża do testów ACO
- */
 @Component
-public class KnapsackProblem extends AbstractProblem {
+public class KnapsackProblem extends AbstractMatrixProblem {
 
-    // Parametry problemu
-    private final List<String> items;
-    private final Map<String, Integer> weights;
-    private final Map<String, Integer> values;
-    private final int capacity;
-
-    // Konstruktor z domyślnymi wartościami (duży problem)
-    public KnapsackProblem() {
-        int n = 500; // liczba przedmiotów
-        List<String> tempItems = new ArrayList<>();
-        Map<String, Integer> tempWeights = new HashMap<>();
-        Map<String, Integer> tempValues = new HashMap<>();
-        int tempCapacity = 0;
-
-        Random rnd = new Random(42); // dla powtarzalności
-
-        for (int i = 1; i <= n; i++) {
-            String name = "item" + i;
-            int weight = 1 + rnd.nextInt(100); // waga 1-100
-            int value = 10 + rnd.nextInt(1000); // wartość 10-1000
-
-            tempItems.add(name);
-            tempWeights.put(name, weight);
-            tempValues.put(name, value);
-
-            tempCapacity += weight;
-        }
-
-        this.items = tempItems;
-        this.weights = tempWeights;
-        this.values = tempValues;
-        this.capacity = tempCapacity / 2; // pojemność ~50% sumy wag
-    }
-
-    @Override
-    protected void performInitialization() {
-        if (items == null || weights == null || values == null) {
-            throw new IllegalArgumentException("KnapsackProblem wymaga parametrów: items, weights, values");
-        }
-    }
+    private Map<String, Integer> weights = new HashMap<>();
+    private Map<String, Integer> values = new HashMap<>();
+    private int capacity;
 
     @Override
     public String getName() {
@@ -60,7 +20,26 @@ public class KnapsackProblem extends AbstractProblem {
 
     @Override
     public String getDescription() {
-        return "Klasyczny problem plecakowy 0/1 – duży problem testowy dla ACO";
+        return "Problem plecakowy (0-1 Knapsack)";
+    }
+
+    @Override
+    public void initialize(Map<String, Object> parameters) {
+        // bezpieczne rzutowanie
+        this.elements = parameters.containsKey("items") ? new ArrayList<>((List<String>) parameters.get("items")) : new ArrayList<>();
+        this.weights = parameters.containsKey("weights") ? (Map<String, Integer>) parameters.get("weights") : new HashMap<>();
+        this.values = parameters.containsKey("values") ? (Map<String, Integer>) parameters.get("values") : new HashMap<>();
+        this.capacity = parameters.containsKey("capacity") ? (Integer) parameters.get("capacity") : 0;
+
+        // heurystyka: wartość/waga
+        this.heuristicMatrix = new double[elements.size()][elements.size()];
+        for (int i = 0; i < elements.size(); i++) {
+            for (int j = 0; j < elements.size(); j++) {
+                String item = elements.get(j);
+                heuristicMatrix[i][j] = weights.get(item) != 0 ? (double) values.get(item) / weights.get(item) : 0.0;
+            }
+        }
+        this.initialized = true;
     }
 
     @Override
@@ -68,80 +47,47 @@ public class KnapsackProblem extends AbstractProblem {
         checkInitialized();
         int totalWeight = 0;
         int totalValue = 0;
-
         for (String item : solution) {
             totalWeight += weights.getOrDefault(item, 0);
             totalValue += values.getOrDefault(item, 0);
         }
-
-        if (totalWeight > capacity) {
-            return Double.MAX_VALUE; // nieważne rozwiązanie
-        }
-
-        return 1.0 / (totalValue + 1e-6); // minimalizacja funkcji celu
+        if (totalWeight > capacity) return Double.MAX_VALUE; // kara za przekroczenie plecaka
+        return 1.0 / (totalValue + 1e-6); // minimalizacja ACO
     }
 
     @Override
     public boolean isValidSolution(List<String> solution) {
-        checkInitialized();
         int totalWeight = 0;
-        for (String item : solution) {
-            totalWeight += weights.getOrDefault(item, 0);
-        }
+        for (String item : solution) totalWeight += weights.getOrDefault(item, 0);
         return totalWeight <= capacity;
     }
 
     @Override
-    public double getHeuristicValue(String current, String next) {
-        int value = values.getOrDefault(next, 0);
-        int weight = weights.getOrDefault(next, 1);
-        return (double) value / weight;
-    }
-
-    @Override
     public List<String> getPossibleNextElements(String current, List<String> alreadySelected) {
-        checkInitialized();
         List<String> remaining = new ArrayList<>();
-        for (String item : items) {
-            if (!alreadySelected.contains(item)) {
-                remaining.add(item);
-            }
+        for (String item : elements) {
+            if (!alreadySelected.contains(item)) remaining.add(item);
         }
         return remaining;
     }
 
     @Override
     public String getStartElement() {
-        return null; // brak elementu startowego
+        return null; // brak startowego elementu
     }
 
     @Override
     public boolean isSolutionComplete(List<String> solution) {
-        checkInitialized();
-        int totalWeight = 0;
-        for (String item : solution) {
-            totalWeight += weights.getOrDefault(item, 0);
-            if (totalWeight >= capacity) return true;
-        }
-        return solution.size() >= items.size();
-    }
-
-    @Override
-    public List<String> getAllElements() {
-        return items;
+        return solution.size() >= elements.size();
     }
 
     @Override
     public List<ParameterDefinition> getParameters() {
         return List.of(
-                new ParameterDefinition("items", "Przedmioty", ParameterType.LIST, items, null, null,
-                        "Lista dostępnych przedmiotów do plecaka", true),
-                new ParameterDefinition("weights", "Wagi przedmiotów", ParameterType.MAP, weights, null, null,
-                        "Mapa wag dla każdego przedmiotu", true),
-                new ParameterDefinition("values", "Wartości przedmiotów", ParameterType.MAP, values, null, null,
-                        "Mapa wartości dla każdego przedmiotu", true),
-                new ParameterDefinition("capacity", "Pojemność plecaka", ParameterType.INTEGER, capacity, 1, 100000,
-                        "Maksymalna pojemność plecaka", true)
+                new ParameterDefinition("items", "Przedmioty", ParameterType.LIST, elements, null, null, "Lista przedmiotów do wyboru", true),
+                new ParameterDefinition("weights", "Wagi", ParameterType.MAP, weights, null, null, "Mapa wag przedmiotów", true),
+                new ParameterDefinition("values", "Wartości", ParameterType.MAP, values, null, null, "Mapa wartości przedmiotów", true),
+                new ParameterDefinition("capacity", "Pojemność", ParameterType.INTEGER, capacity, 1, 100000, "Pojemność plecaka", true)
         );
     }
 }

@@ -12,28 +12,28 @@ import java.util.Map;
 @AllArgsConstructor
 public class AcoIterationResult {
     private Integer iteration;
-    private List<String> bestPath;
-    private Double bestDistance;
-    private Double worstDistance;
-    private Double averageDistance;
+    private List<String> bestSolution;        // uniwersalne rozwiązanie
+    private Double bestScore;                  // najlepszy wynik funkcji celu
+    private Double worstScore;                 // najgorszy wynik
+    private Double averageScore;               // średni wynik
     private Double executionDurationMs;
     private Integer constraintViolations;
     private Double diversity;
     private Integer stagnation;
 
-    // 🔹 Nowe pola dla śledzenia feromonów
+    // 🔹 Pola dla śledzenia feromonów
     private Map<String, Double> pheromoneSnapshot;  // pełny rozkład feromonów w tej iteracji
     private Map<String, Object> pheromoneStats;     // statystyki: min, max, average, total
 
     // Konstruktor bez feromonów (dla kompatybilności wstecznej)
-    public AcoIterationResult(Integer iteration, List<String> bestPath, Double bestDistance,
-                              Double worstDistance, Double averageDistance, Double executionDurationMs,
+    public AcoIterationResult(Integer iteration, List<String> bestSolution, Double bestScore,
+                              Double worstScore, Double averageScore, Double executionDurationMs,
                               Integer constraintViolations, Double diversity, Integer stagnation) {
         this.iteration = iteration;
-        this.bestPath = bestPath;
-        this.bestDistance = bestDistance;
-        this.worstDistance = worstDistance;
-        this.averageDistance = averageDistance;
+        this.bestSolution = bestSolution;
+        this.bestScore = bestScore;
+        this.worstScore = worstScore;
+        this.averageScore = averageScore;
         this.executionDurationMs = executionDurationMs;
         this.constraintViolations = constraintViolations;
         this.diversity = diversity;

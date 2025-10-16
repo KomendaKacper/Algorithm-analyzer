@@ -1,7 +1,5 @@
 package com.example.algorithm_analyzer.problems;
 
-import com.example.algorithm_analyzer.entity.Graph;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,13 +8,11 @@ import java.util.Map;
  */
 public abstract class AbstractProblem implements Problem {
 
-    protected Graph graph;
     protected Map<String, Object> parameters;
     protected boolean initialized = false;
 
     @Override
-    public void initialize(Graph graph, Map<String, Object> parameters) {
-        this.graph = graph;
+    public void initialize(Map<String, Object> parameters) {
         this.parameters = parameters;
         this.initialized = true;
         performInitialization();
@@ -24,7 +20,7 @@ public abstract class AbstractProblem implements Problem {
 
     /**
      * Metoda do nadpisania przez konkretne implementacje
-     * Wywoływana po ustawieniu graph i parameters
+     * Wywoływana po ustawieniu parametrów
      */
     protected abstract void performInitialization();
 

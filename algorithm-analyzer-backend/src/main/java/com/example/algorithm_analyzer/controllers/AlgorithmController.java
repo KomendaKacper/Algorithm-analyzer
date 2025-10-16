@@ -1,73 +1,88 @@
 package com.example.algorithm_analyzer.controllers;
 
+import com.example.algorithm_analyzer.algorithms.ant.AntColonyOptimizationAlgorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmInfo;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
-import com.example.algorithm_analyzer.entity.Graph;
+import com.example.algorithm_analyzer.problems.Problem;
 import com.example.algorithm_analyzer.services.AlgorithmService;
-import com.example.algorithm_analyzer.services.GraphService;
+import com.example.algorithm_analyzer.services.ProblemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 
 @RestController
 @RequestMapping("/api/algorithms")
 @RequiredArgsConstructor
 public class AlgorithmController {
 
+    private final ProblemService problemService; // serwis do pobierania instancji problemów
     private final AlgorithmService algorithmService;
-    private final GraphService graphService;
+
+    private final AntColonyOptimizationAlgorithm aco;
 
     @GetMapping
     public ResponseEntity<List<AlgorithmInfo>> getAllAlgorithms() {
         return ResponseEntity.ok(algorithmService.getAllAlgorithms());
     }
 
-    @PostMapping("/{algorithmName}/{problemName}/execute")
-    public ResponseEntity<AlgorithmResult> executeAlgorithm(
-            @PathVariable String algorithmName,
+    /**
+     * Wywołanie ACO dla dowolnego problemu
+     */
+    @PostMapping("/aco/{problemName}/execute")
+    public ResponseEntity<AlgorithmResult> executeAco(
             @PathVariable String problemName,
-            @RequestParam Long graphId,
-            @RequestBody Map<String, Object> parameters) {
+            @RequestBody Map<String, Object> parameters
+    ) {
+        try {
+            Problem problem = problemService.getProblemByName(problemName);
+            if (problem == null) {
+                return ResponseEntity.badRequest()
+                        .body(buildErrorResult("Nieznany problem: " + problemName));
+            }
 
-        Optional<Graph> graph = graphService.findById(graphId);
-        if (graph.isEmpty()) {
-            AlgorithmResult errorResult = new AlgorithmResult();
-            errorResult.setSuccess(false);
-            errorResult.setErrorMessage("Graf o ID " + graphId + " nie został znaleziony");
-            return ResponseEntity.badRequest().body(errorResult);
+            // Parametry ACO
+            Map<String, Object> parsedParameters = parseParameters(parameters);
+
+            AlgorithmResult result = aco.execute(problem, parsedParameters);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(buildErrorResult("Błąd podczas uruchamiania ACO: " + e.getMessage()));
         }
+    }
 
-        // dodaj problemName do mapy parametrów,
-        // żeby serwis/algorytm miał nadal do niego dostęp
-        parameters.put("problemName", problemName);
+    // ===============================
+    // Parsowanie parametrów wejściowych
+    // ===============================
+    private Map<String, Object> parseParameters(Map<String, Object> parameters) {
+        Map<String, Object> parsed = new HashMap<>();
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            Object value = entry.getValue();
+            String key = entry.getKey();
 
-        Map<String, Object> parsedParameters = parameters.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> {
-                            Object value = entry.getValue();
-                            String key = entry.getKey();
-                            if ("startNodeId".equals(key) || "endNodeId".equals(key)
-                                    || "antCount".equals(key) || "iterations".equals(key)) {
-                                return value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString());
-                            }
-                            if ("alpha".equals(key) || "beta".equals(key) || "evaporationRate".equals(key) || "pheromoneDeposit".equals(key)) {
-                                return value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString());
-                            }
-                            if ("someBooleanParam".equals(key)) {
-                                return Boolean.parseBoolean(value.toString());
-                            }
-                            return value;
-                        }
-                ));
+            if ("antCount".equals(key) || "iterations".equals(key)) {
+                parsed.put(key, value instanceof Number ? ((Number) value).intValue() : Integer.parseInt(value.toString()));
+            } else if ("alpha".equals(key) || "beta".equals(key) || "evaporationRate".equals(key) || "pheromoneDeposit".equals(key) || "elitistWeight".equals(key)) {
+                parsed.put(key, value instanceof Number ? ((Number) value).doubleValue() : Double.parseDouble(value.toString()));
+            } else {
+                parsed.put(key, value);
+            }
+        }
+        return parsed;
+    }
 
-        AlgorithmResult result = algorithmService.executeAlgorithm(algorithmName, graph.get(), parsedParameters);
-        return ResponseEntity.ok(result);
+    // ===============================
+    // Budowanie wyniku błędu
+    // ===============================
+    private AlgorithmResult buildErrorResult(String message) {
+        AlgorithmResult result = new AlgorithmResult();
+        result.setSuccess(false);
+        result.setErrorMessage(message);
+        return result;
     }
 }
