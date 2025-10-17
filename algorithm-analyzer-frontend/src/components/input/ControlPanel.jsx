@@ -5,46 +5,67 @@ import ProblemPanel from "./ProblemPanel";
 import ResultPanelWrapper from "../result/ResultPanelWrapper";
 
 export default function ControlPanel({
-  algorithms,
-  algorithmResult,
-  currentTask,
-  setCurrentTask,
-  isAlgorithmRunning,
-  handleExecuteCurrentTask,
-  addPanel, // Prop `onShowPheromones` usunięty
+  algorithms, results, tasks, setTasks,
+  problemConfig, setProblemConfig,
+  isAlgorithmRunning, handleExecuteCurrentTask, addPanel,
 }) {
-  const [isResultVisible, setIsResultVisible] = useState(true);
+  const [isComparisonMode, setIsComparisonMode] = useState(false);
 
+  const handleToggleComparison = () => {
+    setIsComparisonMode(prev => {
+      const newMode = !prev;
+      // Przy wyłączeniu trybu porównawczego, zostaw tylko pierwszy algorytm
+      if (!newMode && tasks.length > 1) {
+        setTasks([tasks[0]]);
+      }
+      return newMode;
+    });
+  };
+  
   return (
     <div className="controls-panel">
       <Shuffle text="Algorithm Analyzer" shuffleDirection="right" duration={3} />
 
       <div className="panels-container">
-        <ProblemPanel setCurrentTask={setCurrentTask} />
-        <AlgorithmPanel
-          algorithms={algorithms}
-          currentTask={currentTask}
-          setCurrentTask={setCurrentTask}
-          selectedProblemName={currentTask?.problemName}
-        />
+        <ProblemPanel setProblemConfig={setProblemConfig} />
+
+        <div className="comparison-container">
+          <div className="comparison-toggle">
+            <label>Tryb Porównawczy</label>
+            <input type="checkbox" checked={isComparisonMode} onChange={handleToggleComparison} />
+          </div>
+          <div className="algorithm-panels-wrapper">
+            <AlgorithmPanel
+              key={0} // Klucz jest ważny dla Reacta
+              panelId={0}
+              algorithms={algorithms}
+              tasks={tasks}
+              setTasks={setTasks}
+              problemName={problemConfig.name}
+            />
+            {isComparisonMode && (
+              <AlgorithmPanel
+                key={1}
+                panelId={1}
+                algorithms={algorithms}
+                tasks={tasks}
+                setTasks={setTasks}
+                problemName={problemConfig.name}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       <button
         className="panel-button"
         onClick={handleExecuteCurrentTask}
-        disabled={!currentTask?.name || !currentTask?.problemName || isAlgorithmRunning}
+        disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t.name) || isAlgorithmRunning}
       >
         {isAlgorithmRunning ? "Pracuję..." : "🚀 Wykonaj Analizę"}
       </button>
 
-      {algorithmResult && (
-        <ResultPanelWrapper
-          algorithmResult={algorithmResult}
-          isResultVisible={isResultVisible}
-          setIsResultVisible={setIsResultVisible}
-          addPanel={addPanel} // Prop `onShowPheromones` usunięty
-        />
-      )}
+      {results.length > 0 && <ResultPanelWrapper results={results} addPanel={addPanel} />}
     </div>
   );
 }

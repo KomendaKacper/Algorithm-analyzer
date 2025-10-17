@@ -2,18 +2,12 @@
 
 import api from './apiClient';
 
-// Pobranie listy algorytmów
 export const getAlgorithms = () => api.get("/algorithms");
 
-/**
- * Główna funkcja do wykonywania dowolnego algorytmu dla dowolnego problemu.
- * @param {string} algorithmName - Pełna nazwa algorytmu, np. "Ant Colony Optimization (ACO)".
- * @param {string} problemName - Nazwa beana problemu, np. "travelingSalesmanProblem".
- * @param {object} payload - Obiekt zawierający problemParameters i algorithmParameters.
- */
-export const executeAlgorithm = (algorithmName, problemName, payload) => {
-  const url = `/algorithms/${encodeURIComponent(algorithmName)}/problems/${encodeURIComponent(problemName)}/execute`;
-  console.log("Wysyłanie zapytania na:", url);
-  console.log("Payload:", JSON.stringify(payload)); // Logujemy payload jako string, żeby zobaczyć całą strukturę
+export const executeComparison = (problemName, payload) => {
+  const url = `/compare/${encodeURIComponent(problemName)}/execute`;
+  console.log("Wysyłanie zapytania porównawczego na:", url);
+  // --- ZMIANA: Logujemy JSON jako tekst, a nie obiekt ---
+  console.log("Payload (jako JSON):", JSON.stringify(payload, null, 2)); 
   return api.post(url, payload);
 };

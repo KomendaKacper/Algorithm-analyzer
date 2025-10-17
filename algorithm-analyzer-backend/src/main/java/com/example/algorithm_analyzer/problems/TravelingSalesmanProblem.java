@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component("travelingSalesmanProblem") // Ważne: nazwa komponentu musi pasować do problemName w JSON
+@Component("travelingSalesmanProblem")
 @Slf4j
 public class TravelingSalesmanProblem extends AbstractProblem implements Problem {
 
@@ -25,7 +25,7 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
 
     @Override
     public boolean isMaximization() {
-        return false; // Zawsze minimalizujemy dystans
+        return false;
     }
 
     @Override
@@ -33,9 +33,7 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
     public void initialize(Map<String, Object> parameters) {
         log.info("Rozpoczynam inicjalizację TravelingSalesmanProblem...");
         try {
-            // Bezpieczne pobieranie i rzutowanie parametrów
             this.cities = convertToStringList(getParameter(parameters, "cities", new ArrayList<>()));
-
             Object distancesObj = getParameter(parameters, "distances", new HashMap<>());
             if (!(distancesObj instanceof Map)) {
                 throw new IllegalArgumentException("Parametr 'distances' musi być mapą (obiektem JSON).");
@@ -49,14 +47,8 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
                 }
             });
 
-            // Kluczowa walidacja
-            if (this.cities.isEmpty()) {
-                log.error("Błąd inicjalizacji: Lista 'cities' jest pusta.");
-                this.initialized = false;
-                return;
-            }
-            if (this.distances.isEmpty()) {
-                log.error("Błąd inicjalizacji: Mapa 'distances' jest pusta.");
+            if (this.cities.isEmpty() || this.distances.isEmpty()) {
+                log.error("Błąd inicjalizacji: Lista 'cities' lub mapa 'distances' jest pusta.");
                 this.initialized = false;
                 return;
             }
@@ -64,9 +56,6 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
             this.initialized = true;
             log.info("Inicjalizacja TSP zakończona pomyślnie. Załadowano {} miast.", this.cities.size());
 
-        } catch (ClassCastException e) {
-            log.error("Błąd rzutowania typów podczas inicjalizacji. Sprawdź strukturę JSON. Błąd: {}", e.getMessage(), e);
-            this.initialized = false;
         } catch (Exception e) {
             log.error("Krytyczny błąd podczas inicjalizacji TSP: {}", e.getMessage(), e);
             this.initialized = false;
@@ -82,9 +71,7 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
         for (int i = 0; i < solution.size() - 1; i++) {
             totalDistance += getDistance(solution.get(i), solution.get(i + 1));
         }
-        // Zamknięcie cyklu - powrót do miasta startowego
         totalDistance += getDistance(solution.get(solution.size() - 1), solution.get(0));
-
         return totalDistance;
     }
 
@@ -92,13 +79,7 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
     public boolean isValidSolution(List<String> solution) {
         checkInitialized();
         if (solution == null) return false;
-        // Poprawne rozwiązanie musi zawierać każde miasto dokładnie raz.
-        boolean isValid = new HashSet<>(solution).size() == cities.size() && solution.size() == cities.size();
-        if (!isValid) {
-            log.warn("Wykryto nieprawidłowe rozwiązanie. Oczekiwano {} unikalnych miast, ścieżka zawiera {} elementów ({} unikalnych). Ścieżka: {}",
-                    cities.size(), solution.size(), new HashSet<>(solution).size(), solution);
-        }
-        return isValid;
+        return new HashSet<>(solution).size() == cities.size() && solution.size() == cities.size();
     }
 
     @Override
@@ -123,10 +104,7 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
     @Override
     public double getHeuristicValue(String from, String to) {
         double distance = getDistance(from, to);
-        if (distance <= 0 || distance >= Double.MAX_VALUE) {
-            return 0.0001;
-        }
-        return 1.0 / distance;
+        return (distance <= 0 || distance >= Double.MAX_VALUE) ? 0.0001 : 1.0 / distance;
     }
 
     private double getDistance(String from, String to) {
@@ -152,5 +130,34 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
     @Override
     public List<ParameterDefinition> getParameters() {
         return List.of();
+    }
+
+    // --- Metody dla Symulowanego Wyżarzania ---
+
+    @Override
+    public List<String> generateRandomSolution() {
+        checkInitialized();
+        List<String> randomSolution = new ArrayList<>(cities);
+        Collections.shuffle(randomSolution);
+        return randomSolution;
+    }
+
+    @Override
+    public List<String> generateNeighborSolution(List<String> currentSolution) {
+        checkInitialized();
+        List<String> neighbor = new ArrayList<>(currentSolution);
+        if (neighbor.size() < 2) {
+            return neighbor;
+        }
+
+        Random random = new Random();
+        int i = random.nextInt(neighbor.size());
+        int j = random.nextInt(neighbor.size());
+        while (i == j) {
+            j = random.nextInt(neighbor.size());
+        }
+
+        Collections.swap(neighbor, i, j);
+        return neighbor;
     }
 }

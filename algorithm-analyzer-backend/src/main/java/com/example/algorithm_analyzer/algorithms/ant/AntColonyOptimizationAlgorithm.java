@@ -28,21 +28,22 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
     @Override
     public List<ParameterDefinition> getParameterDefinitions() {
         return Arrays.asList(
-                new ParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 50, 1, 1000, "Liczba mrówek w kolonii", true),
-                new ParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 500, 1, 10000, "Maksymalna liczba iteracji", true),
-                new ParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 1.0, 0.1, 5.0, "Waga feromonów", true),
-                new ParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 2.5, 0.1, 10.0, "Waga heurystyki", true),
-                new ParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.2, 0.01, 0.99, "Tempo parowania feromonów", true),
-                new ParameterDefinition("pheromoneDeposit", "Depozyt feromonów", ParameterType.DOUBLE, 100.0, 1.0, 1000.0, "Ilość feromonów odkładanych przez mrówkę", true),
+                new ParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 20, 1, 1000, "Liczba mrówek w kolonii", true),
+                new ParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 1000, 1, 10000, "Maksymalna liczba iteracji", true),
+                new ParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 0.7, 0.1, 5.0, "Waga feromonów", true),
+                new ParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.7, 0.1, 10.0, "Waga heurystyki", true),
+                new ParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.2, 0.1, 1.0, "Tempo parowania feromonów", true),
+                new ParameterDefinition("pheromoneDeposit", "Depozyt feromonów", ParameterType.DOUBLE, 0.3, 0.1, 5.0, "Ilość feromonów odkładanych przez mrówkę", true),
                 new ParameterDefinition("elitistWeight", "Współczynnik elitarny", ParameterType.DOUBLE, 1.5, 1.0, 10.0, "Współczynnik wzmacniający najlepszą globalną ścieżkę", true)
         );
     }
 
     @Override
     public AlgorithmResult execute(Problem problem, Map<String, Object> problemParameters, Map<String, Object> algorithmParameters) {
-        double startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         AlgorithmResult result = new AlgorithmResult();
         result.setAlgorithmName(this.getName());
+        result.setProblemName(problem.getName());
 
         try {
             problem.initialize(problemParameters);
@@ -66,7 +67,12 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
 
             List<String> finalSolution = problem.convertPathToSolution(bestPath);
             result.setBestSolution(finalSolution, acoResult.bestFitness);
-            result.setIterationResults(acoResult.iterationResults);
+
+            // --- KLUCZOWA ZMIANA ---
+            // Konwertujemy specyficzną listę wyników ACO na ogólną listę obiektów,
+            // której oczekuje uniwersalny AlgorithmResult.
+            result.setIterationResults(new ArrayList<>(acoResult.iterationResults));
+
             result.setSuccess(true);
 
         } catch (Exception e) {
@@ -75,7 +81,6 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
             result.setSuccess(false);
         }
 
-        // Poprawione wywołanie metody - przekazujemy long
         result.setExecutionDurationMs(System.currentTimeMillis() - startTime);
         return result;
     }
@@ -87,7 +92,7 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         List<String> bestSolutionPathGlobal = null;
         double bestFitnessGlobal = maximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         int lastImprovementIter = 0;
-        List<AcoIterationResult> iterationResults = new ArrayList<>();
+        List<AcoIterationResult> iterationResults = new ArrayList<>(); // <-- Ta lista jest typu AcoIterationResult
 
         for (int iter = 0; iter < iterations; iter++) {
             long iterStartTime = System.nanoTime();
@@ -189,8 +194,6 @@ public class AntColonyOptimizationAlgorithm implements Algorithm {
         if (path == null || path.isEmpty()) return;
 
         double initialPheromoneToAdd = maximize ? deposit * fitness : deposit / fitness;
-
-        // POPRAWKA: Zmienna musi być "effectively final", aby użyć jej w lambdzie
         final double finalPheromoneToAdd;
         if (Double.isInfinite(initialPheromoneToAdd) || Double.isNaN(initialPheromoneToAdd) || initialPheromoneToAdd <= 0) {
             finalPheromoneToAdd = deposit;

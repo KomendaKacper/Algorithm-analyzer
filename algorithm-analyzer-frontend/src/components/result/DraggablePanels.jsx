@@ -1,8 +1,6 @@
-// src/components/result/DraggablePanels.jsx
-
-import AcoIterationTable from "./AcoIterationTable";
+import IterationTable from "./IterationTable";
 import { MetricChart } from "./charts/MetricChart";
-import { DistanceChart } from "./charts/DistanceChart";
+import { ScoreChart } from "./charts/ScoreChart";
 
 export default function DraggablePanels({
   openPanels,
@@ -10,67 +8,44 @@ export default function DraggablePanels({
   setPanelPositions,
   removePanel,
 }) {
-  const startDrag = (e, id) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const pos = panelPositions[id] || { top: 100, left: 100 };
-
-    const onMouseMove = (moveEvent) => {
-      const newTop = pos.top + (moveEvent.clientY - startY);
-      const newLeft = pos.left + (moveEvent.clientX - startX);
-      setPanelPositions((prev) => ({ ...prev, [id]: { top: newTop, left: newLeft } }));
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
+  const startDrag = (e, id) => { /* ... bez zmian ... */ };
 
   return (
     <>
       {openPanels.map((panel) => {
         const pos = panelPositions[panel.id] || {};
-        // --- POPRAWKA: Wyciągamy potrzebne dane z obiektu panel.data ---
-        const iterationData = panel.data?.iterationResults || [];
-        const algorithmName = panel.data?.algorithmName || "Algorytm";
+        
+        // --- KLUCZOWA ZMIANA: Sprawdzamy, czy dane to tablica (porównanie) czy obiekt (pojedynczy widok) ---
+        const isComparison = Array.isArray(panel.data);
+        const results = isComparison ? panel.data : [panel.data]; // Zawsze pracujemy na tablicy
+        
+        const problemName = results[0]?.problemName || "";
+
+        const getPanelTitle = (type) => { /* ... bez zmian ... */ };
 
         return (
-          <div
-            key={panel.id}
-            className={`draggable-panel ${panel.type.startsWith("charts") ? "panel-charts" : "panel-table"}`}
-            style={{ top: pos.top, left: pos.left }}
-          >
+          <div key={panel.id} className={`draggable-panel ${panel.type.startsWith("charts") ? "panel-charts" : "panel-table"}`} style={{ top: pos.top, left: pos.left }}>
             <div className="panel-header" onMouseDown={(e) => startDrag(e, panel.id)}>
-              <span className="panel-title">
-                {panel.type === "table" && "📊 Tabela iteracji"}
-                {panel.type === "charts-distance" && "📈 Wykresy wyników"}
-                {panel.type === "charts-diversity" && "🧬 Różnorodność"}
-                {panel.type === "charts-stagnation" && "⏳ Stagnacja"}
-              </span>
+              <span className="panel-title">{getPanelTitle(panel.type)}</span>
               <button className="panel-close-btn" onClick={() => removePanel(panel.id)}>✕</button>
             </div>
-
             <div className="panel-content">
-              {panel.type === "table" && <AcoIterationTable data={iterationData} />}
 
-              {panel.type === "charts-distance" && (
-                <DistanceChart data={iterationData} algorithmName={algorithmName} />
-              )}
-
-              {panel.type.startsWith("charts-") && panel.type !== "charts-distance" && (
-                <MetricChart
-                  data={iterationData}
-                  dataKey={panel.type === "charts-diversity" ? "diversity" : "stagnation"}
-                  name={panel.type === "charts-diversity" ? "Różnorodność" : "Stagnacja"}
-                  color={panel.type === "charts-diversity" ? "#9b59b6" : "#f1c40f"}
-                  algorithmName={algorithmName}
+              {/* Tabela zawsze wyświetla dane dla jednego algorytmu */}
+              {panel.type === "table" && !isComparison && (
+                <IterationTable 
+                  data={panel.data.iterationResults || []} 
+                  problemName={panel.data.problemName} 
+                  algorithmName={panel.data.algorithmName}
                 />
               )}
+
+              {/* Wykresy zawsze działają w trybie porównawczym (nawet dla jednego wyniku) */}
+              {panel.type === "charts-score" && <ScoreChart results={results} problemName={problemName} />}
+              {panel.type === "charts-time" && <MetricChart results={results} dataKey="executionDurationMs" name="Czas iteracji (ms)" />}
+              {panel.type === "charts-diversity" && <MetricChart results={results} dataKey="diversity" name="Różnorodność" />}
+              {panel.type === "charts-stagnation" && <MetricChart results={results} dataKey="stagnation" name="Stagnacja" />}
+
             </div>
           </div>
         );

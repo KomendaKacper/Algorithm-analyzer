@@ -1,13 +1,12 @@
 package com.example.algorithm_analyzer.problems;
 
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
-import com.example.algorithm_analyzer.enums.ParameterType;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Component
+@Component("knapsackProblem")
 public class KnapsackProblem extends AbstractProblem implements Problem {
 
     private Map<String, Integer> weights = new HashMap<>();
@@ -16,10 +15,14 @@ public class KnapsackProblem extends AbstractProblem implements Problem {
     private int capacity;
 
     @Override
-    public String getName() { return "Knapsack Problem"; }
+    public String getName() {
+        return "Knapsack Problem";
+    }
 
     @Override
-    public String getDescription() { return "Problem plecakowy (0-1 Knapsack) - oparty na wyborze ścieżkowym."; }
+    public String getDescription() {
+        return "Problem plecakowy (0-1 Knapsack).";
+    }
 
     @Override
     public boolean isMaximization() {
@@ -27,9 +30,7 @@ public class KnapsackProblem extends AbstractProblem implements Problem {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void initialize(Map<String, Object> parameters) {
-        // Używamy metod pomocniczych z AbstractProblem (zakładając ich istnienie)
         this.elements = convertToStringList(getParameter(parameters, "items", List.of()));
         this.weights = convertToIntegerMap(getParameter(parameters, "weights", Map.of()));
         this.values = convertToIntegerMap(getParameter(parameters, "values", Map.of()));
@@ -39,51 +40,39 @@ public class KnapsackProblem extends AbstractProblem implements Problem {
 
     @Override
     public List<String> convertPathToSolution(List<String> path) {
-        // Rozwiązaniem są UNIKALNE elementy, które się w tej ścieżce znalazły.
         return path.stream().distinct().collect(Collectors.toList());
     }
 
     @Override
     public double evaluateSolution(List<String> solution) {
         checkInitialized();
-        int totalWeight = 0;
         int totalValue = 0;
-
         for (String item : solution) {
-            totalWeight += getWeight(item);
             totalValue += values.getOrDefault(item, 0);
         }
-
-        if (totalWeight > capacity) return 0.0; // Kara za przekroczenie
         return totalValue;
     }
 
     @Override
     public boolean isValidSolution(List<String> solution) {
         int totalWeight = 0;
-        for (String item : solution) totalWeight += getWeight(item);
+        for (String item : solution) {
+            totalWeight += getWeight(item);
+        }
         return totalWeight <= capacity;
     }
 
-    // KnapsackProblem.java - SUGEROWANE POPRAWKI
-
     @Override
     public List<String> getPossibleNextElements(String current, List<String> alreadySelectedPath) {
-        // Oblicz aktualną wagę ścieżki
-        int currentWeight = alreadySelectedPath.stream()
-                .mapToInt(this::getWeight)
-                .sum();
-
-        // Zwróć tylko te przedmioty, których jeszcze nie ma w plecaku I które się zmieszczą
+        int currentWeight = alreadySelectedPath.stream().mapToInt(this::getWeight).sum();
         return elements.stream()
-                .filter(item -> !alreadySelectedPath.contains(item)) // Przedmiot nie jest jeszcze w plecaku
-                .filter(item -> currentWeight + getWeight(item) <= capacity) // Przedmiot się zmieści
+                .filter(item -> !alreadySelectedPath.contains(item))
+                .filter(item -> currentWeight + getWeight(item) <= capacity)
                 .collect(Collectors.toList());
     }
 
     @Override
     public boolean isSolutionComplete(List<String> path) {
-        // Rozwiązanie jest kompletne, jeśli nie ma już możliwych ruchów (żaden przedmiot się nie zmieści)
         return getPossibleNextElements(null, path).isEmpty();
     }
 
@@ -92,11 +81,12 @@ public class KnapsackProblem extends AbstractProblem implements Problem {
         return null; // Brak ustalonego elementu startowego
     }
 
-    public int getWeight(String item) { return weights.getOrDefault(item, 0); }
+    public int getWeight(String item) {
+        return weights.getOrDefault(item, 0);
+    }
 
     @Override
     public double getHeuristicValue(String current, String next) {
-        // Heurystyka to stosunek wartości do wagi
         Integer weight = weights.get(next);
         Integer value = values.get(next);
         if (weight == null || weight == 0 || value == null) return 0.001;
@@ -110,17 +100,55 @@ public class KnapsackProblem extends AbstractProblem implements Problem {
 
     @Override
     public List<ParameterDefinition> getParameters() {
-        // W uproszczonej wersji zostawiamy puste lub pełne definicje, jak w oryginalnym kodzie
-        return List.of(
-                new ParameterDefinition("items", "Przedmioty", ParameterType.LIST, elements, null, null, "Lista przedmiotów do wyboru", true),
-                new ParameterDefinition("weights", "Wagi", ParameterType.MAP, weights, null, null, "Mapa wag przedmiotów", true),
-                new ParameterDefinition("values", "Wartości", ParameterType.MAP, values, null, null, "Mapa wartości przedmiotów", true),
-                new ParameterDefinition("capacity", "Pojemność", ParameterType.INTEGER, capacity, 1, 100000, "Pojemność plecaka", true)
-        );
+        return List.of(); // Definicje parametrów są teraz w kontrolerze instancji
     }
 
     @Override
     public String getPheromoneKey(String from, String to) {
         return (from != null ? from : "START") + "->" + to;
+    }
+
+    // --- Metody dla Symulowanego Wyżarzania ---
+
+    @Override
+    public List<String> generateRandomSolution() {
+        checkInitialized();
+        List<String> solution = new ArrayList<>();
+        int currentWeight = 0;
+        Random random = new Random();
+        List<String> shuffledElements = new ArrayList<>(this.elements);
+        Collections.shuffle(shuffledElements);
+
+        for (String item : shuffledElements) {
+            int itemWeight = getWeight(item);
+            // Z 50% szansą próbujemy dodać przedmiot, jeśli się zmieści
+            if (random.nextBoolean() && currentWeight + itemWeight <= capacity) {
+                solution.add(item);
+                currentWeight += itemWeight;
+            }
+        }
+        return solution;
+    }
+
+    @Override
+    public List<String> generateNeighborSolution(List<String> currentSolution) {
+        checkInitialized();
+        List<String> neighbor = new ArrayList<>(currentSolution);
+        Random random = new Random();
+        if (elements.isEmpty()) {
+            return neighbor;
+        }
+
+        // Prosta mutacja: losowo spróbuj dodać lub usunąć jeden przedmiot
+        String randomItem = elements.get(random.nextInt(elements.size()));
+
+        if (neighbor.contains(randomItem)) {
+            // Jeśli przedmiot jest w plecaku, usuwamy go
+            neighbor.remove(randomItem);
+        } else {
+            // Jeśli go nie ma, dodajemy go (isValidSolution sprawdzi później pojemność)
+            neighbor.add(randomItem);
+        }
+        return neighbor;
     }
 }

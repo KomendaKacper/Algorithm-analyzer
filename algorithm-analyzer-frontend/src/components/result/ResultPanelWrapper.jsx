@@ -1,35 +1,20 @@
-// src/components/result/ResultPanelWrapper.jsx
-
 import AlgorithmResultPanel from "./AlgorithmResultPanel";
-import '../../App.css'; // Dodajemy styl
+import '../../App.css'; 
 
-export default function ResultPanelWrapper({
-  algorithmResult,
-  isResultVisible,
-  setIsResultVisible,
-  addPanel,
-  onShowPheromones,
-}) {
-  if (!algorithmResult) return null;
+export default function ResultPanelWrapper({ results, addPanel }) {
+  if (!results || results.length === 0) return null;
 
   return (
     <div className="result-wrapper">
-      <div className="result-toggle">
-        <button
-          onClick={() => setIsResultVisible(!isResultVisible)}
-          className="toggle-button"
-        >
-          {isResultVisible ? "▲ Ukryj podsumowanie" : "▼ Pokaż podsumowanie"}
-        </button>
-      </div>
-
-      {isResultVisible && (
+      {/* Przekazujemy całą listę `results` do każdego panelu podrzędnego */}
+      {results.map((result, index) => (
         <AlgorithmResultPanel 
-          result={algorithmResult} 
+          key={result.algorithmName || index}
+          result={result} 
+          allResults={results} // <-- NOWY PROP: Przekazujemy wszystkie wyniki
           addPanel={addPanel}
-          onShowPheromones={onShowPheromones}
         />
-      )}
+      ))}
     </div>
   );
 }
