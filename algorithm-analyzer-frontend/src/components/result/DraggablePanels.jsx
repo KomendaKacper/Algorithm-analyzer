@@ -1,4 +1,5 @@
-// src/components/DraggablePanels.jsx
+// src/components/result/DraggablePanels.jsx
+
 import AcoIterationTable from "./AcoIterationTable";
 import { MetricChart } from "./charts/MetricChart";
 import { DistanceChart } from "./charts/DistanceChart";
@@ -34,67 +35,40 @@ export default function DraggablePanels({
     <>
       {openPanels.map((panel) => {
         const pos = panelPositions[panel.id] || {};
+        // --- POPRAWKA: Wyciągamy potrzebne dane z obiektu panel.data ---
+        const iterationData = panel.data?.iterationResults || [];
+        const algorithmName = panel.data?.algorithmName || "Algorytm";
+
         return (
           <div
             key={panel.id}
-            className={`draggable-panel ${
-              panel.type.startsWith("charts") ? "panel-charts" : "panel-table"
-            }`}
+            className={`draggable-panel ${panel.type.startsWith("charts") ? "panel-charts" : "panel-table"}`}
             style={{ top: pos.top, left: pos.left }}
           >
             <div className="panel-header" onMouseDown={(e) => startDrag(e, panel.id)}>
               <span className="panel-title">
-                {panel.type === "table" && "Tabela iteracji"}
-                {panel.type === "charts-distance" && "Wykres dystansów"}
-                {panel.type === "charts-time" && "Wykres czasu"}
-                {panel.type === "charts-gap" && "Różnica"}
-                {panel.type === "charts-violations" && "Naruszenia ograniczeń"}
-                {panel.type === "charts-diversity" && "Różnorodność [%]"}
-                {panel.type === "charts-stagnation" && "Zastój iteracji"}
+                {panel.type === "table" && "📊 Tabela iteracji"}
+                {panel.type === "charts-distance" && "📈 Wykresy wyników"}
+                {panel.type === "charts-diversity" && "🧬 Różnorodność"}
+                {panel.type === "charts-stagnation" && "⏳ Stagnacja"}
               </span>
-              <button className="panel-close-btn" onClick={() => removePanel(panel.id)}>
-                ✕
-              </button>
+              <button className="panel-close-btn" onClick={() => removePanel(panel.id)}>✕</button>
             </div>
 
             <div className="panel-content">
-              {panel.type === "table" && <AcoIterationTable data={panel.data.data || panel.data} />}
+              {panel.type === "table" && <AcoIterationTable data={iterationData} />}
+
               {panel.type === "charts-distance" && (
-                <DistanceChart
-                  data={panel.data.data || panel.data}
-                  algorithmName={panel.data.algorithmName || "ACO"}
-                  showAverage={false}
-                />
+                <DistanceChart data={iterationData} algorithmName={algorithmName} />
               )}
+
               {panel.type.startsWith("charts-") && panel.type !== "charts-distance" && (
                 <MetricChart
-                  data={panel.data.data}
-                  dataKey={
-                    panel.type === "charts-time"
-                      ? "executionDurationMs"
-                      : panel.type === "charts-gap"
-                      ? "gap"
-                      : panel.type === "charts-violations"
-                      ? "constraintViolations"
-                      : panel.type === "charts-diversity"
-                      ? "diversity"
-                      : "stagnation"
-                  }
-                  name={
-                    panel.type === "charts-time"
-                      ? "Czas [ms]"
-                      : panel.type === "charts-gap"
-                      ? "Różnica"
-                      : panel.type === "charts-violations"
-                      ? "Naruszenia ograniczeń"
-                      : panel.type === "charts-diversity"
-                      ? "Różnorodność [%]"
-                      : "Zastój iteracji"
-                  }
-                  color="#3498DB"
-                  trendColor="#2ECC71"
-                  algorithmName={panel.data.algorithmName || "ACO"}
-                  showTrend={true}
+                  data={iterationData}
+                  dataKey={panel.type === "charts-diversity" ? "diversity" : "stagnation"}
+                  name={panel.type === "charts-diversity" ? "Różnorodność" : "Stagnacja"}
+                  color={panel.type === "charts-diversity" ? "#9b59b6" : "#f1c40f"}
+                  algorithmName={algorithmName}
                 />
               )}
             </div>

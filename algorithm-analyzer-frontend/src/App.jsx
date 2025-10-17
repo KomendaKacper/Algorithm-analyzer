@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { getAlgorithms, executeAco } from "./api/algorithmApi";
+import { getAlgorithms, executeAlgorithm } from "./api/algorithmApi";
 
 import ControlPanel from "./components/input/ControlPanel";
-import ResultPanelWrapper from "./components/result/ResultPanelWrapper";
 import DraggablePanels from "./components/result/DraggablePanels";
 import AlgorithmOverlay from "./components/result/AlgorithmOverlay";
 
@@ -12,17 +11,17 @@ export default function App() {
   const [algorithms, setAlgorithms] = useState([]);
   const [algorithmResult, setAlgorithmResult] = useState(null);
   const [isAlgorithmRunning, setIsAlgorithmRunning] = useState(false);
-  const [isResultVisible, setIsResultVisible] = useState(true);
-
-  const [currentTask, setCurrentTask] = useState({
-    type: null, // "algorithm" lub "problem"
-    name: null,
-    problemName: null,
-    parameters: {},
-  });
 
   const [openPanels, setOpenPanels] = useState([]);
   const [panelPositions, setPanelPositions] = useState({});
+
+  const [currentTask, setCurrentTask] = useState({
+    type: null,
+    name: null,
+    problemName: null,
+    problemParameters: {},
+    algorithmParameters: {},
+  });
 
   useEffect(() => {
     const fetchAlgorithms = async () => {
@@ -30,36 +29,51 @@ export default function App() {
         const res = await getAlgorithms();
         setAlgorithms(res.data);
       } catch (err) {
-        console.error("Error loading algorithms:", err);
+        console.error("Błąd ładowania algorytmów:", err);
       }
     };
     fetchAlgorithms();
   }, []);
 
   const handleExecuteCurrentTask = async () => {
-    if (!currentTask?.type) return;
+    if (!currentTask?.name || !currentTask?.problemName) {
+      console.error("Nie można wykonać zadania: brak nazwy algorytmu lub problemu.");
+      return;
+    }
 
     setIsAlgorithmRunning(true);
-    setIsResultVisible(false);
+    setAlgorithmResult(null);
+
+    const payload = {
+      problemParameters: currentTask.problemParameters,
+      algorithmParameters: currentTask.algorithmParameters,
+    };
 
     try {
-      const res = await executeAco(currentTask.problemName, currentTask.parameters);
-      setAlgorithmResult(res.data);
-    } catch (err) {
-      console.error("Execution error:", err);
-      setAlgorithmResult({ success: false, errorMessage: err.message });
+      const response = await executeAlgorithm(
+        currentTask.name,
+        currentTask.problemName,
+        payload
+      );
+      setAlgorithmResult(response.data);
+    } catch (error) {
+      console.error("Błąd wykonania algorytmu:", error);
+      const errorData = error.response?.data || { 
+        success: false, 
+        errorMessage: error.message || "Błąd sieci lub serwera" 
+      };
+      setAlgorithmResult(errorData);
     } finally {
       setIsAlgorithmRunning(false);
-      setTimeout(() => setIsResultVisible(true), 500);
     }
   };
 
   const addPanel = (type, data) => {
-    const id = Date.now();
+    const id = `${type}-${Date.now()}`;
     setOpenPanels((prev) => [...prev, { id, type, data }]);
     setPanelPositions((prev) => ({
       ...prev,
-      [id]: { top: 120 + Object.keys(prev).length * 30, left: 120 + Object.keys(prev).length * 30 },
+      [id]: { top: 120 + Object.keys(prev).length * 30, left: 450 + Object.keys(prev).length * 30 },
     }));
   };
 
@@ -82,13 +96,7 @@ export default function App() {
           setCurrentTask={setCurrentTask}
           isAlgorithmRunning={isAlgorithmRunning}
           handleExecuteCurrentTask={handleExecuteCurrentTask}
-        />
-
-        <ResultPanelWrapper
-          algorithmResult={algorithmResult}
-          isResultVisible={isResultVisible}
-          setIsResultVisible={setIsResultVisible}
-          addPanel={addPanel}
+          addPanel={addPanel} // Prop `onShowPheromones` usunięty
         />
       </div>
 

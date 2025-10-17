@@ -2,12 +2,12 @@ import { useState } from "react";
 import { MetricChart } from "./MetricChart";
 
 export function DistanceChart({ data, algorithmName = "ACO" }) {
-  const [selected, setSelected] = useState("bestDistance");
+  const [selected, setSelected] = useState("bestScore");
 
   const options = [
-    { key: "bestDistance", label: "Najlepszy", color: "#4CAF50", trendColor: "#FFC107" },
-    { key: "averageDistance", label: "Średni", color: "#2196F3", trendColor: "#00BCD4" },
-    { key: "worstDistance", label: "Najgorszy", color: "#F44336", trendColor: "#FF5722" },
+    { key: "bestScore", label: "Najlepszy", color: "#4CAF50", trendColor: "#FFC107" },
+    { key: "averageScore", label: "Średni", color: "#2196F3", trendColor: "#00BCD4" },
+    { key: "worstScore", label: "Najgorszy", color: "#F44336", trendColor: "#FF5722" },
   ];
 
   return (

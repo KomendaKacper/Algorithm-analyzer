@@ -1,69 +1,54 @@
-// src/components/result/AlgorithmResultPanel.jsx
 import React from "react";
+import '../../App.css'; 
 
-export default function AlgorithmResultPanel({ result, addPanel, onShowPheromones }) {
+export default function AlgorithmResultPanel({ result, addPanel }) { // Prop `onShowPheromones` usunięty
   if (!result) return null;
-
-  const shortestDistance =
-    result.results?.shortestDistance !== undefined
-      ? Number(result.results.shortestDistance).toFixed(2)
-      : "-";
-
-  const hasPheromoneData = result.iterationResults?.some(
-    iter => iter.pheromoneSnapshot
-  );
+  
+  const formatSolution = (solution) => {
+    if (!solution || solution.length === 0) return "Brak danych";
+    const formatted = solution.join(" → ");
+    return `${formatted} → ${solution[0]}`;
+  };
 
   return (
     <div className="result-panel result-panel-top">
-      <h3>Wyniki algorytmu</h3>
-      {result.success && (
-        <div>
-          <p><strong>Ścieżka:</strong> {result.path?.join(" → ")}</p>
-          <p><strong>Najlepszy dystans:</strong> {result.results.bestFitness}</p>
+      <h3>Wynik końcowy: {result.algorithmName}</h3>
+      {result.success ? (
+        <div className="result-content">
+          <div className="result-metric">
+            <strong>🏆 Najlepszy wynik (dystans):</strong>
+            <span>{result.bestScore != null ? `${parseFloat(result.bestScore).toFixed(2)} km` : "Brak danych"}</span>
+          </div>
+          
+          <div className="result-metric">
+            <strong>⏱️ Czas wykonania:</strong>
+            <span>{result.executionDurationMs != null ? `${result.executionDurationMs.toFixed(2)} ms` : "Brak danych"}</span>
+          </div>
 
-          <div style={{ marginBottom: "10px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {/* 🔹 Tabela */}
-            <button className="result-button" onClick={() => addPanel("table", result.iterationResults)}>
-              Otwórz tabelę
-            </button>
+          <div className="result-metric full-width">
+            <strong>📍 Najlepsza znaleziona trasa:</strong>
+            <p className="solution-path">{formatSolution(result.bestSolution)}</p>
+          </div>
 
-            {/* 🔹 Wykresy podstawowe */}
-            <button className="result-button" onClick={() => addPanel("charts-distance", result.iterationResults)}>
-              Wykresy dystansów
+          <div className="result-buttons">
+            <button className="result-button" onClick={() => addPanel("table", result)}>
+              📊 Tabela iteracji
             </button>
-
-            {/* 🔹 Nowe metryki ACO */}
-            <button className="result-button" onClick={() => addPanel("charts-violations", result.iterationResults)}>
-              Niedopuszczalne ścieżki
+            <button className="result-button" onClick={() => addPanel("charts-distance", result)}>
+              📈 Wykresy wyników
             </button>
-            <button className="result-button" onClick={() => addPanel("charts-diversity", result.iterationResults)}>
-              Różnorodność ścieżek
+            <button className="result-button" onClick={() => addPanel("charts-diversity", result)}>
+              🧬 Różnorodność
             </button>
-            <button className="result-button" onClick={() => addPanel("charts-stagnation", result.iterationResults)}>
-              Zastój iteracji
+            <button className="result-button" onClick={() => addPanel("charts-stagnation", result)}>
+              ⏳ Stagnacja
             </button>
-
-            {/* 🔹 Wizualizacja feromonów */}
-            {hasPheromoneData && (
-              <button 
-                className="result-button"
-                style={{ 
-                  background: "linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)" 
-                }}
-                onClick={() => {
-                  onShowPheromones(result.iterationResults);
-                }}
-              >
-                🐜 Wizualizacja feromonów
-              </button>
-            )}
+            {/* Przycisk do wizualizacji feromonów został usunięty */}
           </div>
         </div>
-      )}
-
-      {!result.success && (
+      ) : (
         <div className="error">
-          <p>Błąd: {result.errorMessage || "Nieznany błąd"}</p>
+          <p><strong>Wystąpił błąd:</strong> {result.errorMessage || "Nieznany błąd serwera"}</p>
         </div>
       )}
     </div>

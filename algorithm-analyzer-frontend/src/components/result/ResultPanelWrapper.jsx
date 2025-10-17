@@ -1,5 +1,7 @@
-// src/components/ResultPanelWrapper.jsx
+// src/components/result/ResultPanelWrapper.jsx
+
 import AlgorithmResultPanel from "./AlgorithmResultPanel";
+import '../../App.css'; // Dodajemy styl
 
 export default function ResultPanelWrapper({
   algorithmResult,
@@ -11,13 +13,13 @@ export default function ResultPanelWrapper({
   if (!algorithmResult) return null;
 
   return (
-    <>
+    <div className="result-wrapper">
       <div className="result-toggle">
         <button
           onClick={() => setIsResultVisible(!isResultVisible)}
           className="toggle-button"
         >
-          {isResultVisible ? "▲ Ukryj wynik" : "▼ Pokaż wynik"}
+          {isResultVisible ? "▲ Ukryj podsumowanie" : "▼ Pokaż podsumowanie"}
         </button>
       </div>
 
@@ -28,6 +30,6 @@ export default function ResultPanelWrapper({
           onShowPheromones={onShowPheromones}
         />
       )}
-    </>
+    </div>
   );
 }

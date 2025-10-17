@@ -1,68 +1,129 @@
 package com.example.algorithm_analyzer.problems;
 
+import java.util.List;
 import java.util.Map;
 
 /**
- * Abstrakcyjna klasa bazowa dla problemów optymalizacyjnych
- * Zawiera wspólną logikę dla wszystkich problemów
+ * Opcjonalna klasa bazowa dla problemów.
+ * Dostarcza wspólną funkcjonalność i walidację.
  */
 public abstract class AbstractProblem implements Problem {
 
-    protected Map<String, Object> parameters;
     protected boolean initialized = false;
-
-    @Override
-    public void initialize(Map<String, Object> parameters) {
-        this.parameters = parameters;
-        this.initialized = true;
-        performInitialization();
-    }
-
-    /**
-     * Metoda do nadpisania przez konkretne implementacje
-     * Wywoływana po ustawieniu parametrów
-     */
-    protected abstract void performInitialization();
 
     /**
      * Sprawdza czy problem został zainicjalizowany
      */
     protected void checkInitialized() {
         if (!initialized) {
-            throw new IllegalStateException("Problem nie został zainicjalizowany. Wywołaj initialize() przed użyciem.");
+            throw new IllegalStateException(
+                    "Problem '" + getName() + "' nie został zainicjalizowany! " +
+                            "Wywołaj metodę initialize() przed użyciem."
+            );
         }
-    }
-
-    @Override
-    public String getPheromoneKey(String from, String to) {
-        return from + "-" + to;
     }
 
     /**
-     * Pomocnicza metoda do pobierania parametrów z bezpieczną konwersją typu
+     * Walidacja parametrów inicjalizacji
      */
-    protected <T> T getParameter(String key, T defaultValue, Class<T> type) {
-        if (parameters == null || !parameters.containsKey(key)) {
+    protected void validateParameter(Map<String, Object> parameters, String paramName, Class<?> expectedType) {
+        if (!parameters.containsKey(paramName)) {
+            throw new IllegalArgumentException(
+                    "Brak wymaganego parametru: " + paramName
+            );
+        }
+
+        Object value = parameters.get(paramName);
+        if (value == null) {
+            throw new IllegalArgumentException(
+                    "Parametr " + paramName + " nie może być null"
+            );
+        }
+
+        if (!expectedType.isInstance(value)) {
+            throw new IllegalArgumentException(
+                    "Parametr " + paramName + " ma nieprawidłowy typ. " +
+                            "Oczekiwano: " + expectedType.getSimpleName() +
+                            ", otrzymano: " + value.getClass().getSimpleName()
+            );
+        }
+    }
+
+    /**
+     * Konwersja mapy z różnymi typami liczbowymi na Map<String, Integer>
+     */
+    protected Map<String, Integer> convertToIntegerMap(Map<?, ?> map) {
+        java.util.Map<String, Integer> result = new java.util.HashMap<>();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String key = entry.getKey().toString();
+            Integer value = entry.getValue() instanceof Number
+                    ? ((Number) entry.getValue()).intValue()
+                    : Integer.parseInt(entry.getValue().toString());
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    /**
+     * Konwersja mapy z różnymi typami liczbowymi na Map<String, Double>
+     */
+    protected Map<String, Double> convertToDoubleMap(Map<?, ?> map) {
+        java.util.Map<String, Double> result = new java.util.HashMap<>();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String key = entry.getKey().toString();
+            Double value = entry.getValue() instanceof Number
+                    ? ((Number) entry.getValue()).doubleValue()
+                    : Double.parseDouble(entry.getValue().toString());
+            result.put(key, value);
+        }
+        return result;
+    }
+
+    /**
+     * Konwersja listy obiektów na listę stringów
+     */
+    protected List<String> convertToStringList(List<?> list) {
+        return list.stream()
+                .map(Object::toString)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    /**
+     * Bezpieczne pobranie parametru z domyślną wartością
+     */
+    @SuppressWarnings("unchecked")
+    protected <T> T getParameter(Map<String, Object> parameters, String key, T defaultValue) {
+        Object value = parameters.get(key);
+        if (value == null) {
             return defaultValue;
         }
-
-        Object value = parameters.get(key);
-        if (type.isInstance(value)) {
-            return type.cast(value);
+        try {
+            return (T) value;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException(
+                    "Nieprawidłowy typ parametru '" + key + "': " + e.getMessage()
+            );
         }
+    }
 
-        // Konwersja liczbowa
-        if (value instanceof Number) {
-            Number num = (Number) value;
-            if (type == Integer.class) {
-                return type.cast(num.intValue());
-            } else if (type == Double.class) {
-                return type.cast(num.doubleValue());
-            } else if (type == Long.class) {
-                return type.cast(num.longValue());
-            }
-        }
+    /**
+     * Domyślna implementacja klucza feromonowego
+     */
+    @Override
+    public String getPheromoneKey(String from, String to) {
+        return (from != null ? from : "START") + "->" + to;
+    }
 
-        return defaultValue;
+    /**
+     * Domyślnie problemy są minimalizacyjne
+     */
+    @Override
+    public boolean isMaximization() {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return getName() + " (" + (initialized ? "zainicjalizowany" : "niezainicjalizowany") + ")";
     }
 }

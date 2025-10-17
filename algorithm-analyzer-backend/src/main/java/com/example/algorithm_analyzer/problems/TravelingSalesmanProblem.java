@@ -1,117 +1,156 @@
 package com.example.algorithm_analyzer.problems;
 
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
-import com.example.algorithm_analyzer.enums.ParameterType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component
-public class TravelingSalesmanProblem implements Problem {
+@Component("travelingSalesmanProblem") // Ważne: nazwa komponentu musi pasować do problemName w JSON
+@Slf4j
+public class TravelingSalesmanProblem extends AbstractProblem implements Problem {
 
-    private List<String> elements;                     // miasta
-    private Map<String, Map<String, Double>> distances; // macierz odległości
+    private List<String> cities = new ArrayList<>();
+    private Map<String, Map<String, Double>> distances = new HashMap<>();
 
     @Override
     public String getName() {
-        return "TSP";
+        return "Traveling Salesman Problem (TSP)";
     }
 
     @Override
     public String getDescription() {
-        return "Problem komiwojażera - minimalizacja długości trasy odwiedzającej wszystkie miasta";
+        return "Problem komiwojażera polegający na znalezieniu najkrótszej trasy, która odwiedza każde miasto dokładnie raz i wraca do miasta startowego.";
     }
 
     @Override
-    public List<ParameterDefinition> getParameters() {
-        return List.of(
-                new ParameterDefinition(
-                        "cities",
-                        "Lista miast",
-                        ParameterType.LIST,
-                        null, null, null,
-                        "Podaj nazwy miast, np. [\"Warszawa\", \"Kraków\", \"Gdańsk\"]",
-                        true
-                ),
-                new ParameterDefinition(
-                        "distances",
-                        "Macierz odległości",
-                        ParameterType.MAP,
-                        null, null, null,
-                        "Podaj odległości między miastami w formacie JSON, np. {\"Warszawa\": {\"Kraków\": 300, \"Gdańsk\": 350}, ...}",
-                        true
-                )
-        );
+    public boolean isMaximization() {
+        return false; // Zawsze minimalizujemy dystans
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(Map<String, Object> parameters) {
-        // Pobranie listy miast
-        elements = (List<String>) parameters.get("cities");
+        log.info("Rozpoczynam inicjalizację TravelingSalesmanProblem...");
+        try {
+            // Bezpieczne pobieranie i rzutowanie parametrów
+            this.cities = convertToStringList(getParameter(parameters, "cities", new ArrayList<>()));
 
-        // Pobranie macierzy odległości
-        distances = (Map<String, Map<String, Double>>) parameters.get("distances");
-
-        // Walidacja: wszystkie miasta muszą mieć wpisy odległości do pozostałych
-        for (String city : elements) {
-            if (!distances.containsKey(city)) {
-                throw new IllegalArgumentException("Brak odległości dla miasta: " + city);
+            Object distancesObj = getParameter(parameters, "distances", new HashMap<>());
+            if (!(distancesObj instanceof Map)) {
+                throw new IllegalArgumentException("Parametr 'distances' musi być mapą (obiektem JSON).");
             }
-            for (String other : elements) {
-                if (!city.equals(other) && !distances.get(city).containsKey(other)) {
-                    throw new IllegalArgumentException(
-                            "Brak odległości z " + city + " do " + other
-                    );
+
+            this.distances = new HashMap<>();
+            ((Map<?, ?>) distancesObj).forEach((fromCity, toMapObj) -> {
+                if (fromCity != null && toMapObj instanceof Map) {
+                    Map<String, Double> innerMap = convertToDoubleMap((Map<?, ?>) toMapObj);
+                    this.distances.put(fromCity.toString(), innerMap);
                 }
+            });
+
+            // Kluczowa walidacja
+            if (this.cities.isEmpty()) {
+                log.error("Błąd inicjalizacji: Lista 'cities' jest pusta.");
+                this.initialized = false;
+                return;
             }
+            if (this.distances.isEmpty()) {
+                log.error("Błąd inicjalizacji: Mapa 'distances' jest pusta.");
+                this.initialized = false;
+                return;
+            }
+
+            this.initialized = true;
+            log.info("Inicjalizacja TSP zakończona pomyślnie. Załadowano {} miast.", this.cities.size());
+
+        } catch (ClassCastException e) {
+            log.error("Błąd rzutowania typów podczas inicjalizacji. Sprawdź strukturę JSON. Błąd: {}", e.getMessage(), e);
+            this.initialized = false;
+        } catch (Exception e) {
+            log.error("Krytyczny błąd podczas inicjalizacji TSP: {}", e.getMessage(), e);
+            this.initialized = false;
         }
-    }
-
-    @Override
-    public List<String> getAllElements() {
-        return elements != null ? elements : Collections.emptyList();
-    }
-
-    @Override
-    public String getStartElement() {
-        return elements != null && !elements.isEmpty() ? elements.get(0) : null;
-    }
-
-    @Override
-    public boolean isSolutionComplete(List<String> solution) {
-        return solution.size() == elements.size();
-    }
-
-    @Override
-    public List<String> getPossibleNextElements(String current, List<String> partialSolution) {
-        List<String> remaining = new ArrayList<>(elements);
-        remaining.removeAll(partialSolution);
-        return remaining;
     }
 
     @Override
     public double evaluateSolution(List<String> solution) {
-        double sum = 0;
+        checkInitialized();
+        if (solution == null || solution.size() < 2) return Double.MAX_VALUE;
+
+        double totalDistance = 0.0;
         for (int i = 0; i < solution.size() - 1; i++) {
-            String from = solution.get(i);
-            String to = solution.get(i + 1);
-            sum += distances.get(from).get(to);
+            totalDistance += getDistance(solution.get(i), solution.get(i + 1));
         }
-        return sum;
+        // Zamknięcie cyklu - powrót do miasta startowego
+        totalDistance += getDistance(solution.get(solution.size() - 1), solution.get(0));
+
+        return totalDistance;
     }
 
     @Override
     public boolean isValidSolution(List<String> solution) {
-        return solution.size() <= elements.size();
+        checkInitialized();
+        if (solution == null) return false;
+        // Poprawne rozwiązanie musi zawierać każde miasto dokładnie raz.
+        boolean isValid = new HashSet<>(solution).size() == cities.size() && solution.size() == cities.size();
+        if (!isValid) {
+            log.warn("Wykryto nieprawidłowe rozwiązanie. Oczekiwano {} unikalnych miast, ścieżka zawiera {} elementów ({} unikalnych). Ścieżka: {}",
+                    cities.size(), solution.size(), new HashSet<>(solution).size(), solution);
+        }
+        return isValid;
     }
 
     @Override
-    public String getPheromoneKey(String from, String to) {
-        return from + "->" + to;
+    public List<String> convertPathToSolution(List<String> path) {
+        return path;
+    }
+
+    @Override
+    public List<String> getPossibleNextElements(String current, List<String> visited) {
+        checkInitialized();
+        List<String> remainingCities = new ArrayList<>(cities);
+        remainingCities.removeAll(visited);
+        return remainingCities;
+    }
+
+    @Override
+    public boolean isSolutionComplete(List<String> path) {
+        checkInitialized();
+        return path != null && path.size() == cities.size();
     }
 
     @Override
     public double getHeuristicValue(String from, String to) {
-        return 1.0 / distances.get(from).get(to); // odwrotność odległości
+        double distance = getDistance(from, to);
+        if (distance <= 0 || distance >= Double.MAX_VALUE) {
+            return 0.0001;
+        }
+        return 1.0 / distance;
+    }
+
+    private double getDistance(String from, String to) {
+        return distances.getOrDefault(from, Collections.emptyMap()).getOrDefault(to, Double.MAX_VALUE);
+    }
+
+    @Override
+    public String getStartElement() {
+        checkInitialized();
+        return cities.isEmpty() ? null : cities.get(0);
+    }
+
+    @Override
+    public List<String> getAllElements() {
+        return new ArrayList<>(cities);
+    }
+
+    @Override
+    public String getPheromoneKey(String from, String to) {
+        return (from != null ? from : "START") + "->" + to;
+    }
+
+    @Override
+    public List<ParameterDefinition> getParameters() {
+        return List.of();
     }
 }
