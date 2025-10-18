@@ -2,21 +2,22 @@ import { useState } from "react";
 import Shuffle from "../../uiComponents/ShuffleHeader";
 import AlgorithmPanel from "./AlgorithmPanel";
 import ProblemPanel from "./ProblemPanel";
-import ResultPanelWrapper from "../result/ResultPanelWrapper";
 
 export default function ControlPanel({
-  algorithms, results, tasks, setTasks,
+  algorithms, tasks, setTasks,
   problemConfig, setProblemConfig,
-  isAlgorithmRunning, handleExecuteCurrentTask, addPanel,
+  isAlgorithmRunning, handleExecuteCurrentTask,
 }) {
   const [isComparisonMode, setIsComparisonMode] = useState(false);
 
   const handleToggleComparison = () => {
     setIsComparisonMode(prev => {
       const newMode = !prev;
-      // Przy wyłączeniu trybu porównawczego, zostaw tylko pierwszy algorytm
       if (!newMode && tasks.length > 1) {
         setTasks([tasks[0]]);
+      } else if (newMode && tasks.length < 2) {
+        // Dodaj pusty slot na drugi algorytm
+        setTasks(prev => [...prev, {}]); 
       }
       return newMode;
     });
@@ -36,7 +37,7 @@ export default function ControlPanel({
           </div>
           <div className="algorithm-panels-wrapper">
             <AlgorithmPanel
-              key={0} // Klucz jest ważny dla Reacta
+              key={0}
               panelId={0}
               algorithms={algorithms}
               tasks={tasks}
@@ -60,12 +61,13 @@ export default function ControlPanel({
       <button
         className="panel-button"
         onClick={handleExecuteCurrentTask}
-        disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t.name) || isAlgorithmRunning}
+        disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
       >
         {isAlgorithmRunning ? "Pracuję..." : "🚀 Wykonaj Analizę"}
       </button>
 
-      {results.length > 0 && <ResultPanelWrapper results={results} addPanel={addPanel} />}
+      {/* Panel wyników został przeniesiony do App.jsx */}
     </div>
   );
 }
+

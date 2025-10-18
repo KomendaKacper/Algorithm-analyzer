@@ -1,341 +1,260 @@
-/* 🔹 Główne kontenery */
-.app-container {
+/* ==========================================================================
+   1. Design System & Global Styles
+   ========================================================================== */
+
+:root {
+  /* Paleta Kolorów */
+  --color-primary: #3b82f6; /* Niebieski jako główny akcent */
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
+  --color-background: #f8fafc; /* Bardzo jasny szary, prawie biały */
+  --color-surface: #ffffff;   /* Kolor powierzchni paneli bocznych */
+  --color-surface-secondary: #f1f5f9; /* Tło dla bardziej złożonych kontrolek */
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-panel-header: #f9fafb;
+
+  /* Typografia */
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  
+  /* Cienie */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* Zaokrąglenia */
+  --border-radius: 8px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   2. Główny Layout Aplikacji & Zwijany Sidebar
+   ========================================================================== */
+
+.App {
+  display: grid;
+  /* --- ZMIANA: Szerokość sidebara kontrolowana przez zmienną CSS --- */
+  grid-template-columns: var(--sidebar-width, 400px) 1fr;
+  height: 100vh;
+  overflow: hidden;
+  transition: grid-template-columns 0.3s ease-in-out;
+}
+
+.sidebar {
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
   display: flex;
-  height: calc(100vh - 60px);
+  flex-direction: column;
+  height: 100vh;
+  position: relative; /* Potrzebne do pozycjonowania przycisku */
+  transition: width 0.3s ease-in-out;
 }
 
 .controls-panel {
-  width: 300px;
-  flex-shrink: 0;
+  padding: 24px;
   display: flex;
   flex-direction: column;
+  gap: 24px;
   overflow-y: auto;
-  background: #f8f9fa;
-  border-right: 1px solid #ddd;
-  z-index: 2;
-  height: 100vh;
-  padding: 20px;
+  flex-grow: 1;
+  transition: opacity 0.3s, visibility 0.3s;
 }
 
-.graph-container {
-  flex: 1;
+.main-content {
   position: relative;
-  overflow: hidden;
-  background: #fff;
+  overflow: auto;
+  padding: 32px;
 }
 
-.loading-message {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  font-size: 18px;
-  color: #666;
-}
-
-/* 🔹 Panele wyników */
-.result-panel-top,
-.result-panel-bottom {
+/* --- NOWE STYLE: Przycisk do zwijania sidebara --- */
+.sidebar-toggle {
   position: absolute;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  min-width: 250px;
-  max-height: 400px;   
-  overflow-y: auto;    
-  z-index: 10;
-}
-
-.result-panel-top {
-  top: 20px;
-  right: 20px;
-}
-
-.result-panel-bottom {
-  bottom: 20px;
-  right: 20px;
-}
-
-.result-panel h3 {
-  margin: 0 0 10px 0;
-  color: #333;
-}
-
-.result-panel .error {
-  color: #dc3545;
-}
-
-/* 🔹 Nagłówki i panele */
-.header-container {
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  border-bottom: 1px solid #ddd;
-  gap: 10px;
-  padding: 10px;
-}
-
-/* 🔹 Shuffle Header */
-.shuffle-parent {
-  display: inline-block;
-  white-space: normal;
-  word-wrap: break-word;
-  will-change: transform;
-  line-height: 1;
-  font-size: 2rem;
-  font-family: 'Press Start 2P', sans-serif;
-  text-transform: uppercase;
-  visibility: hidden;
-}
-
-.shuffle-parent.is-ready {
-  visibility: visible;
-}
-
-.shuffle-char-wrapper {
-  display: inline-block;
-  overflow: hidden;
-  vertical-align: baseline;
-  position: relative;
-}
-
-.shuffle-char-wrapper > span {
-  display: inline-flex;
-  will-change: transform;
-}
-
-.shuffle-char {
-  line-height: 1;
-  display: inline-block;
-  text-align: center;
-}
-
-/* 🔹 Inputs */
-.controls-input {
-  width: 40px;
-  height: 24px;
-}
-
-.input-group {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.input-error {
-  border: 1px solid #d93025 !important;
-  box-shadow: 0 0 0 3px rgba(217, 48, 37, 0.15);
-  transition: all 0.2s ease;
-}
-
-.input-error-text {
-  color: #d93025;
-  font-size: 12px;
-  margin-top: 5px;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-3px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* 🔹 Dynamiczne przesuwalne panele */
-.draggable-panel {
-  position: fixed;
-  max-height: 80vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15),
-              0 2px 8px rgba(0,0,0,0.1);
-  z-index: 1000;
-  transition: box-shadow 0.2s ease;
-  animation: panelFadeIn 0.3s ease-out;
-}
-
-.draggable-panel:hover {
-  box-shadow: 0 12px 48px rgba(0,0,0,0.25),
-              0 4px 12px rgba(0,0,0,0.15);
-}
-
-.draggable-panel.dragging {
-  box-shadow: 0 16px 64px rgba(0,0,0,0.3),
-              0 8px 24px rgba(0,0,0,0.2);
-  transition: none;
-}
-
-/* 🔹 Nagłówek panelu */
-.panel-header {
-  cursor: move;
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  user-select: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px 10px 0 0;
-}
-
-.panel-header:active {
-  cursor: grabbing;
-}
-
-.panel-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #ffffff;
+  top: 50%;
+  right: -16px; /* Wystaje poza sidebar */
+  transform: translateY(-50%);
+  z-index: 100;
+  width: 32px;
+  height: 48px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: none;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  justify-content: center;
+  color: var(--color-text-secondary);
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  transition: all 0.3s ease-in-out;
 }
-
-.panel-title-icon {
-  font-size: 18px;
-}
-
-/* 🔹 Przycisk zamykania */
-.panel-close-btn {
-  background: rgba(255, 255, 255, 0.2);
+.sidebar-toggle:hover {
+  background-color: var(--color-primary);
   color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
+  border-color: var(--color-primary);
+}
+.sidebar-toggle svg {
+  transition: transform 0.3s ease-in-out;
 }
 
-.panel-close-btn:hover {
-  background: rgba(231, 76, 60, 0.9);
-  transform: scale(1.05);
+/* --- NOWE STYLE: Stan zwiniętego sidebara --- */
+.App.sidebar-collapsed {
+  --sidebar-width: 0px;
+}
+.App.sidebar-collapsed .controls-panel {
+  opacity: 0;
+  visibility: hidden;
+  padding: 0;
+}
+.App.sidebar-collapsed .sidebar-toggle {
+  right: -32px; /* Przesuwamy przycisk, aby był w pełni widoczny */
+}
+.App.sidebar-collapsed .sidebar-toggle svg {
+  transform: rotate(180deg);
 }
 
-.panel-close-btn:active {
-  transform: scale(0.95);
-}
 
-/* 🔹 Zawartość panelu */
-.panel-content {
+/* ==========================================================================
+   3. Komponenty UI (Przyciski, Formularze) - bez zmian
+   ========================================================================== */
+.form-group { display: flex; flex-direction: column; gap: 8px; }
+.form-group label, .input-group label { font-weight: 500; font-size: 0.875rem; color: var(--color-text-secondary); }
+.input, .select, .controls-input, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--border-radius); background-color: var(--color-surface); transition: border-color 0.2s, box-shadow 0.2s; font-size: 0.9rem; }
+.input:focus, .select:focus, .controls-input:focus, textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+.input-group { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.input-group .controls-input { width: 80px; }
+.panel-button { background: var(--color-primary); color: white; font-weight: 600; font-size: 1rem; padding: 12px 20px; border: none; border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s, transform 0.1s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto; }
+.panel-button:hover { background: var(--color-primary-dark); }
+.panel-button:active { transform: scale(0.98); }
+.panel-button:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
+
+/* ==========================================================================
+   4. Panele Konfiguracyjne (Sidebar) - bez zmian
+   ========================================================================== */
+.panel { background-color: var(--color-surface-secondary); border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.panel h3, .panel h4 { margin: 0; font-size: 1.1rem; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border); padding-bottom: 12px; }
+.comparison-toggle { display: flex; align-items: center; justify-content: space-between; background-color: var(--color-surface); padding: 12px; border-radius: var(--border-radius); border: 1px solid var(--color-border); }
+.comparison-toggle input[type="checkbox"] { width: 40px; height: 22px; appearance: none; background: #ccc; border-radius: 20px; position: relative; cursor: pointer; transition: background-color 0.2s; }
+.comparison-toggle input[type="checkbox"]::before { content: ''; width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.2s; }
+.comparison-toggle input:checked { background: var(--color-primary); }
+.comparison-toggle input:checked::before { transform: translateX(18px); }
+.algorithm-panels-wrapper { display: flex; flex-direction: column; gap: 16px; }
+.tsp-config-container, .knapsack-config-container { display: flex; flex-direction: column; gap: 16px; }
+.divider { border: none; border-top: 1px solid var(--color-border); margin: 8px 0; }
+textarea.error-json { border-color: var(--color-error); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+.error-message { color: var(--color-error); font-size: 0.8rem; }
+.info-text { font-size: 0.8rem; color: var(--color-text-secondary); text-align: center; padding: 8px; }
+.knapsack-config-container .tab-buttons { display: flex; gap: 8px; }
+.knapsack-config-container .tab-button { flex-grow: 1; padding: 8px 12px; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: var(--border-radius); cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+.knapsack-config-container .tab-button.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+
+
+/* ==========================================================================
+   5. Panele Wyników (Main Content)
+   ========================================================================== */
+
+.result-buttons-wrapper { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--border-radius); box-shadow: var(--shadow-md); padding: 20px 24px; margin-bottom: 32px; }
+.result-buttons-wrapper h3 { font-size: 1.2rem; margin: 0 0 16px 0; color: var(--color-text-primary); }
+.result-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px; }
+
+/* --- ZMIENIONY BLOK: Style dla panelu wyników i jego nagłówka --- */
+.result-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease-in-out;
+  overflow: hidden; /* Ważne dla animacji zwijania */
+}
+.result-panel:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+.result-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 16px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1;
-  user-select: text;
-  cursor: auto;
-  background: #fafafa;
+  border-bottom: 1px solid var(--color-border);
 }
+.result-panel h3 { font-size: 1.1rem; padding: 0; border-bottom: none; margin: 0; }
 
-/* Scrollbar styling */
-.panel-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.panel-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 0 0 10px 0;
-}
-
-.panel-content::-webkit-scrollbar-thumb {
-  background: #3498db;
-  border-radius: 4px;
-  transition: background 0.2s ease;
-}
-
-.panel-content::-webkit-scrollbar-thumb:hover {
-  background: #2980b9;
-}
-
-/* 🔹 Warianty kolorystyczne i szerokości */
-.draggable-panel.panel-table {
-  width: min(90vw, 600px); /* węższy */
-  border: 2px solid #3498db;
-}
-
-.draggable-panel.panel-table .panel-header {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-}
-
-.draggable-panel.panel-charts {
-  width: min(90vw, 1400px); /* szerszy */
-  border: 2px solid #9b59b6;
-}
-
-.draggable-panel.panel-charts .panel-header {
-  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-}
-
-.draggable-panel.panel-charts .panel-content::-webkit-scrollbar-thumb {
-  background: #9b59b6;
-}
-
-.draggable-panel.panel-charts .panel-content::-webkit-scrollbar-thumb:hover {
-  background: #8e44ad;
-}
-
-/* 🔹 Animacja pojawienia się panelu */
-@keyframes panelFadeIn {
-  from { opacity: 0; transform: scale(0.9) translateY(-20px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* 🔹 Responsywność */
-@media (max-width: 768px) {
-  .draggable-panel.panel-table,
-  .draggable-panel.panel-charts {
-    width: 95vw;
-    max-height: 70vh;
-  }
-
-  .panel-header {
-    padding: 10px 12px;
-  }
-
-  .panel-title {
-    font-size: 14px;
-  }
-
-  .panel-content {
-    padding: 12px;
-  }
-}
-
-/* 🔹 Przycisk wyników */
-.result-button {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: #ffffff;
+.panel-minimize-button {
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-right: 10px;
+  color: var(--color-text-secondary);
+  padding: 0;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s, color 0.2s;
+}
+.panel-minimize-button:hover { color: var(--color-primary); }
+
+.result-content { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* --- NOWE STYLE: Stan zminimalizowanego panelu --- */
+.result-panel.minimized {
+  /* Style zostają, ale treść jest ukryta, a wysokość się dostosowuje */
+}
+.result-panel.minimized .panel-minimize-button {
+  transform: rotate(45deg);
 }
 
-.result-button:last-child {
-  margin-right: 0;
-}
+.result-metric { display: flex; flex-direction: column; gap: 4px; }
+.result-metric strong { font-size: 0.9rem; color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; }
+.result-metric span { font-weight: 600; font-size: 1.2rem; }
+.result-metric.full-width { grid-column: 1 / -1; }
+.solution-path { font-family: 'Fira Code', monospace; font-size: 0.9rem !important; background: var(--color-surface-secondary); padding: 8px 12px; border-radius: var(--border-radius); word-break: break-all; }
+.result-buttons { grid-column: 1 / -1; border-top: 1px solid var(--color-border); padding-top: 16px; display: flex; flex-wrap: wrap; gap: 12px; }
+.result-button { padding: 8px 16px; border: 1px solid var(--color-border); border-radius: var(--border-radius); font-weight: 500; cursor: pointer; transition: all 0.2s; background-color: var(--color-surface); display: flex; align-items: center; gap: 8px; }
+.result-button:hover { background-color: var(--color-surface-secondary); border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-2px); }
 
-.result-button:hover {
-  background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%);
-  transform: scale(1.05);
-}
 
-.result-button:active {
-  transform: scale(0.95);
-}
+/* ==========================================================================
+   6. Przeciągane Panele i Wykresy - bez zmian
+   ========================================================================== */
+.draggable-panel { position: absolute; display: flex; flex-direction: column; background: var(--color-surface); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); z-index: 100; transition: box-shadow 0.2s; }
+.draggable-panel:hover { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); }
+.panel-header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); cursor: grab; user-select: none; }
+.panel-header:active { cursor: grabbing; }
+.panel-title { font-weight: 600; }
+.panel-close-btn { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-secondary); padding: 0; line-height: 1; width: 24px; height: 24px; }
+.panel-close-btn:hover { color: var(--color-error); }
+.panel-content { padding: 16px; overflow: auto; flex-grow: 1; }
+.draggable-panel.panel-table { width: 800px; height: 500px; }
+.draggable-panel.panel-charts { width: 900px; height: 450px; }
+.chart-container, .iteration-table-container { width: 100%; height: 100%; }
+.chart-container h4, .iteration-table-container h4 { margin-bottom: 16px; text-align: center; }
+.chart-placeholder { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--color-text-secondary); }
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--color-border); }
+th { background-color: var(--color-surface-secondary); font-weight: 600; position: sticky; top: 0; }
+tbody tr:hover { background-color: #f0f7ff; }
+
+/* ==========================================================================
+   7. Nakładka "Pracuję..." i Inne - bez zmian
+   ========================================================================== */
+.algorithm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.7); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+.shuffle-parent { font-size: 1.5rem; font-weight: 700; text-align: center; padding-bottom: 24px; color: var(--color-text-primary); }
 
 .falling-text-container {
   position: relative;
@@ -367,52 +286,4 @@
   top: 0;
   left: 0;
   z-index: 0;
-}
-
-.algorithm-overlay {
-  position: fixed; /* overlay nad wszystkimi elementami */
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.1); /* półprzezroczyste tło opcjonalnie */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000; /* wyższy niż draggable panels */
-}
-
-/* 🔹 Przycisk wyświetlania wyniku */
-.toggle-button {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 18px;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.toggle-button:hover {
-  background: linear-gradient(135deg, #2980b9 0%, #1f6391 100%);
-  transform: scale(1.05);
-}
-
-.toggle-button:active {
-  transform: scale(0.95);
-}
-
-.result-toggle {
-  position: fixed;         /* fixed do przyczepienia w określonym miejscu */
-  top: 20px;               /* odległość od góry */
-  right: 20px;             /* odległość od prawej */
-  z-index: 20; 
-  display: inline-block;   /* dopasowuje szerokość i wysokość do treści */
-  padding: 8px 16px;       /* mniejszy padding */
-  height: auto;            /* automatyczna wysokość */
 }
