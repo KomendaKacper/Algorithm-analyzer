@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.HashMap; // Potrzebny import
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -31,8 +32,6 @@ public class ComparisonController {
             @RequestBody ComparisonRequest request
     ) {
         log.info("Rozpoczynanie analizy porównawczej dla problemu: {}", problemName);
-        log.debug("Otrzymano problem parameters: {}", request.getProblemParameters());
-        log.debug("Otrzymano {} konfiguracji algorytmów.", request.getAlgorithms().size());
 
         Problem problem = problemService.getProblemByName(problemName);
         if (problem == null) {
@@ -40,13 +39,37 @@ public class ComparisonController {
         }
 
         List<AlgorithmResult> results = new ArrayList<>();
+        // --- KLUCZOWA ZMIANA: Mapa do śledzenia liczby wystąpień każdej nazwy algorytmu ---
+        Map<String, Integer> nameCounts = new HashMap<>();
+
+        // Sprawdzamy, które nazwy algorytmów w ogóle się powtarzają w żądaniu
+        Map<String, Long> totalOccurrences = new HashMap<>();
+        for (AlgorithmExecutionRequest algoRequest : request.getAlgorithms()) {
+            totalOccurrences.merge(algoRequest.getName(), 1L, Long::sum);
+        }
 
         for (AlgorithmExecutionRequest algoRequest : request.getAlgorithms()) {
-            log.info("Wykonywanie algorytmu: {}", algoRequest.getName());
-            Algorithm algorithm = algorithmService.getAlgorithmByName(algoRequest.getName())
-                    .orElseThrow(() -> new NoSuchElementException("Nie znaleziono algorytmu: " + algoRequest.getName()));
+            String originalName = algoRequest.getName();
+            log.info("Wykonywanie algorytmu: {}", originalName);
 
+            Algorithm algorithm = algorithmService.getAlgorithmByName(originalName)
+                    .orElseThrow(() -> new NoSuchElementException("Nie znaleziono algorytmu: " + originalName));
+
+            // Wykonaj algorytm jak poprzednio
             AlgorithmResult result = algorithm.execute(problem, request.getProblemParameters(), algoRequest.getParameters());
+
+            // --- KLUCZOWA ZMIANA: Tworzenie unikalnej etykiety ---
+            // Jeśli dana nazwa występuje więcej niż raz w całym żądaniu...
+            if (totalOccurrences.getOrDefault(originalName, 0L) > 1) {
+                int currentCount = nameCounts.getOrDefault(originalName, 0) + 1;
+                nameCounts.put(originalName, currentCount);
+                // ...to stwórz unikalną etykietę, np. "Ant Colony Optimization (ACO) [#1]"
+                String uniqueName = String.format("%s [#%d]", originalName, currentCount);
+                // i ustaw ją w obiekcie wyniku.
+                result.setAlgorithmName(uniqueName);
+            }
+            // Jeśli nazwa jest unikalna, nic nie zmieniamy - `result.getAlgorithmName()` ma już poprawną wartość.
+
             results.add(result);
         }
 
@@ -54,7 +77,6 @@ public class ComparisonController {
         return ResponseEntity.ok(results);
     }
 
-    // Upewnij się, że ta klasa jest publiczna i statyczna, aby Jackson nie miał problemów
     @Data
     public static class ComparisonRequest {
         private Map<String, Object> problemParameters;

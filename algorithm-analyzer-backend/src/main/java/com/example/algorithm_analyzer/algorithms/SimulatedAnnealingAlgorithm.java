@@ -1,9 +1,8 @@
 package com.example.algorithm_analyzer.algorithms;
 
-import com.example.algorithm_analyzer.algorithms.Algorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
+import com.example.algorithm_analyzer.dto.IterationResult;
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
-import com.example.algorithm_analyzer.dto.SaIterationResult;
 import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import lombok.extern.slf4j.Slf4j;
@@ -52,8 +51,8 @@ public class SimulatedAnnealingAlgorithm implements Algorithm {
 
             SaResult saResult = runSA(problem, initialTemperature, coolingRate, stoppingTemperature, iterationsPerTemp);
 
-            result.setBestSolution(saResult.bestSolution, saResult.bestScore);
-            result.setIterationResults(saResult.iterationResults);
+            result.setBestSolution(saResult.bestSolution(), saResult.bestScore());
+            result.setIterationResults(new ArrayList<>(saResult.iterationResults()));
             result.setSuccess(true);
 
         } catch (Exception e) {
@@ -68,6 +67,11 @@ public class SimulatedAnnealingAlgorithm implements Algorithm {
 
     private SaResult runSA(Problem problem, double initialTemperature, double coolingRate, double stoppingTemperature, int iterationsPerTemp) {
         List<String> currentSolution = problem.generateRandomSolution();
+
+        if (!problem.isValidSolution(currentSolution)) {
+            log.warn("Wygenerowano niepoprawne rozwiązanie początkowe dla SA. Może być puste.");
+        }
+
         double currentScore = problem.evaluateSolution(currentSolution);
 
         List<String> bestSolution = new ArrayList<>(currentSolution);
@@ -75,12 +79,17 @@ public class SimulatedAnnealingAlgorithm implements Algorithm {
         boolean maximize = problem.isMaximization();
 
         double temperature = initialTemperature;
-        List<Object> iterationResults = new ArrayList<>();
+        List<IterationResult> iterationResults = new ArrayList<>();
         int iteration = 0;
+        int lastImprovementIter = 0;
+        int improvementCount = 0;
+
 
         while (temperature > stoppingTemperature) {
             long iterStartTime = System.nanoTime();
             int acceptedWorseMoves = 0;
+            double oldBestScore = bestScore;
+            double relativeImprovement = 0.0;
 
             for (int i = 0; i < iterationsPerTemp; i++) {
                 List<String> neighborSolution = problem.generateNeighborSolution(currentSolution);
@@ -88,49 +97,53 @@ public class SimulatedAnnealingAlgorithm implements Algorithm {
                     continue;
                 }
                 double neighborScore = problem.evaluateSolution(neighborSolution);
-
                 double deltaScore = maximize ? neighborScore - currentScore : currentScore - neighborScore;
 
-                if (deltaScore > 0) { // Lepsze rozwiązanie (większe dla max, mniejsze dla min)
-                    currentSolution = neighborSolution;
+                if (deltaScore > 0) {
+                    currentSolution = new ArrayList<>(neighborSolution);
                     currentScore = neighborScore;
                     if (maximize ? currentScore > bestScore : currentScore < bestScore) {
                         bestScore = currentScore;
                         bestSolution = new ArrayList<>(currentSolution);
+                        lastImprovementIter = iteration;
+                        improvementCount++;
                     }
-                } else if (Math.exp(deltaScore / temperature) > Math.random()) { // Gorsze rozwiązanie, ale akceptowalne
-                    currentSolution = neighborSolution;
+                } else if (Math.exp(deltaScore / temperature) > Math.random()) {
+                    currentSolution = new ArrayList<>(neighborSolution);
                     currentScore = neighborScore;
                     acceptedWorseMoves++;
                 }
             }
 
-            iterationResults.add(new SaIterationResult(
-                    iteration++,
-                    temperature,
-                    new ArrayList<>(bestSolution),
-                    bestScore,
-                    currentScore,
-                    acceptedWorseMoves,
-                    (System.nanoTime() - iterStartTime) / 1_000_000.0
-            ));
+            // Oblicz względną poprawę dla całego kroku temperaturowego
+            if (bestScore != oldBestScore && Double.isFinite(oldBestScore) && oldBestScore != 0) {
+                relativeImprovement = Math.abs((bestScore - oldBestScore) / oldBestScore);
+            }
 
-            temperature *= coolingRate; // Schładzanie
+            iterationResults.add(
+                    IterationResult.builder()
+                            .iteration(iteration)
+                            .bestScore(bestScore)
+                            .bestSolution(new ArrayList<>(bestSolution))
+                            .currentScore(currentScore)
+                            .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
+                            .specificMetrics(Map.of(
+                                    "exploration", (double) acceptedWorseMoves,
+                                    "stagnation", iteration - lastImprovementIter,
+                                    "improvements", improvementCount,
+                                    "relativeImprovement", relativeImprovement,
+                                    "temperature", temperature
+                            ))
+                            .build()
+            );
+
+            temperature *= coolingRate;
+            iteration++;
         }
 
         return new SaResult(bestSolution, bestScore, iterationResults);
     }
 
-    // Klasy wewnętrzne do przechowywania wyników
-    private static class SaResult {
-        final List<String> bestSolution;
-        final double bestScore;
-        final List<Object> iterationResults;
-
-        SaResult(List<String> bestSolution, double bestScore, List<Object> iterationResults) {
-            this.bestSolution = bestSolution;
-            this.bestScore = bestScore;
-            this.iterationResults = iterationResults;
-        }
-    }
+    private record SaResult(List<String> bestSolution, double bestScore, List<IterationResult> iterationResults) {}
 }
+

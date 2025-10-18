@@ -1,58 +1,76 @@
-import { useMemo } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import React from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { CHART_COLORS } from './chartColors'; // Załóżmy, że masz zdefiniowane kolory
 
-const COLORS = ["#3498db", "#e74c3c", "#2ecc71", "#f1c40f", "#9b59b6"];
+export function MetricChart({ results, dataKey, name }) {
+  if (!results || results.length === 0) {
+    return <div className="chart-placeholder">Brak danych do wyświetlenia.</div>;
+  }
 
-// Zmieniamy props: `data` na `results`
-export const MetricChart = ({ results, dataKey, name }) => {
+  // Sprawdź, czy dane dla tego klucza w ogóle istnieją
+  const firstResult = results[0]?.iterationResults?.[0];
+  if (!firstResult) {
+      return <div className="chart-placeholder">Brak wyników iteracji.</div>;
+  }
 
-  const combinedData = useMemo(() => {
-    if (!results || results.length === 0) return [];
-    
-    const dataMap = new Map();
-    results.forEach((result) => {
-      if (!result.success || !result.iterationResults) return;
-      
-      result.iterationResults.forEach(iter => {
-        if (!dataMap.has(iter.iteration)) {
-          dataMap.set(iter.iteration, { iteration: iter.iteration });
-        }
-        const point = dataMap.get(iter.iteration);
-        point[`${dataKey}_${result.algorithmName}`] = iter[dataKey];
-      });
+  // --- KLUCZOWA ZMIANA: Sprawdzamy, gdzie znajduje się klucz danych ---
+  const isSpecificMetric = firstResult.specificMetrics?.hasOwnProperty(dataKey);
+  if (!isSpecificMetric && !firstResult.hasOwnProperty(dataKey)) {
+      return <div className="chart-placeholder">Brak danych dla metryki: {name}.</div>;
+  }
+
+  // Przygotuj dane do wykresu - wyciągnij maksymalną długość iteracji
+  const maxIterations = Math.max(...results.map(r => r.iterationResults?.length || 0));
+  const chartData = [];
+
+  for (let i = 0; i < maxIterations; i++) {
+    const dataPoint = { iteration: i };
+    results.forEach(result => {
+      if (result.iterationResults && result.iterationResults[i]) {
+        const iteration = result.iterationResults[i];
+        
+        // --- KLUCZOWA ZMIANA: Uniwersalny sposób dostępu do danych ---
+        // Szukaj klucza najpierw w specificMetrics, a jeśli go tam nie ma, to na głównym poziomie.
+        const value = isSpecificMetric 
+            ? iteration.specificMetrics?.[dataKey] 
+            : iteration[dataKey];
+            
+        // Używamy unikalnej nazwy algorytmu (np. "ACO [#1]") jako klucza
+        dataPoint[result.algorithmName] = value;
+      }
     });
-
-    return Array.from(dataMap.values()).sort((a, b) => a.iteration - b.iteration);
-  }, [results, dataKey]);
-  
-  if (combinedData.length === 0) {
-    return <div style={{ textAlign: "center", color: "#999", margin: "2em 0" }}>Brak danych do wyświetlenia.</div>;
+    chartData.push(dataPoint);
   }
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <LineChart data={combinedData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="iteration" label={{ value: "Iteracja", position: "insideBottom", dy: 10 }} />
-        <YAxis label={{ value: name, angle: -90, position: "insideLeft" }} allowDecimals={false} />
-        <Tooltip formatter={(value) => typeof value === 'number' ? value.toFixed(2) : value} />
-        <Legend />
-
-        {/* Dynamiczne renderowanie linii dla każdego wyniku */}
-        {results.map((result, index) => (
-          result.success && (
+    <div className="chart-container">
+      <h4>{name} w kolejnych iteracjach</h4>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart
+          data={chartData}
+          margin={{ top: 5, right: 30, left: 20, bottom: 25 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="iteration" label={{ value: 'Iteracja', position: 'insideBottom', offset: -15 }} />
+          <YAxis label={{ value: name, angle: -90, position: 'insideLeft' }} />
+          <Tooltip
+            formatter={(value) => typeof value === 'number' ? value.toFixed(3) : value}
+            labelFormatter={(label) => `Iteracja: ${label}`}
+          />
+          <Legend wrapperStyle={{ position: 'relative', marginTop: '10px' }} />
+          {results.map((result, index) => (
             <Line
               key={result.algorithmName}
               type="monotone"
-              dataKey={`${dataKey}_${result.algorithmName}`}
-              name={result.algorithmName}
-              stroke={COLORS[index % COLORS.length]}
-              dot={false}
+              dataKey={result.algorithmName}
+              stroke={CHART_COLORS[index % CHART_COLORS.length]}
               strokeWidth={2}
+              dot={false}
+              name={result.algorithmName}
             />
-          )
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
-};
+}
