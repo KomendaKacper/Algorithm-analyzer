@@ -13,7 +13,8 @@ export default function App() {
   const [isAlgorithmRunning, setIsAlgorithmRunning] = useState(false);
   
   const [problemConfig, setProblemConfig] = useState({ name: null, parameters: {} });
-  const [tasks, setTasks] = useState([]);
+  // --- ZMIANA: Inicjalizujemy stan z jednym panelem konfiguracyjnym ---
+  const [tasks, setTasks] = useState([{}]);
 
   const [openPanels, setOpenPanels] = useState([]);
   const [panelPositions, setPanelPositions] = useState({});
@@ -56,7 +57,6 @@ export default function App() {
   
   const addPanel = (type, data) => {
     const id = `${type}-${Date.now()}`;
-    // --- ZMIANA: Dodajemy flagę 'minimized' do nowo tworzonych paneli ---
     setOpenPanels(prev => [...prev, { id, type, data, minimized: false }]);
     const panelStartLeft = isSidebarCollapsed ? 80 : 450;
     setPanelPositions(prev => ({
@@ -69,7 +69,6 @@ export default function App() {
     setOpenPanels(prev => prev.filter((p) => p.id !== id));
   };
 
-  // --- NOWA FUNKCJA: Przełączanie stanu minimalizacji dla paneli wykresów ---
   const togglePanelMinimize = (id) => {
     setOpenPanels(prev => 
       prev.map(p => (p.id === id ? { ...p, minimized: !p.minimized } : p))
@@ -109,7 +108,6 @@ export default function App() {
               panelPositions={panelPositions}
               setPanelPositions={setPanelPositions}
               removePanel={removePanel}
-              // --- ZMIANA: Przekazujemy funkcję do przełączania minimalizacji ---
               toggleMinimize={togglePanelMinimize}
             />
         </div>

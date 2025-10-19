@@ -1,26 +1,19 @@
-import { useState } from "react";
-import Shuffle from "../../uiComponents/ShuffleHeader";
 import AlgorithmPanel from "./AlgorithmPanel";
 import ProblemPanel from "./ProblemPanel";
+import Shuffle from "../../uiComponents/ShuffleHeader";
 
 export default function ControlPanel({
   algorithms, tasks, setTasks,
   problemConfig, setProblemConfig,
   isAlgorithmRunning, handleExecuteCurrentTask,
 }) {
-  const [isComparisonMode, setIsComparisonMode] = useState(false);
 
-  const handleToggleComparison = () => {
-    setIsComparisonMode(prev => {
-      const newMode = !prev;
-      if (!newMode && tasks.length > 1) {
-        setTasks([tasks[0]]);
-      } else if (newMode && tasks.length < 2) {
-        // Dodaj pusty slot na drugi algorytm
-        setTasks(prev => [...prev, {}]); 
-      }
-      return newMode;
-    });
+  const addAlgorithmPanel = () => {
+    setTasks(prevTasks => [...prevTasks, {}]);
+  };
+
+  const removeAlgorithmPanel = (panelIdToRemove) => {
+    setTasks(prevTasks => prevTasks.filter((_, index) => index !== panelIdToRemove));
   };
   
   return (
@@ -30,31 +23,23 @@ export default function ControlPanel({
       <div className="panels-container">
         <ProblemPanel setProblemConfig={setProblemConfig} />
 
-        <div className="comparison-container">
-          <div className="comparison-toggle">
-            <label>Tryb Porównawczy</label>
-            <input type="checkbox" checked={isComparisonMode} onChange={handleToggleComparison} />
-          </div>
-          <div className="algorithm-panels-wrapper">
+        <div className="algorithm-panels-wrapper">
+          {tasks.map((_, index) => (
             <AlgorithmPanel
-              key={0}
-              panelId={0}
+              key={index}
+              panelId={index}
               algorithms={algorithms}
               tasks={tasks}
               setTasks={setTasks}
               problemName={problemConfig.name}
+              onRemove={removeAlgorithmPanel}
+              canBeRemoved={tasks.length > 1}
             />
-            {isComparisonMode && (
-              <AlgorithmPanel
-                key={1}
-                panelId={1}
-                algorithms={algorithms}
-                tasks={tasks}
-                setTasks={setTasks}
-                problemName={problemConfig.name}
-              />
-            )}
-          </div>
+          ))}
+
+          <button onClick={addAlgorithmPanel} className="add-algorithm-button">
+            + Dodaj algorytm do porównania
+          </button>
         </div>
       </div>
 
@@ -65,8 +50,6 @@ export default function ControlPanel({
       >
         {isAlgorithmRunning ? "Pracuję..." : "🚀 Wykonaj Analizę"}
       </button>
-
-      {/* Panel wyników został przeniesiony do App.jsx */}
     </div>
   );
 }

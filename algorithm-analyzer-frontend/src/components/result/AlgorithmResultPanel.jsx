@@ -7,33 +7,39 @@ const problemConfig = {
   default: { isMaximization: true, solutionLabel: "Najlepsze rozwiązanie", scoreLabel: "Najlepszy wynik", unit: "", icon: "🏆", format: (solution) => solution && solution.length > 0 ? solution.join(", ") : "Brak danych" }
 };
 
-// --- ZMIANA: Komponent akceptuje nowe propsy 'isMinimized' i 'toggleMinimize' ---
-export default function AlgorithmResultPanel({ result, addPanel, allResults, isComparisonMode, isMinimized, toggleMinimize }) {
+// --- NOWA FUNKCJA POMOCNICZA: Do formatowania złożonych wartości ---
+const formatMetricValue = (value) => {
+    if (value == null) return "Brak danych";
+    if (typeof value === 'number') {
+        return value.toFixed(3);
+    }
+    if (typeof value === 'object') {
+        return Object.entries(value)
+            .map(([k, v]) => `${k}: ${formatMetricValue(v)}`)
+            .join(' | ');
+    }
+    return String(value);
+};
+
+export default function AlgorithmResultPanel({ result, addPanel, isComparisonMode, isMinimized, toggleMinimize }) {
   if (!result) return null;
 
   const config = problemConfig[result.problemName] || problemConfig.default;
   
-  const chartButtonsConfig = [
-    { type: "charts-score", label: "📈 Wykres Wyników", key: "bestScore", isSpecific: false },
-    { type: "charts-time", label: "🕒 Wykres Czasu", key: "executionDurationMs", isSpecific: false },
-    { type: "charts-exploration", label: "🧭 Wykres Eksploracji", key: "exploration", isSpecific: true },
-    { type: "charts-improvements", label: "🚀 Wykres Poprawy", key: "improvements", isSpecific: true },
-    { type: "charts-relative-improvement", label: "📊 Wykres Skoków", key: "relativeImprovement", isSpecific: true },
-    { type: "charts-stagnation", label: "⏳ Wykres Stagnacji", key: "stagnation", isSpecific: true },
+  const commonChartButtons = [
+    { type: "charts-score", label: "📈 Jakość / Trajektoria" },
+    { type: "charts-time", label: "🕒 Czas iteracji" },
+    { type: "charts-exploration", label: "🧭 Miara Eksploracji" },
+    { type: "charts-improvements", label: "🚀 Częstotliwość poprawy" },
+    { type: "charts-relative-improvement", label: "📊 Skoki Poprawy" },
+    { type: "charts-stagnation", label: "⏳ Stagnacja" },
   ];
-
-  const dataKeyExists = (key, isSpecific) => {
-    if (!result?.iterationResults?.[0]) return false;
-    if (isSpecific) {
-      return result.iterationResults[0].specificMetrics?.hasOwnProperty(key);
-    }
-    return result.iterationResults[0].hasOwnProperty(key);
-  };
+  
+  // Pobierz ostatni zestaw metryk
+  const lastIteration = result.iterationResults?.[result.iterationResults.length - 1];
 
   return (
-    // --- ZMIANA: Dynamiczna klasa dla zminimalizowanego panelu ---
     <div className={`result-panel ${isMinimized ? "minimized" : ""}`}>
-      {/* --- ZMIANA: Nagłówek teraz zawiera przycisk minimalizacji --- */}
       <div className="result-panel-header">
         <h3>Wynik: {result.algorithmName}</h3>
         <button onClick={toggleMinimize} className="panel-minimize-button" title={isMinimized ? "Rozwiń" : "Zwiń"}>
@@ -41,9 +47,9 @@ export default function AlgorithmResultPanel({ result, addPanel, allResults, isC
         </button>
       </div>
 
-      {/* --- ZMIANA: Treść renderowana warunkowo dla płynnej animacji (można też przez CSS) --- */}
       {!isMinimized && result.success ? (
         <div className="result-content">
+          {/* Metryki Główne */}
           <div className="result-metric">
             <strong>{config.icon} {config.scoreLabel}:</strong>
             <span>{result.bestScore != null ? `${parseFloat(result.bestScore).toFixed(2)} ${config.unit}`.trim() : "Brak danych"}</span>
@@ -56,21 +62,40 @@ export default function AlgorithmResultPanel({ result, addPanel, allResults, isC
             <strong>{config.icon} {config.solutionLabel}: </strong>
             <span className="solution-path">{config.format(result.bestSolution)}</span>
           </div>
+          
+          {/* --- NOWA SEKCJA: Charakterystyka Końcowa --- */}
+          {result.specificMetricLabels && lastIteration && (
+            <div className="result-metric full-width specific-metrics-summary">
+              <strong>Charakterystyka Końcowa:</strong>
+              <div className="specific-metrics-grid">
+                {Object.entries(result.specificMetricLabels).map(([key, label]) => (
+                  <div key={key} className="specific-metric-item">
+                    <span>{label}:</span>
+                    <strong>{formatMetricValue(lastIteration.specificMetrics?.[key])}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="result-buttons">
             <button className="result-button single-view" onClick={() => addPanel("table", result)}>
               📊 Pokaż tabelę iteracji
             </button>
-            {!isComparisonMode && chartButtonsConfig.map(btn => {
-              if (dataKeyExists(btn.key, btn.isSpecific)) {
-                return (
-                  <button key={btn.type} className="result-button compare-view" onClick={() => addPanel(btn.type, allResults)}>
-                    {btn.label}
+            {!isComparisonMode && (
+              <>
+                {commonChartButtons.map(btn => (
+                   <button key={btn.type} className="result-button compare-view" onClick={() => addPanel(btn.type, [result])}>
+                     {btn.label}
+                   </button>
+                ))}
+                {result.specificMetricLabels && Object.entries(result.specificMetricLabels).map(([key, label]) => (
+                  <button key={key} className="result-button specific-view" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
+                    {label}
                   </button>
-                );
-              }
-              return null;
-            })}
+                ))}
+              </>
+            )}
           </div>
         </div>
       ) : !isMinimized && (

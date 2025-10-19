@@ -1,25 +1,32 @@
 import React, { useMemo } from 'react';
 
-// Funkcja pomocnicza do formatowania wartości w tabeli
+// --- ZAKTUALIZOWANA, PANCERNA FUNKCJA FORMATUJĄCA ---
 const formatValue = (value) => {
+    if (value === undefined || value === null) {
+        return '—'; // Znak braku danych
+    }
     if (typeof value === 'number') {
+        if (Math.abs(value) < 1e-6 && value !== 0) {
+            return value.toExponential(2);
+        }
+        if (Number.isInteger(value)) {
+            return value.toString();
+        }
         return value.toFixed(3);
     }
-    if (typeof value === 'object' && value !== null) {
-        // Formatuje obiekty (np. pheromoneStats) do czytelnej postaci
+    // Bezpieczne formatowanie obiektu (np. pheromoneStats)
+    if (typeof value === 'object') {
         return Object.entries(value)
-            .map(([k, v]) => `${k}: ${typeof v === 'number' ? v.toFixed(2) : v}`)
-            .join(', ');
+            .map(([k, v]) => `${k}: ${formatValue(v)}`) // Rekurencyjne wywołanie
+            .join('; ');
     }
     return String(value);
 };
 
 export default function IterationTable({ data, problemName, algorithmName }) {
-    // --- KLUCZOWA ZMIANA: Dynamiczne generowanie nagłówków tabeli ---
     const headers = useMemo(() => {
         if (!data || data.length === 0) return [];
 
-        const firstRow = data[0];
         const baseHeaders = [
             { key: 'iteration', name: 'Iteracja' },
             { key: 'bestScore', name: 'Najlepszy Wynik' },
@@ -28,25 +35,27 @@ export default function IterationTable({ data, problemName, algorithmName }) {
             { key: 'worstScore', name: 'Najgorszy Wynik' },
         ];
         
-        const specificMetricHeaders = [];
-        if (firstRow.specificMetrics) {
-            for (const key in firstRow.specificMetrics) {
-                specificMetricHeaders.push({ key: key, name: key, isSpecific: true });
+        const allSpecificKeys = new Set();
+        data.forEach(row => {
+            if (row.specificMetrics) {
+                Object.keys(row.specificMetrics).forEach(key => allSpecificKeys.add(key));
             }
-        }
-        
-        // Zwracamy tylko te nagłówki, dla których istnieją dane w pierwszej iteracji
-        return [...baseHeaders, ...specificMetricHeaders].filter(h => {
-             if (h.isSpecific) {
-                return firstRow.specificMetrics?.[h.key] !== undefined;
-             }
-             return firstRow[h.key] !== undefined && firstRow[h.key] !== null;
         });
+
+        const specificMetricHeaders = Array.from(allSpecificKeys).map(key => ({ 
+            key: key, 
+            name: key.charAt(0).toUpperCase() + key.slice(1), // Estetyczna nazwa kolumny
+            isSpecific: true 
+        }));
+        
+        return [...baseHeaders, ...specificMetricHeaders].filter(h => 
+            data.some(row => h.isSpecific ? row.specificMetrics?.[h.key] != null : row[h.key] != null)
+        );
 
     }, [data]);
 
     if (!data || data.length === 0) {
-        return <p>Brak danych iteracyjnych do wyświetlenia.</p>;
+        return <p className="chart-placeholder">Brak danych iteracyjnych do wyświetlenia.</p>;
     }
 
     return (
@@ -73,3 +82,4 @@ export default function IterationTable({ data, problemName, algorithmName }) {
         </div>
     );
 }
+

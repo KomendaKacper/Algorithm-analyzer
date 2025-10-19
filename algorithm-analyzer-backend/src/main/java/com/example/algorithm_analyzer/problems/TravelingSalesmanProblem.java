@@ -3,31 +3,23 @@ package com.example.algorithm_analyzer.problems;
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component("travelingSalesmanProblem")
 @Slf4j
-public class TravelingSalesmanProblem extends AbstractProblem implements Problem {
+// --- ZMIANA: Usunięto redundantne "implements Problem" ---
+public class TravelingSalesmanProblem extends AbstractProblem {
 
     private List<String> cities = new ArrayList<>();
     private Map<String, Map<String, Double>> distances = new HashMap<>();
 
     @Override
-    public String getName() {
-        return "Traveling Salesman Problem (TSP)";
-    }
-
+    public String getName() { return "Traveling Salesman Problem (TSP)"; }
     @Override
-    public String getDescription() {
-        return "Problem komiwojażera polegający na znalezieniu najkrótszej trasy, która odwiedza każde miasto dokładnie raz i wraca do miasta startowego.";
-    }
-
+    public String getDescription() { return "Problem komiwojażera..."; }
     @Override
-    public boolean isMaximization() {
-        return false;
-    }
-
+    public boolean isMaximization() { return false; }
     @Override
     @SuppressWarnings("unchecked")
     public void initialize(Map<String, Object> parameters) {
@@ -35,38 +27,27 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
         try {
             this.cities = convertToStringList(getParameter(parameters, "cities", new ArrayList<>()));
             Object distancesObj = getParameter(parameters, "distances", new HashMap<>());
-            if (!(distancesObj instanceof Map)) {
-                throw new IllegalArgumentException("Parametr 'distances' musi być mapą (obiektem JSON).");
-            }
-
+            if (!(distancesObj instanceof Map)) throw new IllegalArgumentException("Parametr 'distances' musi być mapą (obiektem JSON).");
             this.distances = new HashMap<>();
             ((Map<?, ?>) distancesObj).forEach((fromCity, toMapObj) -> {
                 if (fromCity != null && toMapObj instanceof Map) {
-                    Map<String, Double> innerMap = convertToDoubleMap((Map<?, ?>) toMapObj);
-                    this.distances.put(fromCity.toString(), innerMap);
+                    this.distances.put(fromCity.toString(), convertToDoubleMap((Map<?, ?>) toMapObj));
                 }
             });
-
             if (this.cities.isEmpty() || this.distances.isEmpty()) {
-                log.error("Błąd inicjalizacji: Lista 'cities' lub mapa 'distances' jest pusta.");
-                this.initialized = false;
-                return;
+                this.initialized = false; return;
             }
-
             this.initialized = true;
             log.info("Inicjalizacja TSP zakończona pomyślnie. Załadowano {} miast.", this.cities.size());
-
         } catch (Exception e) {
             log.error("Krytyczny błąd podczas inicjalizacji TSP: {}", e.getMessage(), e);
             this.initialized = false;
         }
     }
-
     @Override
     public double evaluateSolution(List<String> solution) {
         checkInitialized();
         if (solution == null || solution.size() < 2) return Double.MAX_VALUE;
-
         double totalDistance = 0.0;
         for (int i = 0; i < solution.size() - 1; i++) {
             totalDistance += getDistance(solution.get(i), solution.get(i + 1));
@@ -74,19 +55,13 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
         totalDistance += getDistance(solution.get(solution.size() - 1), solution.get(0));
         return totalDistance;
     }
-
     @Override
     public boolean isValidSolution(List<String> solution) {
         checkInitialized();
-        if (solution == null) return false;
-        return new HashSet<>(solution).size() == cities.size() && solution.size() == cities.size();
+        return solution != null && new HashSet<>(solution).size() == cities.size() && solution.size() == cities.size();
     }
-
     @Override
-    public List<String> convertPathToSolution(List<String> path) {
-        return path;
-    }
-
+    public List<String> convertPathToSolution(List<String> path) { return path; }
     @Override
     public List<String> getPossibleNextElements(String current, List<String> visited) {
         checkInitialized();
@@ -94,46 +69,20 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
         remainingCities.removeAll(visited);
         return remainingCities;
     }
-
     @Override
-    public boolean isSolutionComplete(List<String> path) {
-        checkInitialized();
-        return path != null && path.size() == cities.size();
-    }
-
+    public boolean isSolutionComplete(List<String> path) { return path != null && path.size() == cities.size(); }
     @Override
     public double getHeuristicValue(String from, String to) {
         double distance = getDistance(from, to);
-        return (distance <= 0 || distance >= Double.MAX_VALUE) ? 0.0001 : 1.0 / distance;
+        return (distance <= 0) ? 0.0001 : 1.0 / distance;
     }
-
-    private double getDistance(String from, String to) {
-        return distances.getOrDefault(from, Collections.emptyMap()).getOrDefault(to, Double.MAX_VALUE);
-    }
-
+    private double getDistance(String from, String to) { return distances.getOrDefault(from, Collections.emptyMap()).getOrDefault(to, Double.MAX_VALUE); }
     @Override
-    public String getStartElement() {
-        checkInitialized();
-        return cities.isEmpty() ? null : cities.get(0);
-    }
-
+    public String getStartElement() { return cities.isEmpty() ? null : cities.get(0); }
     @Override
-    public List<String> getAllElements() {
-        return new ArrayList<>(cities);
-    }
-
+    public List<String> getAllElements() { return new ArrayList<>(cities); }
     @Override
-    public String getPheromoneKey(String from, String to) {
-        return (from != null ? from : "START") + "->" + to;
-    }
-
-    @Override
-    public List<ParameterDefinition> getParameters() {
-        return List.of();
-    }
-
-    // --- Metody dla Symulowanego Wyżarzania ---
-
+    public List<ParameterDefinition> getParameters() { return List.of(); }
     @Override
     public List<String> generateRandomSolution() {
         checkInitialized();
@@ -141,23 +90,76 @@ public class TravelingSalesmanProblem extends AbstractProblem implements Problem
         Collections.shuffle(randomSolution);
         return randomSolution;
     }
-
     @Override
     public List<String> generateNeighborSolution(List<String> currentSolution) {
+        return mutate(currentSolution); // Dla TSP, mutacja to to samo co wygenerowanie sąsiada
+    }
+    @Override
+    public Map<String, Object> getProblemData() { return Map.of("distances", this.distances); }
+
+    // --- NOWE METODY: Implementacja dla Algorytmu Genetycznego ---
+
+    /**
+     * Implementuje klasyczne krzyżowanie uporządkowane (Ordered Crossover, OX1) dla TSP.
+     * Zachowuje względną kolejność miast od jednego rodzica w losowym fragmencie.
+     */
+    @Override
+    public List<String> crossover(List<String> parent1, List<String> parent2) {
         checkInitialized();
-        List<String> neighbor = new ArrayList<>(currentSolution);
-        if (neighbor.size() < 2) {
-            return neighbor;
+        Random rand = new Random();
+        int size = parent1.size();
+
+        int start = rand.nextInt(size);
+        int end = rand.nextInt(size);
+
+        if (start > end) {
+            int temp = start;
+            start = end;
+            end = temp;
         }
 
-        Random random = new Random();
-        int i = random.nextInt(neighbor.size());
-        int j = random.nextInt(neighbor.size());
+        List<String> child = new ArrayList<>(Collections.nCopies(size, null));
+        Set<String> childSubset = new HashSet<>();
+
+        // Kopiuj fragment z pierwszego rodzica
+        for (int i = start; i <= end; i++) {
+            child.set(i, parent1.get(i));
+            childSubset.add(parent1.get(i));
+        }
+
+        // Uzupełnij resztę miastami z drugiego rodzica w odpowiedniej kolejności
+        int childIndex = (end + 1) % size;
+        for (int i = 0; i < size; i++) {
+            int parentIndex = (end + 1 + i) % size;
+            String city = parent2.get(parentIndex);
+            if (!childSubset.contains(city)) {
+                child.set(childIndex, city);
+                childIndex = (childIndex + 1) % size;
+            }
+        }
+        return child;
+    }
+
+    /**
+     * Implementuje prostą mutację przez zamianę (Swap Mutation).
+     * Losowo wybiera dwa miasta w trasie i zamienia je miejscami.
+     */
+    @Override
+    public List<String> mutate(List<String> solution) {
+        checkInitialized();
+        List<String> mutated = new ArrayList<>(solution);
+        Random rand = new Random();
+        int size = mutated.size();
+        if (size < 2) return mutated;
+
+        int i = rand.nextInt(size);
+        int j = rand.nextInt(size);
         while (i == j) {
-            j = random.nextInt(neighbor.size());
+            j = rand.nextInt(size);
         }
 
-        Collections.swap(neighbor, i, j);
-        return neighbor;
+        Collections.swap(mutated, i, j);
+        return mutated;
     }
 }
+

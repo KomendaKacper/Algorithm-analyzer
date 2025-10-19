@@ -155,7 +155,7 @@ const FallingText = ({
       World.clear(engine.world);
       Engine.clear(engine);
     };
-  }, 2000); // <- 2 sekundy opóźnienia
+  }, 100); // <- 2 sekundy opóźnienia
 
   return () => clearTimeout(timer);
 }, [effectStarted, gravity, wireframes, backgroundColor, mouseConstraintStiffness]);

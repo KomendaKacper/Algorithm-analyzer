@@ -1,7 +1,9 @@
-import "../App.css";
+import React from 'react';
+import '../App.css'; 
 
 export default function InputField({
   label,
+  description,
   type = "text",
   value,
   onChange,
@@ -9,34 +11,38 @@ export default function InputField({
   step,
   min,
   max,
-  checkbox = false,
+  // --- ZMIANA: Prop do obsługi checkboxa ---
+  isCheckbox = false,
 }) {
   return (
-    <div>
-      <div className="input-group">
-        <label>{label}</label>
-
-        {checkbox ? (
-          <input
-            type="checkbox"
-            checked={!!value} // zawsze boolean
-            onChange={(e) => onChange(e.target.checked)}
-            className="input-field"
-          />
-        ) : (
-          <input
-            type={type}
-            value={value ?? ""} // jeśli undefined, ustaw ""
-            onChange={(e) => onChange(e.target.value)}
-            className={`controls-input ${error ? "input-error" : ""}`}
-            step={step}
-            min={min}
-            max={max}
-          />
-        )}
-      </div>
-
-      {error && <p className="input-error-text">{error}</p>}
+    // --- ZMIANA: Dynamiczna klasa dla grupy checkboxa ---
+    <div className={`form-group ${isCheckbox ? 'checkbox-group' : ''}`}>
+      <label>
+        {label}
+        {description && <span className="tooltip" data-tooltip={description}>?</span>}
+      </label>
+      
+      {/* --- ZMIANA: Logika renderowania checkboxa --- */}
+      {isCheckbox ? (
+        <input
+          type="checkbox"
+          checked={!!value}
+          onChange={(e) => onChange(e.target.checked)}
+          className="checkbox-input"
+        />
+      ) : (
+        <input
+          type={type}
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          className={`input ${error ? "input-error" : ""}`}
+          step={step}
+          min={min}
+          max={max}
+        />
+      )}
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 }
+

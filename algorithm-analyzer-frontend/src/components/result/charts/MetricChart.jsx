@@ -1,41 +1,42 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { CHART_COLORS } from './chartColors'; // Załóżmy, że masz zdefiniowane kolory
+import { CHART_COLORS } from './chartColors';
+
+// --- NOWA FUNKCJA POMOCNICZA: Do bezpiecznego formatowania wartości ---
+const tooltipFormatter = (value) => {
+  if (value == null) return 'N/A';
+  if (typeof value === 'number') return value.toFixed(3);
+  if (typeof value === 'object') return JSON.stringify(value); // Zabezpieczenie przed crashowaniem
+  return String(value);
+};
+
 
 export function MetricChart({ results, dataKey, name }) {
   if (!results || results.length === 0) {
     return <div className="chart-placeholder">Brak danych do wyświetlenia.</div>;
   }
 
-  // Sprawdź, czy dane dla tego klucza w ogóle istnieją
   const firstResult = results[0]?.iterationResults?.[0];
   if (!firstResult) {
       return <div className="chart-placeholder">Brak wyników iteracji.</div>;
   }
 
-  // --- KLUCZOWA ZMIANA: Sprawdzamy, gdzie znajduje się klucz danych ---
   const isSpecificMetric = firstResult.specificMetrics?.hasOwnProperty(dataKey);
   if (!isSpecificMetric && !firstResult.hasOwnProperty(dataKey)) {
       return <div className="chart-placeholder">Brak danych dla metryki: {name}.</div>;
   }
 
-  // Przygotuj dane do wykresu - wyciągnij maksymalną długość iteracji
   const maxIterations = Math.max(...results.map(r => r.iterationResults?.length || 0));
   const chartData = [];
 
   for (let i = 0; i < maxIterations; i++) {
     const dataPoint = { iteration: i };
     results.forEach(result => {
-      if (result.iterationResults && result.iterationResults[i]) {
-        const iteration = result.iterationResults[i];
-        
-        // --- KLUCZOWA ZMIANA: Uniwersalny sposób dostępu do danych ---
-        // Szukaj klucza najpierw w specificMetrics, a jeśli go tam nie ma, to na głównym poziomie.
+      const iteration = result.iterationResults?.[i];
+      if (iteration) {
         const value = isSpecificMetric 
             ? iteration.specificMetrics?.[dataKey] 
             : iteration[dataKey];
-            
-        // Używamy unikalnej nazwy algorytmu (np. "ACO [#1]") jako klucza
         dataPoint[result.algorithmName] = value;
       }
     });
@@ -53,8 +54,9 @@ export function MetricChart({ results, dataKey, name }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="iteration" label={{ value: 'Iteracja', position: 'insideBottom', offset: -15 }} />
           <YAxis label={{ value: name, angle: -90, position: 'insideLeft' }} />
+          {/* --- ZMIANA: Użycie bezpiecznego formattera --- */}
           <Tooltip
-            formatter={(value) => typeof value === 'number' ? value.toFixed(3) : value}
+            formatter={tooltipFormatter}
             labelFormatter={(label) => `Iteracja: ${label}`}
           />
           <Legend wrapperStyle={{ position: 'relative', marginTop: '10px' }} />
