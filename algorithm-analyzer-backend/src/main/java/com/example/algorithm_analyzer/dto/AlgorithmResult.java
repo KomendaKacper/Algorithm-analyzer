@@ -18,11 +18,12 @@ public class AlgorithmResult {
     private long executionDurationMs;
     private List<Object> iterationResults;
 
+    // Etykiety dla metryk, które zmieniają się w każdej iteracji
     private Map<String, String> specificMetricLabels;
 
-    // --- NOWE POLE: Przechowuje końcowe, charakterystyczne dane macierzowe ---
-    private Map<String, Object> finalMetrics;
-    // --- NOWE POLE: Lista węzłów (miast/przedmiotów) potrzebna do zbudowania osi macierzy ---
+    // --- ZMIANA: Pole na końcowe dane macierzowe wraz z etykietą ---
+    private Map<String, FinalMetricData> finalMetrics;
+
     private List<String> nodes;
 
 

@@ -7,10 +7,10 @@ const problemConfig = {
   default: { isMaximization: true, solutionLabel: "Najlepsze rozwiązanie", scoreLabel: "Najlepszy wynik", unit: "", icon: "🏆", format: (solution) => solution && solution.length > 0 ? solution.join(", ") : "Brak danych" }
 };
 
-// --- NOWA FUNKCJA POMOCNICZA: Do formatowania złożonych wartości ---
 const formatMetricValue = (value) => {
     if (value == null) return "Brak danych";
     if (typeof value === 'number') {
+        if (Number.isInteger(value)) return value;
         return value.toFixed(3);
     }
     if (typeof value === 'object') {
@@ -35,7 +35,6 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
     { type: "charts-stagnation", label: "⏳ Stagnacja" },
   ];
   
-  // Pobierz ostatni zestaw metryk
   const lastIteration = result.iterationResults?.[result.iterationResults.length - 1];
 
   return (
@@ -49,7 +48,6 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
 
       {!isMinimized && result.success ? (
         <div className="result-content">
-          {/* Metryki Główne */}
           <div className="result-metric">
             <strong>{config.icon} {config.scoreLabel}:</strong>
             <span>{result.bestScore != null ? `${parseFloat(result.bestScore).toFixed(2)} ${config.unit}`.trim() : "Brak danych"}</span>
@@ -63,7 +61,6 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             <span className="solution-path">{config.format(result.bestSolution)}</span>
           </div>
           
-          {/* --- NOWA SEKCJA: Charakterystyka Końcowa --- */}
           {result.specificMetricLabels && lastIteration && (
             <div className="result-metric full-width specific-metrics-summary">
               <strong>Charakterystyka Końcowa:</strong>
@@ -82,6 +79,22 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             <button className="result-button single-view" onClick={() => addPanel("table", result)}>
               📊 Pokaż tabelę iteracji
             </button>
+            
+            {/* --- ZMIENIONA LOGIKA: Dynamiczne przyciski dla macierzy --- */}
+            {result.finalMetrics && Object.entries(result.finalMetrics).map(([key, metricData]) => (
+                <button 
+                  key={key} 
+                  className="result-button specific-view" 
+                  onClick={() => addPanel(`matrix-${key}`, {
+                      title: metricData.label || `Macierz ${key}`,
+                      nodes: result.nodes,
+                      matrixData: metricData.data
+                  })}
+                >
+                  {metricData.label || `Macierz ${key}`}
+                </button>
+            ))}
+
             {!isComparisonMode && (
               <>
                 {commonChartButtons.map(btn => (

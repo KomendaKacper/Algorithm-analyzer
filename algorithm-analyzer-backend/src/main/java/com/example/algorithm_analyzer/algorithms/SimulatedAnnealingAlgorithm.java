@@ -1,28 +1,21 @@
 package com.example.algorithm_analyzer.algorithms;
 
+import com.example.algorithm_analyzer.dto.FinalMetricData;
 import com.example.algorithm_analyzer.dto.IterationResult;
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     @Override
-    public String getName() {
-        return "Simulated Annealing (SA)";
-    }
+    public String getName() { return "Simulated Annealing (SA)"; }
 
     @Override
-    public String getDescription() {
-        return "Algorytm Symulowanego Wyżarzania inspirowany procesem metalurgicznym.";
-    }
+    public String getDescription() { return "Algorytm Symulowanego Wyżarzania inspirowany procesem metalurgicznym."; }
 
     @Override
     public List<ParameterDefinition> getParameterDefinitions() {
@@ -36,10 +29,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of(
-                "temperature", "🌡️ Temperatura",
-                "distances", "🗺️ Macierz Odległości"
-        );
+        return Map.of("temperature", "🌡️ Temperatura");
     }
 
     @Override
@@ -76,9 +66,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                 if (deltaScore > 0 || Math.exp(deltaScore / temperature) > Math.random()) {
                     currentSolution = new ArrayList<>(neighborSolution);
                     currentScore = neighborScore;
-                    if (deltaScore < 0) {
-                        acceptedWorseMoves++;
-                    }
+                    if (deltaScore < 0) acceptedWorseMoves++;
                 }
 
                 if (problem.isMaximization() ? currentScore > bestScore : currentScore < bestScore) {
@@ -116,7 +104,12 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             iteration++;
         }
 
-        return new ExecutionResult(bestSolution, bestScore, iterationResults, problem.getProblemData());
+        Map<String, FinalMetricData> finalMetrics = new HashMap<>();
+        if (problem.getProblemData().containsKey("distances")) {
+            finalMetrics.put("distances", new FinalMetricData("🗺️ Macierz Odległości", problem.getProblemData().get("distances")));
+        }
+
+        return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);
     }
 
     private record SaParameters(double initialTemperature, double coolingRate, double stoppingTemperature, int iterationsPerTemp) {

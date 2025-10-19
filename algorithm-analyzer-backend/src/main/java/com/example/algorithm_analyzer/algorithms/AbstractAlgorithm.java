@@ -1,6 +1,7 @@
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
+import com.example.algorithm_analyzer.dto.FinalMetricData;
 import com.example.algorithm_analyzer.dto.IterationResult;
 import com.example.algorithm_analyzer.problems.Problem;
 import lombok.extern.slf4j.Slf4j;
@@ -12,15 +13,6 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractAlgorithm implements Algorithm {
 
-    /**
-     * Wzorzec projektowy "metoda szablonowa".
-     * Ta metoda `execute` jest finalna i zawiera całą logikę wspólną:
-     * - Mierzenie czasu
-     * - Inicjalizację problemu
-     * - Obsługę błędów
-     * - Budowanie obiektu AlgorithmResult
-     * Deleguje ona faktyczne rozwiązanie problemu do abstrakcyjnej metody `solve`.
-     */
     @Override
     public final AlgorithmResult execute(Problem problem, Map<String, Object> problemParameters, Map<String, Object> algorithmParameters) {
         long startTime = System.currentTimeMillis();
@@ -31,7 +23,6 @@ public abstract class AbstractAlgorithm implements Algorithm {
         try {
             problem.initialize(problemParameters);
 
-            // Wywołanie właściwej logiki algorytmu w klasie dziedziczącej
             ExecutionResult executionResult = solve(problem, algorithmParameters);
 
             result.setSuccess(true);
@@ -51,36 +42,21 @@ public abstract class AbstractAlgorithm implements Algorithm {
         return result;
     }
 
-    /**
-     * Każda konkretna implementacja algorytmu musi zaimplementować tę metodę.
-     * Zawiera ona "czyste" serce algorytmu.
-     * @param problem Zainicjalizowana instancja problemu.
-     * @param algorithmParameters Mapa z parametrami dla tego algorytmu.
-     * @return Obiekt `ExecutionResult` zawierający wyniki.
-     */
     protected abstract ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters);
 
-    /**
-     * Opcjonalna metoda do zdefiniowania etykiet dla specyficznych metryk,
-     * które mają być wizualizowane na froncie.
-     * @return Mapa kluczy metryk i ich etykiet.
-     */
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of(); // Domyślnie pusta
+        return Map.of();
     }
 
-    /**
-     * Rekord używany do ustandaryzowania danych zwracanych przez metodę `solve`.
-     */
     protected record ExecutionResult(
             List<String> bestSolution,
             double bestScore,
             List<IterationResult> iterationResults,
-            Map<String, Object> finalMetrics
+            Map<String, FinalMetricData> finalMetrics
     ) {
-        // Konstruktor dla algorytmów bez finalnych metryk macierzowych
         public ExecutionResult(List<String> bestSolution, double bestScore, List<IterationResult> iterationResults) {
             this(bestSolution, bestScore, iterationResults, Map.of());
         }
     }
 }
+
