@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@Builder // Użycie wzorca Builder ułatwi tworzenie obiektów
+@Builder
 public class IterationResult {
 
     // --- METRYKI PODSTAWOWE (wspólne dla wszystkich algorytmów) ---

@@ -26,13 +26,15 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
 
   const config = problemConfig[result.problemName] || problemConfig.default;
   
-  const commonChartButtons = [
-    { type: "charts-score", label: "📈 Jakość / Trajektoria" },
-    { type: "charts-time", label: "🕒 Czas iteracji" },
-    { type: "charts-exploration", label: "🧭 Miara Eksploracji" },
-    { type: "charts-improvements", label: "🚀 Częstotliwość poprawy" },
-    { type: "charts-relative-improvement", label: "📊 Skoki Poprawy" },
-    { type: "charts-stagnation", label: "⏳ Stagnacja" },
+  const hasPheromoneSnapshots = result.iterationResults?.[0]?.specificMetrics?.hasOwnProperty('pheromoneSnapshot');
+
+  // --- ZMIANA: Zaktualizowana lista przycisków dla widoku pojedynczego ---
+  const chartButtonsConfig = [
+    { type: "charts-score", label: "📈 Wykres Zbieżności Wyniku" },
+    { type: "charts-time", label: "🕒 Wykres Czasu" },
+    { type: "charts-improvements", label: "🚀 Wykres Poprawy" },
+    { type: "charts-relative-improvement", label: "📊 Wykres Skoków" },
+    { type: "charts-stagnation", label: "⏳ Wykres Stagnacji" },
   ];
   
   const lastIteration = result.iterationResults?.[result.iterationResults.length - 1];
@@ -65,12 +67,15 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             <div className="result-metric full-width specific-metrics-summary">
               <strong>Charakterystyka Końcowa:</strong>
               <div className="specific-metrics-grid">
-                {Object.entries(result.specificMetricLabels).map(([key, label]) => (
-                  <div key={key} className="specific-metric-item">
-                    <span>{label}:</span>
-                    <strong>{formatMetricValue(lastIteration.specificMetrics?.[key])}</strong>
-                  </div>
-                ))}
+                {Object.entries(result.specificMetricLabels).map(([key, label]) => {
+                  if (result.finalMetrics && result.finalMetrics[key]) return null;
+                  return (
+                    <div key={key} className="specific-metric-item">
+                      <span>{label}:</span>
+                      <strong>{formatMetricValue(lastIteration.specificMetrics?.[key])}</strong>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -80,20 +85,33 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
               📊 Pokaż tabelę iteracji
             </button>
             
-            {/* --- ZMIENIONA LOGIKA: Dynamiczne przyciski dla macierzy --- */}
-            {result.finalMetrics && Object.entries(result.finalMetrics).map(([key, metricData]) => (
+            {result.finalMetrics && Object.entries(result.finalMetrics).map(([key, metricData]) => {
+                if (key === 'pheromones' && hasPheromoneSnapshots) {
+                    return null;
+                }
+                return (
+                    <button 
+                      key={key} 
+                      className="result-button specific-view" 
+                      onClick={() => addPanel(`matrix-${key}`, {
+                          title: metricData.label || `Macierz ${key}`,
+                          nodes: result.nodes,
+                          matrixData: metricData.data
+                      })}
+                    >
+                      {metricData.label || `Macierz ${key}`}
+                    </button>
+                )
+            })}
+
+            {hasPheromoneSnapshots && (
                 <button 
-                  key={key} 
                   className="result-button specific-view" 
-                  onClick={() => addPanel(`matrix-${key}`, {
-                      title: metricData.label || `Macierz ${key}`,
-                      nodes: result.nodes,
-                      matrixData: metricData.data
-                  })}
+                  onClick={() => addPanel('animated-matrix-pheromones', [result])}
                 >
-                  {metricData.label || `Macierz ${key}`}
+                  📽️ Ewolucja Feromonów
                 </button>
-            ))}
+            )}
 
             {!isComparisonMode && (
               <>
@@ -102,11 +120,14 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
                      {btn.label}
                    </button>
                 ))}
-                {result.specificMetricLabels && Object.entries(result.specificMetricLabels).map(([key, label]) => (
-                  <button key={key} className="result-button specific-view" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
-                    {label}
-                  </button>
-                ))}
+                {result.specificMetricLabels && Object.entries(result.specificMetricLabels).map(([key, label]) => {
+                  if (result.finalMetrics && result.finalMetrics[key]) return null;
+                  return (
+                    <button key={key} className="result-button specific-view" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
+                      {label}
+                    </button>
+                  )
+                })}
               </>
             )}
           </div>

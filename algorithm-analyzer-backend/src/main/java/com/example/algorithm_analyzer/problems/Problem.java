@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface Problem {
-    // === Metody Podstawowe ===
+    // Metody Podstawowe
     String getName();
     String getDescription();
     boolean isMaximization();
@@ -15,7 +15,7 @@ public interface Problem {
     List<String> getAllElements();
     Map<String, Object> getProblemData();
 
-    // === Metody dla Algorytmów Konstrukcyjnych (np. ACO) ===
+    // Metody dla Algorytmów Konstrukcyjnych (np. ACO)
     List<String> getPossibleNextElements(String current, List<String> visited);
     boolean isSolutionComplete(List<String> path);
     double getHeuristicValue(String from, String to);
@@ -23,15 +23,15 @@ public interface Problem {
     String getPheromoneKey(String from, String to);
     List<String> convertPathToSolution(List<String> path);
 
-    // === Metody dla Algorytmów Przeszukiwania Lokalnego (np. SA, TS) ===
+    // Metody dla Algorytmów Przeszukiwania Lokalnego (np. SA, TS)
     List<String> generateRandomSolution();
     List<String> generateNeighborSolution(List<String> currentSolution);
 
-    // === NOWE METODY: Dla Algorytmów Ewolucyjnych (np. Genetycznego) ===
+    // Dla Algorytmów Ewolucyjnych (np. Genetycznego) ===
     List<String> crossover(List<String> parent1, List<String> parent2);
     List<String> mutate(List<String> solution);
 
-    // === Metody Pomocnicze ===
+    // Metody Pomocnicze
     List<ParameterDefinition> getParameters();
 }
 

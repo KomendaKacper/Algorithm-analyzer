@@ -21,7 +21,6 @@ public class AlgorithmResult {
     // Etykiety dla metryk, które zmieniają się w każdej iteracji
     private Map<String, String> specificMetricLabels;
 
-    // --- ZMIANA: Pole na końcowe dane macierzowe wraz z etykietą ---
     private Map<String, FinalMetricData> finalMetrics;
 
     private List<String> nodes;

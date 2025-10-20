@@ -14,7 +14,6 @@ public class KnapsackProblem extends AbstractProblem {
     private List<String> elements = new ArrayList<>();
     private int capacity;
 
-    // ... (istniejące metody bez zmian) ...
     @Override
     public String getName() { return "Knapsack Problem"; }
     @Override
@@ -99,7 +98,7 @@ public class KnapsackProblem extends AbstractProblem {
         return neighbor;
     }
 
-    // --- NOWE METODY: Implementacja dla Algorytmu Genetycznego ---
+    // Implementacja dla Algorytmu Genetycznego
 
     /**
      * Reprezentuje rozwiązanie jako "genotyp" (tablica bitów).
@@ -159,7 +158,7 @@ public class KnapsackProblem extends AbstractProblem {
         if (mask.length == 0) return solution;
 
         int mutationPoint = new Random().nextInt(mask.length);
-        mask[mutationPoint] = !mask[mutationPoint]; // Odwróć bit
+        mask[mutationPoint] = !mask[mutationPoint]; // Odwróceine bitu
 
         return fromBitmask(mask);
     }

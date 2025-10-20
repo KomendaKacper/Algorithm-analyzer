@@ -4,11 +4,9 @@ import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component("travelingSalesmanProblem")
 @Slf4j
-// --- ZMIANA: Usunięto redundantne "implements Problem" ---
 public class TravelingSalesmanProblem extends AbstractProblem {
 
     private List<String> cities = new ArrayList<>();
@@ -97,7 +95,7 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     public Map<String, Object> getProblemData() { return Map.of("distances", this.distances); }
 
-    // --- NOWE METODY: Implementacja dla Algorytmu Genetycznego ---
+    // Implementacja dla Algorytmu Genetycznego
 
     /**
      * Implementuje klasyczne krzyżowanie uporządkowane (Ordered Crossover, OX1) dla TSP.

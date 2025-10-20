@@ -13,7 +13,6 @@ export default function App() {
   const [isAlgorithmRunning, setIsAlgorithmRunning] = useState(false);
   
   const [problemConfig, setProblemConfig] = useState({ name: null, parameters: {} });
-  // --- ZMIANA: Inicjalizujemy stan z jednym panelem konfiguracyjnym ---
   const [tasks, setTasks] = useState([{}]);
 
   const [openPanels, setOpenPanels] = useState([]);
@@ -55,13 +54,22 @@ export default function App() {
     }
   };
   
+  // --- ZMIANA: Dodajemy domyślny rozmiar przy tworzeniu panelu ---
   const addPanel = (type, data) => {
     const id = `${type}-${Date.now()}`;
     setOpenPanels(prev => [...prev, { id, type, data, minimized: false }]);
+    
     const panelStartLeft = isSidebarCollapsed ? 80 : 450;
+    const isChartPanel = type.startsWith('charts') || type.startsWith('matrix') || type.startsWith('animated');
+
     setPanelPositions(prev => ({
       ...prev,
-      [id]: { top: 120 + Object.keys(prev).length * 30, left: panelStartLeft + Object.keys(prev).length * 30 },
+      [id]: { 
+        top: 120 + Object.keys(prev).length * 30, 
+        left: panelStartLeft + Object.keys(prev).length * 30,
+        width: isChartPanel ? 900 : 800, // Domyślna szerokość
+        height: isChartPanel ? 450 : 500, // Domyślna wysokość
+      },
     }));
   };
 

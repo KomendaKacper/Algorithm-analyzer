@@ -11,18 +11,17 @@ export default function ResultPanelWrapper({ results, addPanel }) {
   const toggleMinimizePanel = (panelId) => {
     setMinimizedPanels(prev => ({ ...prev, [panelId]: !prev[panelId] }));
   };
-  
-  // --- ZMIANA: Sprawdzamy, czy którykolwiek z wyników ma snapshoty feromonów ---
+
+  const isComparison = results.length > 1;
+
   const hasPheromoneSnapshots = results.some(r => 
     r.iterationResults?.[0]?.specificMetrics?.hasOwnProperty('pheromoneSnapshot')
   );
 
-  const isComparison = results.length > 1;
-
+  // --- ZMIANA: Usunięto "Miarę Eksploracji" i przemianowano wykres wyników ---
   const commonChartButtons = [
-    { type: "charts-score", label: "📈 Jakość / Trajektoria" },
+    { type: "charts-score", label: "📈 Wykres Zbieżności Wyniku" },
     { type: "charts-time", label: "🕒 Czas iteracji" },
-    { type: "charts-exploration", label: "🧭 Miara Eksploracji" },
     { type: "charts-improvements", label: "🚀 Częstotliwość poprawy" },
     { type: "charts-relative-improvement", label: "📊 Skoki Poprawy" },
     { type: "charts-stagnation", label: "⏳ Stagnacja" },
@@ -49,7 +48,6 @@ export default function ResultPanelWrapper({ results, addPanel }) {
                   {btn.label}
                 </button>
               ))}
-              {/* --- NOWY PRZYCISK: Animowana macierz feromonów --- */}
               {hasPheromoneSnapshots && (
                  <button 
                     className="result-button specific-view" 

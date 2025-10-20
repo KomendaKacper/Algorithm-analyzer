@@ -29,7 +29,10 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of("temperature", "🌡️ Temperatura");
+        return Map.of(
+                "temperature", "🌡️ Temperatura",
+                "acceptanceProbability", "🎲 Prawdopodobieństwo Akceptacji"
+        );
     }
 
     @Override
@@ -38,7 +41,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
         List<String> currentSolution = problem.generateRandomSolution();
         if (!problem.isValidSolution(currentSolution)) {
-            currentSolution = new ArrayList<>(); // Start with empty if random is invalid
+            currentSolution = new ArrayList<>();
         }
         double currentScore = problem.evaluateSolution(currentSolution);
 
@@ -83,6 +86,10 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             }
             oldBestScore = bestScore;
 
+            double referenceWorseScore = problem.isMaximization() ? currentScore * 0.9 : currentScore * 1.1; // Gorszy o 10%
+            double deltaForProb = problem.isMaximization() ? referenceWorseScore - currentScore : currentScore - referenceWorseScore;
+            double acceptanceProbability = Math.exp(deltaForProb / temperature);
+
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iteration)
@@ -95,7 +102,8 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                                     "stagnation", iteration - lastImprovementIter,
                                     "improvements", improvementCount,
                                     "relativeImprovement", relativeImprovement,
-                                    "temperature", temperature
+                                    "temperature", temperature,
+                                    "acceptanceProbability", acceptanceProbability
                             ))
                             .build()
             );
