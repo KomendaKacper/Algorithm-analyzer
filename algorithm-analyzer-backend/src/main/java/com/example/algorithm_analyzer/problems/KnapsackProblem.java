@@ -4,6 +4,7 @@ import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom; // NOWY IMPORT
 import java.util.stream.Collectors;
 
 @Component("knapsackProblem")
@@ -14,6 +15,7 @@ public class KnapsackProblem extends AbstractProblem {
     private List<String> elements = new ArrayList<>();
     private int capacity;
 
+    // ... (istniejące metody bez zmian) ...
     @Override
     public String getName() { return "Knapsack Problem"; }
     @Override
@@ -68,14 +70,17 @@ public class KnapsackProblem extends AbstractProblem {
 
     @Override
     public List<ParameterDefinition> getParameters() { return List.of(); }
+
+
     @Override
     public List<String> generateRandomSolution() {
         checkInitialized();
         List<String> solution = new ArrayList<>();
         int currentWeight = 0;
-        Random random = new Random();
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        Random random = ThreadLocalRandom.current();
         List<String> shuffledElements = new ArrayList<>(this.elements);
-        Collections.shuffle(shuffledElements);
+        Collections.shuffle(shuffledElements, random);
         for (String item : shuffledElements) {
             if (random.nextBoolean() && currentWeight + getWeight(item) <= capacity) {
                 solution.add(item);
@@ -84,12 +89,14 @@ public class KnapsackProblem extends AbstractProblem {
         }
         return solution;
     }
+
     @Override
     public List<String> generateNeighborSolution(List<String> currentSolution) {
         checkInitialized();
         List<String> neighbor = new ArrayList<>(currentSolution);
         if (elements.isEmpty()) return neighbor;
-        String randomItem = elements.get(new Random().nextInt(elements.size()));
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        String randomItem = elements.get(ThreadLocalRandom.current().nextInt(elements.size()));
         if (neighbor.contains(randomItem)) {
             neighbor.remove(randomItem);
         } else {
@@ -98,12 +105,6 @@ public class KnapsackProblem extends AbstractProblem {
         return neighbor;
     }
 
-    // Implementacja dla Algorytmu Genetycznego
-
-    /**
-     * Reprezentuje rozwiązanie jako "genotyp" (tablica bitów).
-     * 1 oznacza, że przedmiot jest w plecaku, 0 - że go nie ma.
-     */
     private boolean[] toBitmask(List<String> solution) {
         boolean[] mask = new boolean[elements.size()];
         for (int i = 0; i < elements.size(); i++) {
@@ -112,9 +113,6 @@ public class KnapsackProblem extends AbstractProblem {
         return mask;
     }
 
-    /**
-     * Konwertuje genotyp (tablicę bitów) z powrotem na listę przedmiotów.
-     */
     private List<String> fromBitmask(boolean[] mask) {
         List<String> solution = new ArrayList<>();
         for (int i = 0; i < elements.size(); i++) {
@@ -125,11 +123,6 @@ public class KnapsackProblem extends AbstractProblem {
         return solution;
     }
 
-    /**
-     * Implementuje klasyczne krzyżowanie jednopunktowe.
-     * Wybiera losowy punkt i tworzy dziecko z genów jednego rodzica do tego punktu
-     * i z genów drugiego rodzica od tego punktu.
-     */
     @Override
     public List<String> crossover(List<String> parent1, List<String> parent2) {
         checkInitialized();
@@ -137,7 +130,10 @@ public class KnapsackProblem extends AbstractProblem {
         boolean[] mask2 = toBitmask(parent2);
         boolean[] childMask = new boolean[elements.size()];
 
-        int crossoverPoint = new Random().nextInt(elements.size());
+        if (elements.isEmpty()) return new ArrayList<>();
+
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        int crossoverPoint = ThreadLocalRandom.current().nextInt(elements.size());
 
         for (int i = 0; i < elements.size(); i++) {
             childMask[i] = (i < crossoverPoint) ? mask1[i] : mask2[i];
@@ -146,19 +142,15 @@ public class KnapsackProblem extends AbstractProblem {
         return fromBitmask(childMask);
     }
 
-    /**
-     * Implementuje prostą mutację przez odwrócenie bitu (Bit Flip Mutation).
-     * Losowo wybiera jeden "gen" (przedmiot) i zmienia jego stan:
-     * jeśli był w plecaku, zostaje usunięty; jeśli go nie było, zostaje dodany.
-     */
     @Override
     public List<String> mutate(List<String> solution) {
         checkInitialized();
         boolean[] mask = toBitmask(solution);
         if (mask.length == 0) return solution;
 
-        int mutationPoint = new Random().nextInt(mask.length);
-        mask[mutationPoint] = !mask[mutationPoint]; // Odwróceine bitu
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        int mutationPoint = ThreadLocalRandom.current().nextInt(mask.length);
+        mask[mutationPoint] = !mask[mutationPoint];
 
         return fromBitmask(mask);
     }

@@ -28,13 +28,13 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
   
   const hasPheromoneSnapshots = result.iterationResults?.[0]?.specificMetrics?.hasOwnProperty('pheromoneSnapshot');
 
-  // --- ZMIANA: Zaktualizowana lista przycisków dla widoku pojedynczego ---
-  const chartButtonsConfig = [
+  // --- POPRAWKA: Przywrócono definicję, która zniknęła ---
+  const commonChartButtons = [
     { type: "charts-score", label: "📈 Wykres Zbieżności Wyniku" },
-    { type: "charts-time", label: "🕒 Wykres Czasu" },
-    { type: "charts-improvements", label: "🚀 Wykres Poprawy" },
-    { type: "charts-relative-improvement", label: "📊 Wykres Skoków" },
-    { type: "charts-stagnation", label: "⏳ Wykres Stagnacji" },
+    { type: "charts-time", label: "🕒 Czas iteracji" },
+    { type: "charts-improvements", label: "🚀 Częstotliwość poprawy" },
+    { type: "charts-relative-improvement", label: "📊 Skoki Poprawy" },
+    { type: "charts-stagnation", label: "⏳ Stagnacja" },
   ];
   
   const lastIteration = result.iterationResults?.[result.iterationResults.length - 1];
@@ -81,7 +81,7 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
           )}
 
           <div className="result-buttons">
-            <button className="result-button single-view" onClick={() => addPanel("table", result)}>
+            <button className="result-button" onClick={() => addPanel("table", result)}>
               📊 Pokaż tabelę iteracji
             </button>
             
@@ -92,7 +92,7 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
                 return (
                     <button 
                       key={key} 
-                      className="result-button specific-view" 
+                      className="result-button" 
                       onClick={() => addPanel(`matrix-${key}`, {
                           title: metricData.label || `Macierz ${key}`,
                           nodes: result.nodes,
@@ -106,7 +106,7 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
 
             {hasPheromoneSnapshots && (
                 <button 
-                  className="result-button specific-view" 
+                  className="result-button" 
                   onClick={() => addPanel('animated-matrix-pheromones', [result])}
                 >
                   📽️ Ewolucja Feromonów
@@ -116,14 +116,17 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             {!isComparisonMode && (
               <>
                 {commonChartButtons.map(btn => (
-                   <button key={btn.type} className="result-button compare-view" onClick={() => addPanel(btn.type, [result])}>
+                   <button key={btn.type} className="result-button" onClick={() => addPanel(btn.type, [result])}>
                      {btn.label}
                    </button>
                 ))}
                 {result.specificMetricLabels && Object.entries(result.specificMetricLabels).map(([key, label]) => {
                   if (result.finalMetrics && result.finalMetrics[key]) return null;
+                  if (key === 'pheromoneStats') {
+                    return null;
+                  }
                   return (
-                    <button key={key} className="result-button specific-view" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
+                    <button key={key} className="result-button" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
                       {label}
                     </button>
                   )

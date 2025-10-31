@@ -4,6 +4,7 @@ import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom; // NOWY IMPORT
 
 @Component("travelingSalesmanProblem")
 @Slf4j
@@ -12,6 +13,7 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     private List<String> cities = new ArrayList<>();
     private Map<String, Map<String, Double>> distances = new HashMap<>();
 
+    // ... (istniejące metody initialize, evaluateSolution, etc. bez zmian) ...
     @Override
     public String getName() { return "Traveling Salesman Problem (TSP)"; }
     @Override
@@ -82,29 +84,29 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     public List<ParameterDefinition> getParameters() { return List.of(); }
     @Override
+    public Map<String, Object> getProblemData() { return Map.of("distances", this.distances); }
+
+
+    @Override
     public List<String> generateRandomSolution() {
         checkInitialized();
         List<String> randomSolution = new ArrayList<>(cities);
-        Collections.shuffle(randomSolution);
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        Collections.shuffle(randomSolution, ThreadLocalRandom.current());
         return randomSolution;
     }
+
     @Override
     public List<String> generateNeighborSolution(List<String> currentSolution) {
-        return mutate(currentSolution); // Dla TSP, mutacja to to samo co wygenerowanie sąsiada
+        // Dla TSP, generowanie sąsiada to to samo co mutacja
+        return mutate(currentSolution);
     }
-    @Override
-    public Map<String, Object> getProblemData() { return Map.of("distances", this.distances); }
 
-    // Implementacja dla Algorytmu Genetycznego
-
-    /**
-     * Implementuje klasyczne krzyżowanie uporządkowane (Ordered Crossover, OX1) dla TSP.
-     * Zachowuje względną kolejność miast od jednego rodzica w losowym fragmencie.
-     */
     @Override
     public List<String> crossover(List<String> parent1, List<String> parent2) {
         checkInitialized();
-        Random rand = new Random();
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        Random rand = ThreadLocalRandom.current();
         int size = parent1.size();
 
         int start = rand.nextInt(size);
@@ -119,13 +121,11 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         List<String> child = new ArrayList<>(Collections.nCopies(size, null));
         Set<String> childSubset = new HashSet<>();
 
-        // Kopiuj fragment z pierwszego rodzica
         for (int i = start; i <= end; i++) {
             child.set(i, parent1.get(i));
             childSubset.add(parent1.get(i));
         }
 
-        // Uzupełnij resztę miastami z drugiego rodzica w odpowiedniej kolejności
         int childIndex = (end + 1) % size;
         for (int i = 0; i < size; i++) {
             int parentIndex = (end + 1 + i) % size;
@@ -138,18 +138,15 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         return child;
     }
 
-    /**
-     * Implementuje prostą mutację przez zamianę (Swap Mutation).
-     * Losowo wybiera dwa miasta w trasie i zamienia je miejscami.
-     */
     @Override
     public List<String> mutate(List<String> solution) {
         checkInitialized();
         List<String> mutated = new ArrayList<>(solution);
-        Random rand = new Random();
         int size = mutated.size();
         if (size < 2) return mutated;
 
+        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+        Random rand = ThreadLocalRandom.current();
         int i = rand.nextInt(size);
         int j = rand.nextInt(size);
         while (i == j) {

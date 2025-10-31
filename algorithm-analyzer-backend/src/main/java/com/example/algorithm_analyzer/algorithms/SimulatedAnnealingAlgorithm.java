@@ -7,6 +7,7 @@ import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import org.springframework.stereotype.Component;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom; // --- NOWY IMPORT ---
 
 @Component
 public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
@@ -29,10 +30,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of(
-                "temperature", "🌡️ Temperatura",
-                "acceptanceProbability", "🎲 Prawdopodobieństwo Akceptacji"
-        );
+        return Map.of("temperature", "🌡️ Temperatura", "acceptanceProbability", "🎲 Prawdopodobieństwo Akceptacji");
     }
 
     @Override
@@ -40,9 +38,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
         SaParameters params = new SaParameters(algorithmParameters);
 
         List<String> currentSolution = problem.generateRandomSolution();
-        if (!problem.isValidSolution(currentSolution)) {
-            currentSolution = new ArrayList<>();
-        }
+        if (!problem.isValidSolution(currentSolution)) currentSolution = new ArrayList<>();
         double currentScore = problem.evaluateSolution(currentSolution);
 
         List<String> bestSolution = new ArrayList<>(currentSolution);
@@ -66,7 +62,8 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                 double neighborScore = problem.evaluateSolution(neighborSolution);
                 double deltaScore = problem.isMaximization() ? neighborScore - currentScore : currentScore - neighborScore;
 
-                if (deltaScore > 0 || Math.exp(deltaScore / temperature) > Math.random()) {
+                // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
+                if (deltaScore > 0 || Math.exp(deltaScore / temperature) > ThreadLocalRandom.current().nextDouble()) {
                     currentSolution = new ArrayList<>(neighborSolution);
                     currentScore = neighborScore;
                     if (deltaScore < 0) acceptedWorseMoves++;
@@ -86,7 +83,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             }
             oldBestScore = bestScore;
 
-            double referenceWorseScore = problem.isMaximization() ? currentScore * 0.9 : currentScore * 1.1; // Gorszy o 10%
+            double referenceWorseScore = problem.isMaximization() ? currentScore * 0.9 : currentScore * 1.1;
             double deltaForProb = problem.isMaximization() ? referenceWorseScore - currentScore : currentScore - referenceWorseScore;
             double acceptanceProbability = Math.exp(deltaForProb / temperature);
 
@@ -122,11 +119,12 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     private record SaParameters(double initialTemperature, double coolingRate, double stoppingTemperature, int iterationsPerTemp) {
         SaParameters(Map<String, Object> params) {
+            // --- KLUCZOWA ZMIANA: PANCERNY KONSTRUKTOR (POPRAWIONY) ---
             this(
-                    ((Number) params.getOrDefault("initialTemperature", 10000.0)).doubleValue(),
-                    ((Number) params.getOrDefault("coolingRate", 0.995)).doubleValue(),
-                    ((Number) params.getOrDefault("stoppingTemperature", 0.1)).doubleValue(),
-                    ((Number) params.getOrDefault("iterationsPerTemp", 100)).intValue()
+                    ((Number) (params != null ? params.getOrDefault("initialTemperature", 10000.0) : 10000.0)).doubleValue(),
+                    ((Number) (params != null ? params.getOrDefault("coolingRate", 0.995) : 0.995)).doubleValue(),
+                    ((Number) (params != null ? params.getOrDefault("stoppingTemperature", 0.1) : 0.1)).doubleValue(),
+                    ((Number) (params != null ? params.getOrDefault("iterationsPerTemp", 100) : 100)).intValue()
             );
         }
     }

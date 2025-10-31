@@ -5,10 +5,12 @@ import com.example.algorithm_analyzer.dto.IterationResult;
 import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
 
 @Component
+@Slf4j
 public class TabuSearchAlgorithm extends AbstractAlgorithm {
 
     @Override
@@ -18,15 +20,16 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
 
     @Override
     public String getDescription() {
-        return "Algorytm Przeszukiwania z Tabu, który używa pamięci krótkoterminowej.";
+        return "Algorytm Przeszukiwania z Tabu. Wykorzystuje pamięć krótkoterminową (listę tabu), aby unikać zapętlania i uciekać z lokalnych optimów.";
     }
 
     @Override
     public List<ParameterDefinition> getParameterDefinitions() {
         return Arrays.asList(
-                new ParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 1000, 10, 50000, "Całkowita liczba iteracji.", true),
-                new ParameterDefinition("tabuTenure", "Długość listy tabu", ParameterType.INTEGER, 15, 1, 100, "Liczba iteracji, przez którą ruch jest zakazany.", true),
-                new ParameterDefinition("neighborhoodSampleSize", "Próbka sąsiedztwa", ParameterType.INTEGER, 50, 5, 500, "Liczba sąsiadów sprawdzanych w iteracji.", true)
+                new ParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 1000, 10, 50000, "Całkowita liczba iteracji algorytmu.", true),
+                new ParameterDefinition("tabuTenure", "Długość listy tabu (kadencja)", ParameterType.INTEGER, 15, 1, 100, "Liczba iteracji, przez którą ruch pozostaje zakazany.", true),
+                new ParameterDefinition("neighborhoodSampleSize", "Rozmiar próbki sąsiedztwa", ParameterType.INTEGER, 50, 5, 500, "Liczba sąsiadów sprawdzanych w każdej iteracji.", true),
+                new ParameterDefinition("maxIterationsWithoutImprovement", "Max. iteracji bez poprawy", ParameterType.INTEGER, 200, 20, 10000, "Kryterium stopu: zatrzymaj, jeśli wynik nie poprawi się przez X iteracji.", true)
         );
     }
 
@@ -49,9 +52,11 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
         double bestScore = currentScore;
         double previousBestScore = bestScore;
 
-        Queue<List<String>> tabuList = new LinkedList<>();
-        List<IterationResult> iterationResults = new ArrayList<>();
+        // Używamy Set dla szybszego sprawdzania 'contains'
+        Queue<List<String>> tabuListQueue = new LinkedList<>();
+        Set<List<String>> tabuSet = new HashSet<>();
 
+        List<IterationResult> iterationResults = new ArrayList<>();
         int iterationsWithoutImprovement = 0;
         int improvementCount = 0;
 
@@ -72,7 +77,7 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                 boolean isCandidateBetter = problem.isMaximization() ? candidateScore > bestNeighborScore : candidateScore < bestNeighborScore;
 
                 if (isCandidateBetter) {
-                    if (!tabuList.contains(candidate)) {
+                    if (!tabuSet.contains(candidate)) {
                         bestNeighbor = candidate;
                         bestNeighborScore = candidateScore;
                     } else {
@@ -87,26 +92,33 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
             }
 
             if (bestNeighbor == null) {
-                bestNeighbor = problem.generateRandomSolution();
+                // Jeśli wszyscy sąsiedzi są tabu i nie ma aspiracji, wybierz losowy (lub najlepszy z tabu)
+                bestNeighbor = problem.generateNeighborSolution(currentSolution);
                 bestNeighborScore = problem.evaluateSolution(bestNeighbor);
             }
 
-            if (!(problem.isMaximization() ? bestNeighborScore > currentScore : bestNeighborScore < currentScore)) {
+            boolean isMoveImproving = problem.isMaximization() ? bestNeighborScore > currentScore : bestNeighborScore < currentScore;
+            if (!isMoveImproving) {
                 explorationMove = 1;
             }
 
             currentSolution = new ArrayList<>(bestNeighbor);
             currentScore = bestNeighborScore;
 
-            tabuList.add(currentSolution);
-            if (tabuList.size() > params.tabuTenure()) {
-                tabuList.poll();
+            // Zarządzanie listą tabu (kolejka + set)
+            tabuListQueue.add(currentSolution);
+            tabuSet.add(currentSolution);
+            if (tabuListQueue.size() > params.tabuTenure()) {
+                List<String> removedSolution = tabuListQueue.poll();
+                tabuSet.remove(removedSolution); // Usuń z setu, gdy wypada z kolejki
             }
 
-            if (problem.isMaximization() ? currentScore > bestScore : currentScore < bestScore) {
+            boolean isCurrentBest = problem.isMaximization() ? currentScore > bestScore : currentScore < bestScore;
+            if (isCurrentBest) {
                 if (previousBestScore != 0 && Math.abs(previousBestScore) != Double.POSITIVE_INFINITY && bestScore != previousBestScore) {
                     relativeImprovement = Math.abs((currentScore - bestScore) / bestScore);
                 }
+
                 previousBestScore = bestScore;
                 bestSolution = new ArrayList<>(currentSolution);
                 bestScore = currentScore;
@@ -126,13 +138,18 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                             .specificMetrics(Map.of(
                                     "stagnation", iterationsWithoutImprovement,
                                     "improvements", improvementCount,
-                                    "tabuListSize", tabuList.size(),
+                                    "tabuListSize", tabuSet.size(),
                                     "aspirationsMet", aspirationsMet,
                                     "exploration", explorationMove,
                                     "relativeImprovement", relativeImprovement
                             ))
                             .build()
             );
+
+            if (iterationsWithoutImprovement >= params.maxIterationsWithoutImprovement()) {
+                log.info("Zatrzymano Tabu Search z powodu braku poprawy przez {} iteracji.", params.maxIterationsWithoutImprovement());
+                break;
+            }
         }
 
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
@@ -143,12 +160,16 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
         return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);
     }
 
-    private record TsParameters(int iterations, int tabuTenure, int neighborhoodSampleSize) {
+    private record TsParameters(int iterations, int tabuTenure, int neighborhoodSampleSize, int maxIterationsWithoutImprovement) {
         TsParameters(Map<String, Object> params) {
+            // --- KLUCZOWA ZMIANA: PANCERNY KONSTRUKTOR (POPRAWIONY) ---
+            // Wywołanie 'this()' musi być pierwszą instrukcją.
+            // Używamy operatora trójargumentowego, aby sprawdzić 'params' przed przekazaniem.
             this(
-                    ((Number) params.getOrDefault("iterations", 1000)).intValue(),
-                    ((Number) params.getOrDefault("tabuTenure", 15)).intValue(),
-                    ((Number) params.getOrDefault("neighborhoodSampleSize", 50)).intValue()
+                    ((Number) (params != null ? params.getOrDefault("iterations", 1000) : 1000)).intValue(),
+                    ((Number) (params != null ? params.getOrDefault("tabuTenure", 15) : 15)).intValue(),
+                    ((Number) (params != null ? params.getOrDefault("neighborhoodSampleSize", 50) : 50)).intValue(),
+                    ((Number) (params != null ? params.getOrDefault("maxIterationsWithoutImprovement", 200) : 200)).intValue()
             );
         }
     }

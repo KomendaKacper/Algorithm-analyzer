@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { CHART_COLORS } from './chartColors';
+import { CHART_COLORS_PALETTE } from './chartColors';
 
 // Nowy komponent do wizualizacji "skoków" poprawy
 export function SpikeChart({ results, dataKey, name }) {
@@ -51,7 +51,7 @@ export function SpikeChart({ results, dataKey, name }) {
             <Bar
               key={result.algorithmName}
               dataKey={result.algorithmName}
-              fill={CHART_COLORS[index % CHART_COLORS.length]}
+              fill={CHART_COLORS_PALETTE[index % CHART_COLORS_PALETTE.length]}
               name={result.algorithmName}
             />
           ))}

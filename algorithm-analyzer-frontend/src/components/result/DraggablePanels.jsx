@@ -5,16 +5,20 @@ import { ScoreChart } from "./charts/ScoreChart";
 import { SpikeChart } from "./charts/SpikeChart";
 import { MatrixHeatmap } from "./charts/MatrixHeatmap";
 import { AnimatedMatrixHeatmap } from "./charts/AnimatedMatrixHeatmap";
+import { StabilityChart } from "./charts/StabilityChart"; 
+import { ScatterPlotChart } from "./charts/ScatterPlotChart";
 
+// --- ZMIANA: Zaktualizowana lista tytułów ---
 const PANEL_TITLES = {
   table: 'Tabela Iteracji',
-  'charts-score': 'Wykres: Jakość / Trajektoria',
+  'charts-score': 'Wykres: Zbieżność Wyniku',
   'charts-time': 'Wykres: Czas wykonania',
-  'charts-exploration': 'Wykres: Miara Eksploracji',
   'charts-improvements': 'Wykres: Częstotliwość Poprawy',
   'charts-relative-improvement': 'Wykres: Skoki Poprawy',
   'charts-stagnation': 'Wykres: Stagnacja',
-  'animated-matrix-pheromones': 'Animacja: Ewolucja Feromonów'
+  'animated-matrix-pheromones': 'Animacja: Ewolucja Feromonów',
+  'stability-chart': 'Analiza: Stabilność Wyników',
+  'scatter-plot': 'Analiza: Kompromis Jakość vs. Czas'
 };
 
 export default function DraggablePanels({
@@ -23,73 +27,48 @@ export default function DraggablePanels({
   setPanelPositions,
   removePanel,
   toggleMinimize,
+  scatterPlotData,
 }) {
   const interactionInfo = useRef(null);
   const panelRefs = useRef({});
 
   const handleInteractionStart = useCallback((e, id, type) => {
-    // Ignoruj kliknięcia na przyciski w nagłówku
     if (e.target.closest('button')) return;
     e.preventDefault();
     e.stopPropagation();
-
     const panelElement = panelRefs.current[id];
     if (!panelElement) return;
-
-    // Zapisz pozycję startową i wymiary z naszego stanu w React
     const startPos = panelPositions[id];
-    
-    interactionInfo.current = {
-      id,
-      type, // 'drag' or 'resize'
-      startX: e.clientX,
-      startY: e.clientY,
-      initialLeft: startPos.left,
-      initialTop: startPos.top,
-      initialWidth: startPos.width,
-      initialHeight: startPos.height,
-    };
-    
+    interactionInfo.current = { id, type, startX: e.clientX, startY: e.clientY, initialLeft: startPos.left, initialTop: startPos.top, initialWidth: startPos.width, initialHeight: startPos.height };
     panelElement.classList.add('dragging');
-
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   }, [panelPositions]);
 
   const handleMouseMove = useCallback((e) => {
     if (!interactionInfo.current) return;
-
-    const { id, type, startX, startY, initialLeft, initialTop, initialWidth, initialHeight } = interactionInfo.current;
+    const { id, type, startX, startY, initialWidth, initialHeight } = interactionInfo.current;
     const panelElement = panelRefs.current[id];
     if (!panelElement) return;
-
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-
-    // --- KLUCZ DO PŁYNNOŚCI: Manipulujemy transform, a nie top/left ---
     if (type === 'drag') {
       panelElement.style.transform = `translate(${dx}px, ${dy}px)`;
     } else if (type === 'resize') {
-      const newWidth = Math.max(350, initialWidth + dx);
-      const newHeight = Math.max(200, initialHeight + dy);
-      panelElement.style.width = `${newWidth}px`;
-      panelElement.style.height = `${newHeight}px`;
+      panelElement.style.width = `${Math.max(350, initialWidth + dx)}px`;
+      panelElement.style.height = `${Math.max(200, initialHeight + dy)}px`;
     }
   }, []);
   
   const handleMouseUp = useCallback((e) => {
     if (!interactionInfo.current) return;
-
     const { id, type, startX, startY, initialLeft, initialTop, initialWidth, initialHeight } = interactionInfo.current;
     const panelElement = panelRefs.current[id];
     if (!panelElement) return;
-    
     panelElement.classList.remove('dragging');
-
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    // --- AKTUALIZUJEMY STAN REACTA TYLKO RAZ, PO ZAKOŃCZENIU AKCJI ---
     setPanelPositions(prev => {
       const newPositions = { ...prev };
       if (type === 'drag') {
@@ -102,9 +81,7 @@ export default function DraggablePanels({
       return newPositions;
     });
     
-    // Resetujemy style inline po aktualizacji stanu
     panelElement.style.transform = '';
-
     interactionInfo.current = null;
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mouseup", handleMouseUp);
@@ -131,7 +108,7 @@ export default function DraggablePanels({
           <div
             key={panel.id}
             ref={el => panelRefs.current[panel.id] = el}
-            className={`draggable-panel ${panel.type.startsWith("charts") || panel.type.startsWith("matrix") || panel.type.startsWith("animated") ? "panel-charts" : "panel-table"} ${panel.minimized ? "minimized" : ""}`}
+            className={`draggable-panel ${panel.type.startsWith("charts") || panel.type.startsWith("matrix") || panel.type.startsWith("animated") || panel.type.includes('plot') || panel.type.includes('chart') ? "panel-charts" : "panel-table"} ${panel.minimized ? "minimized" : ""}`}
             style={{ 
                 top: `${pos.top}px`, 
                 left: `${pos.left}px`,
@@ -151,15 +128,20 @@ export default function DraggablePanels({
             {!panel.minimized && (
               <div className="panel-content">
                 {panel.type === "table" && !isComparison && <IterationTable data={panel.data.iterationResults || []} algorithmName={panel.data.algorithmName}/>}
+                
                 {panel.type === "charts-score" && <ScoreChart results={results} />}
                 {panel.type === "charts-time" && <MetricChart results={results} dataKey="executionDurationMs" name="Czas iteracji (ms)" />}
-                {panel.type === "charts-exploration" && <MetricChart results={results} dataKey="exploration" name="Miara Eksploracji" />}
                 {panel.type === "charts-improvements" && <MetricChart results={results} dataKey="improvements" name="Liczba Popraw" />}
                 {panel.type === "charts-relative-improvement" && <SpikeChart results={results} dataKey="relativeImprovement" name="Względna Poprawa (%)" />}
                 {panel.type === "charts-stagnation" && <MetricChart results={results} dataKey="stagnation" name="Stagnacja" />}
+                
                 {panel.type.startsWith('charts-specific-') && <MetricChart results={results} dataKey={panel.type.replace('charts-specific-', '')} name={getPanelTitle(panel.type).replace('Wykres: ', '')} />}
                 {panel.type.startsWith('matrix-') && !panel.type.startsWith('animated-matrix') && <MatrixHeatmap title={panel.data.title} nodes={panel.data.nodes} matrixData={panel.data.matrixData} />}
                 {panel.type === 'animated-matrix-pheromones' && <AnimatedMatrixHeatmap results={results} />}
+
+                {/* --- ZMIANA: Poprawka typu z 'box-plot' na 'stability-chart' --- */}
+                {panel.type === 'stability-chart' && <StabilityChart results={panel.data} />}
+                {panel.type === 'scatter-plot' && <ScatterPlotChart data={scatterPlotData} />}
               </div>
             )}
             {!panel.minimized && (
