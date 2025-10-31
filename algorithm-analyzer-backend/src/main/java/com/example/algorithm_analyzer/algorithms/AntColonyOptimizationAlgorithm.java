@@ -1,3 +1,4 @@
+// src/main/java/com/example/algorithm_analyzer/algorithms/AntColonyOptimizationAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dto.FinalMetricData;
@@ -99,10 +100,16 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
                 metrics.put("pheromoneSnapshot", new HashMap<>(pheromones));
             }
 
+            // --- NOWA LOGIKA: Pobierz ścieżkę najlepszej mrówki z tej iteracji ---
+            List<String> currentBestPath = iterStats.bestSolutionThisIteration() != null ? iterStats.bestSolutionThisIteration().path() : null;
+
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iter).bestScore(bestFitnessGlobal)
                             .bestSolution(bestSolutionPathGlobal != null ? problem.convertPathToSolution(bestSolutionPathGlobal) : Collections.emptyList())
+                            // --- NOWA LINIA: Zapisujemy najlepsze rozwiązanie z BIEŻĄCEJ iteracji ---
+                            .currentSolution(currentBestPath != null ? problem.convertPathToSolution(currentBestPath) : null)
+                            .currentScore(iterStats.bestFitnessThisIteration()) // Używamy 'bestFitnessThisIteration' jako 'currentScore'
                             .averageScore(iterStats.averageFitness()).worstScore(iterStats.worstFitness())
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(metrics).build());
@@ -171,4 +178,3 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
     private record AntSolution(List<String> path, double fitness) {}
     private record IterationStats(AntSolution bestSolutionThisIteration, double bestFitnessThisIteration, double averageFitness, double worstFitness) {}
 }
-

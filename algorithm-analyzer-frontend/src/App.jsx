@@ -5,6 +5,8 @@ import ControlPanel from "./components/input/ControlPanel";
 import DraggablePanels from "./components/result/DraggablePanels";
 import AlgorithmOverlay from "./components/result/AlgorithmOverlay";
 import ResultPanelWrapper from "./components/result/ResultPanelWrapper";
+// --- Import grafu (bez zmian) ---
+import { SolutionGraphPanel } from "./components/result/charts/SolutionGraphPanel";
 import "./App.css";
 
 export default function App() {
@@ -24,7 +26,7 @@ export default function App() {
   const [minimizedPanels, setMinimizedPanels] = useState({});
   const [isComparisonMinimized, setIsComparisonMinimized] = useState(false);
 
-  // --- LOGIKA TRYBU CIEMNEGO (POZOSTAJE TUTAJ) ---
+  // --- Logika trybu ciemnego (bez zmian) ---
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode ? JSON.parse(savedMode) : false;
@@ -49,8 +51,8 @@ export default function App() {
     getAlgorithms().then(res => setAlgorithms(res.data)).catch(err => console.error("Błąd ładowania algorytmów:", err));
   }, []);
 
+  // --- Funkcje wykonujące (bez zmian) ---
   const runAnalysis = async (tasksToRun) => {
-    // ... (reszta funkcji runAnalysis bez zmian) ...
     if (!problemConfig.name || tasksToRun.length === 0 || tasksToRun.some(t => !t || !t.name)) {
       return [{ success: false, errorMessage: "Upewnij się, że problem oraz wszystkie algorytmy są w pełni skonfigurowane." }];
     }
@@ -74,7 +76,6 @@ export default function App() {
   };
 
   const handleExecuteCurrentTask = async () => {
-    // ... (bez zmian) ...
     setResults([]);
     const newResults = await runAnalysis(tasks);
     setResults(newResults);
@@ -83,7 +84,6 @@ export default function App() {
   };
 
   const handleRunStabilityAnalysis = async (runCount) => {
-    // ... (bez zmian) ...
     if (tasks.length === 0 || tasks.some(t => !t || !t.name)) {
         setResults([{ success: false, errorMessage: "Skonfiguruj co najmniej jeden algorytm, aby uruchomić analizę stabilności." }]);
         return;
@@ -115,7 +115,6 @@ export default function App() {
   };
 
   const handleRunScatterAnalysis = async (runCount) => {
-    // ... (bez zmian) ...
       if (tasks.length === 0 || tasks.some(t => !t || !t.name)) {
           setResults([{ success: false, errorMessage: "Skonfiguruj co najmniej jeden algorytm, aby uruchomić analizę rozrzutu." }]);
           return;
@@ -144,14 +143,15 @@ export default function App() {
           setResults([{ success: false, errorMessage: "Analiza rozrzutu nie powiodła się. Sprawdź konsolę." }]);
       }
   };
-  
+  // ------------------------------------
+
+  // --- Funkcje paneli (bez zmian) ---
   const addPanel = (type, data) => {
-    // ... (bez zmian) ...
     const id = `${type}-${Date.now()}`;
     setOpenPanels(prev => [...prev, { id, type, data, minimized: false }]);
     const panelStartLeft = isSidebarCollapsed ? 80 : 450;
     const isChartPanel = type.startsWith('charts') || type.startsWith('matrix') || type.startsWith('animated') || type.includes('plot') || type.includes('chart');
-_setPanelPositions(prev => ({ ...prev, [id]: { top: 120 + Object.keys(prev).length * 30, left: panelStartLeft + Object.keys(prev).length * 30, width: isChartPanel ? 900 : 800, height: 500 } }));
+    setPanelPositions(prev => ({ ...prev, [id]: { top: 120 + Object.keys(prev).length * 30, left: panelStartLeft + Object.keys(prev).length * 30, width: isChartPanel ? 900 : 800, height: 500 } }));
   };
 
   const removePanel = (id) => { setOpenPanels(prev => prev.filter((p) => p.id !== id)); };
@@ -163,8 +163,16 @@ _setPanelPositions(prev => ({ ...prev, [id]: { top: 120 + Object.keys(prev).leng
   const toggleComparisonMinimize = () => {
     setIsComparisonMinimized(p => !p);
   };
+  // ---------------------------------
   
   const showResultsWrapper = results.length > 0;
+
+  // --- ZMIANA: Logika wyświetlania grafu ---
+  // Pokaż graf, jeśli mamy jakiekolwiek wyniki ORAZ pierwszy wynik ma dane 'currentSolution' (zakładamy, że reszta też)
+  const showSolutionGraph = 
+    showResultsWrapper &&
+    results.every(r => r.success) && // Pokaż tylko jeśli wszystkie się powiodły
+    results[0].iterationResults?.[0]?.currentSolution; // Sprawdź, czy dane istnieją
 
   return (
     <div className={`App ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
@@ -186,19 +194,24 @@ _setPanelPositions(prev => ({ ...prev, [id]: { top: 120 + Object.keys(prev).leng
         </div>
         <div className="main-content">
             
-            {/* Ten nagłówek został poprawnie usunięty z main-content, 
-                ponieważ jest teraz częścią ControlPanel w sidebarze */}
-            
             {showResultsWrapper && (
               <ResultPanelWrapper 
                 results={results} 
                 addPanel={addPanel} 
-D              minimizedPanels={minimizedPanels}
+                minimizedPanels={minimizedPanels}
                 toggleMinimizePanel={toggleMinimizePanel}
                 isComparisonMinimized={isComparisonMinimized}
                 toggleComparisonMinimize={toggleComparisonMinimize}
               />
             )}
+
+            {/* --- ZMIANA: Przekazujemy CAŁE `results` do grafu --- */}
+            {showSolutionGraph && (
+              <SolutionGraphPanel 
+                results={results} // Przekaż wszystkie wyniki
+              />
+            )}
+            {/* --------------------------------------- */}
 
             <DraggablePanels
               openPanels={openPanels}

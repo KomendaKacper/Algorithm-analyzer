@@ -706,3 +706,86 @@ body.dark .algorithm-overlay { background: rgba(15, 23, 42, 0.7); }
 .highlighted { color: var(--color-primary-static); font-weight: bold; }
 .falling-text-canvas { position: absolute; top: 0; left: 0; z-index: -1; }
 .shuffle-parent { font-size: 1.5rem; font-weight: 700; text-align: center; padding-bottom: 24px; color: var(--color-text-primary); }
+
+.main-content .result-buttons-wrapper {
+ margin-bottom: 32px; 
+}
+
+.graph-tooltip {
+ padding: 8px;
+ border-radius: 4px;
+ background-color: var(--color-surface-secondary);
+ color: var(--color-text-primary);
+ border: 1px solid var(--color-border);
+ box-shadow: var(--shadow-md);
+ font-family: var(--font-family-sans);
+ font-size: 0.85rem;
+ max-width: 300px;
+ word-wrap: break-word;
+}
+.graph-tooltip b {
+ color: var(--color-text-secondary);
+}
+
+/* NOWA SEKCJA 7: Graf Trajektorii */
+.graph-legend {
+ position: absolute;
+ top: 16px; /* Odległość od góry */
+ right: 16px; /* Odległość od prawej */
+ background-color: var(--color-surface-secondary);
+ border: 1px solid var(--color-border);
+ border-radius: var(--border-radius-sm);
+ padding: 10px 15px;
+ box-shadow: var(--shadow-md);
+ z-index: 10; /* Aby legenda była zawsze na wierzchu */
+}
+
+.graph-legend h4 {
+ margin-top: 0;
+ margin-bottom: 10px;
+ color: var(--color-text-secondary);
+ font-size: 0.9em;
+}
+
+.graph-legend .legend-item {
+ display: flex;
+ align-items: center;
+ margin-bottom: 5px;
+ font-size: 0.8em;
+ color: var(--color-text-primary);
+}
+
+.graph-legend .legend-color-box {
+ width: 16px;
+ height: 16px;
+ border-radius: 50%;
+ margin-right: 8px;
+ border: 1px solid rgba(0,0,0,0.2); /* Lekkie obramowanie, aby kolory były widoczne na jasnym tle */
+}
+
+.graph-legend .legend-border-box {
+ width: 14px; /* Mniejsze, aby zmieściło się w obramowaniu */
+ height: 14px;
+ border: 2px solid; /* Będzie miało kolor złoty */
+ border-radius: 50%;
+ background-color: transparent; /* Przezroczyste tło */
+ margin-right: 8px;
+ display: inline-block; /* Aby obramowanie było widoczne */
+}
+
+/* Tooltip dla grafu (poprawki) */
+.graph-tooltip {
+ padding: 8px;
+ border-radius: 4px;
+ background-color: var(--color-surface-secondary);
+ color: var(--color-text-primary);
+ border: 1px solid var(--color-border);
+ box-shadow: var(--shadow-md);
+ font-family: var(--font-family-sans);
+ font-size: 0.85rem;
+ max-width: 300px;
+ word-wrap: break-word;
+}
+.graph-tooltip b {
+ color: var(--color-text-secondary);
+}

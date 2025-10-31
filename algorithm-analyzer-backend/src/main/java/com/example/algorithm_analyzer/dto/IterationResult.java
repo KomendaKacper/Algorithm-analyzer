@@ -1,3 +1,4 @@
+// src/main/java/com/example/algorithm_analyzer/dto/IterationResult.java
 package com.example.algorithm_analyzer.dto;
 
 import lombok.Builder;
@@ -14,6 +15,10 @@ public class IterationResult {
     private double bestScore;
     private List<String> bestSolution;
     private double executionDurationMs;
+
+    // --- NOWE POLE: Rozwiązanie, które jest "aktywne" w tej iteracji ---
+    // (Dla SA/TS będzie to 'currentSolution', dla ACO 'bestAntSolution')
+    private List<String> currentSolution;
 
     // --- METRYKI OPCJONALNE (mogą, ale nie muszą istnieć) ---
     private Double currentScore; // np. dla SA

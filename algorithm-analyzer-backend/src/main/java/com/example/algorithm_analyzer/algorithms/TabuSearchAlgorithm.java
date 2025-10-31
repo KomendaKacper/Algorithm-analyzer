@@ -1,3 +1,4 @@
+// src/main/java/com/example/algorithm_analyzer/algorithms/TabuSearchAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dto.FinalMetricData;
@@ -134,6 +135,8 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                             .bestScore(bestScore)
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
+                            // --- NOWA LINIA: Zapisujemy, gdzie algorytm jest TERAZ ---
+                            .currentSolution(new ArrayList<>(currentSolution))
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
                                     "stagnation", iterationsWithoutImprovement,
@@ -174,4 +177,3 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
         }
     }
 }
-

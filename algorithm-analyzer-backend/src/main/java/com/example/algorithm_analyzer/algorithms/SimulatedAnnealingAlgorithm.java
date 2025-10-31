@@ -1,3 +1,4 @@
+// src/main/java/com/example/algorithm_analyzer/algorithms/SimulatedAnnealingAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dto.FinalMetricData;
@@ -93,6 +94,8 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                             .bestScore(bestScore)
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
+                            // --- NOWA LINIA: Zapisujemy, gdzie algorytm jest TERAZ ---
+                            .currentSolution(new ArrayList<>(currentSolution))
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
                                     "exploration", (double) acceptedWorseMoves,
@@ -129,4 +132,3 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
         }
     }
 }
-

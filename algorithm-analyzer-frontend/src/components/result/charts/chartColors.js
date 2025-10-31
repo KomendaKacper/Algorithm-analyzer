@@ -1,41 +1,14 @@
-// Definiujemy paletę kolorów pasującą do motywu "Gorący Zachód Słońca"
-// Format: { id, start (kolor gradientu), stop (kolor gradientu), line (płaski kolor dla linii/punktów) }
+// src/components/result/charts/chartColors.js
 
 export const CHART_COLORS_PALETTE = [
-  // 1. Motyw główny (Gorący Zachód Słońca)
-  {
-    id: 'grad-0',
-    start: '#fb923c', // Jasny pomarańcz
-    stop: '#f97316',  // Ciemny pomarańcz
-    line: '#f97316'
-  },
-  // 2. Kolor kontrastowy (Niebieski)
-  {
-    id: 'grad-1',
-    start: '#60a5fa', // Jasny niebieski
-    stop: '#3b82f6',  // Ciemny niebieski
-    line: '#3b82f6'
-  },
-  // 3. Kolor uzupełniający (Zielony)
-  {
-    id: 'grad-2',
-    start: '#34d399', // Jasny zielony
-    stop: '#10b981',  // Ciemny zielony
-    line: '#10b981'
-  },
-  // 4. Kolor akcentujący (Fiolet)
-  {
-    id: 'grad-3',
-    start: '#c4b5fd', // Jasny fiolet
-    stop: '#8b5cf6',  // Ciemny fiolet
-    line: '#8b5cf6'
-  },
-  // 5. Kolor neutralny (Szary)
-  {
-    id: 'grad-4',
-    start: '#9ca3af', // Jasny szary
-    stop: '#6b7280',  // Ciemny szary
-    line: '#6b7280'
-  }
+  { line: '#4CAF50', fill: 'rgba(76, 175, 80, 0.2)' }, // Zielony
+  { line: '#2196F3', fill: 'rgba(33, 150, 243, 0.2)' }, // Niebieski
+  { line: '#FFC107', fill: 'rgba(255, 193, 7, 0.2)' }, // Żółty
+  { line: '#F44336', fill: 'rgba(244, 67, 54, 0.2)' }, // Czerwony
+  { line: '#9C27B0', fill: 'rgba(156, 39, 176, 0.2)' }, // Fioletowy
+  { line: '#FF9800', fill: 'rgba(255, 152, 0, 0.2)' }, // Pomarańczowy
+  { line: '#00BCD4', fill: 'rgba(0, 188, 212, 0.2)' }, // Błękitny
+  { line: '#795548', fill: 'rgba(121, 85, 72, 0.2)' }, // Brązowy
+  { line: '#607D8B', fill: 'rgba(96, 125, 139, 0.2)' }, // Szary
+  { line: '#E91E63', fill: 'rgba(233, 30, 99, 0.2)' }, // Różowy
 ];
-

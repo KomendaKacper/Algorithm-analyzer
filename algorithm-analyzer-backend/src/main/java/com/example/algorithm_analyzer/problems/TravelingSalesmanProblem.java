@@ -4,7 +4,7 @@ import com.example.algorithm_analyzer.dto.ParameterDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom; // NOWY IMPORT
+import java.util.concurrent.ThreadLocalRandom; // Import pozostaje (używany gdzie indziej)
 
 @Component("travelingSalesmanProblem")
 @Slf4j
@@ -13,7 +13,7 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     private List<String> cities = new ArrayList<>();
     private Map<String, Map<String, Double>> distances = new HashMap<>();
 
-    // ... (istniejące metody initialize, evaluateSolution, etc. bez zmian) ...
+    // ... (metody initialize, evaluateSolution, etc. pozostają bez zmian) ...
     @Override
     public String getName() { return "Traveling Salesman Problem (TSP)"; }
     @Override
@@ -90,22 +90,26 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     public List<String> generateRandomSolution() {
         checkInitialized();
-        List<String> randomSolution = new ArrayList<>(cities);
-        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
-        Collections.shuffle(randomSolution, ThreadLocalRandom.current());
-        return randomSolution;
+        List<String> deterministicSolution = new ArrayList<>(cities);
+
+        // --- CELOWA ZMIANA: Usunięto Collections.shuffle() ---
+        // Zwracamy posortowaną (domyślną) listę miast, aby zapewnić
+        // ten sam punkt startowy dla algorytmów SA i TS, co dla ACO.
+        // Collections.shuffle(randomSolution, ThreadLocalRandom.current());
+
+        log.info("Zwracam deterministyczne rozwiązanie startowe dla TSP: {}", deterministicSolution);
+        return deterministicSolution;
     }
 
     @Override
     public List<String> generateNeighborSolution(List<String> currentSolution) {
-        // Dla TSP, generowanie sąsiada to to samo co mutacja
+        // Dla TSP, generowanie sąsiada to to samo co mutacja (2-opt swap)
         return mutate(currentSolution);
     }
 
     @Override
     public List<String> crossover(List<String> parent1, List<String> parent2) {
         checkInitialized();
-        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
         Random rand = ThreadLocalRandom.current();
         int size = parent1.size();
 
@@ -145,7 +149,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         int size = mutated.size();
         if (size < 2) return mutated;
 
-        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
         Random rand = ThreadLocalRandom.current();
         int i = rand.nextInt(size);
         int j = rand.nextInt(size);
@@ -153,8 +156,17 @@ public class TravelingSalesmanProblem extends AbstractProblem {
             j = rand.nextInt(size);
         }
 
-        Collections.swap(mutated, i, j);
+        if (i > j) {
+            int temp = i;
+            i = j;
+            j = temp;
+        }
+
+        while (i < j) {
+            Collections.swap(mutated, i, j);
+            i++;
+            j--;
+        }
         return mutated;
     }
 }
-
