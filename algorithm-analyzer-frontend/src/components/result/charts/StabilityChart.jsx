@@ -92,7 +92,8 @@ export function StabilityChart({ results }) {
                 const color = CHART_COLORS_PALETTE[index % CHART_COLORS_PALETTE.length];
                 return <Cell key={`cell-${index}`} fill={`url(#${color.id})`} />
              })}
-             <ErrorBar dataKey="errorRange" width={4} strokeWidth={2} stroke="rgba(0,0,0,0.6)" direction="y" />
+             {/* --- POPRAWKA: Kolor wąsów w trybie ciemnym --- */}
+             <ErrorBar dataKey="errorRange" width={4} strokeWidth={2} stroke="var(--color-text-secondary)" direction="y" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

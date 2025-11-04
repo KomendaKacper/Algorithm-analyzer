@@ -1,0 +1,167 @@
+/* ========================================================================
+ * CUSTOM ALGORITHM TEMPLATE (Groovy/Java)
+ * ========================================================================
+ * CONTRACT:
+ * 1. Must extend 'AbstractAlgorithm'.
+ * 2. Must implement: getName(), getDescription(), getParameterDefinitions().
+ * 3. Must implement: solve(Problem, Map).
+ * 4. Must use valid Problem methods:
+ * - problem.generateRandomSolution()
+ * - problem.generateNeighborSolution(List<String> solution)
+ * - problem.evaluateSolution(List<String> solution)
+ * - problem.isMaximization()
+ * ========================================================================
+ */
+
+// Package imports (whitelisted in GroovySandboxConfig)
+import com.example.algorithm_analyzer.algorithms.AbstractAlgorithm
+import com.example.algorithm_analyzer.problems.Problem
+import com.example.algorithm_analyzer.dto.IterationResult
+import com.example.algorithm_analyzer.dto.FinalMetricData
+import com.example.algorithm_analyzer.dto.ParameterDefinition
+import com.example.algorithm_analyzer.enums.ParameterType
+
+// Java utility imports (whitelisted in GroovySandboxConfig)
+import java.util.Map
+import java.util.List
+import java.util.ArrayList
+import java.util.Arrays
+import java.util.Random
+
+/**
+ * A simple Random Walk algorithm implementation.
+ * It serves as a template for custom user-defined algorithms.
+ */
+public class MyCustomAlgorithm extends AbstractAlgorithm {
+
+    private final Random random = new Random()
+
+    // --- 1. Implementation of Algorithm.getName() ---
+    @Override
+    public String getName() {
+        // This name MUST be unique
+        return "My Custom Algorithm (Random Walk)"
+    }
+
+    // --- 2. Implementation of Algorithm.getDescription() ---
+    @Override
+    public String getDescription() {
+        return "A custom Random Walk algorithm implemented by a user via the Groovy sandbox."
+    }
+
+    // --- 3. Implementation of Algorithm.getParameterDefinitions() ---
+    // These parameters will be automatically shown in the UI.
+    @Override
+    public List<ParameterDefinition> getParameterDefinitions() {
+        return Arrays.asList(
+            new ParameterDefinition(
+                /* name */ "maxIterations",
+                /* displayName */ "Max Iterations",
+                /* type */ ParameterType.INTEGER,
+                /* defaultValue */ 100,
+                /* minValue */ 1,
+                /* maxValue */ 10000,
+                /* description */ "The total number of iterations to run.",
+                /* required */ true
+            )
+        )
+    }
+
+    // --- 4. (Optional) Override of AbstractAlgorithm.getSpecificMetricLabels() ---
+    @Override
+    protected Map<String, String> getSpecificMetricLabels() {
+        // Map a metric key (from specificMetrics) to a UI label
+        return Map.of(
+            "acceptance_rate", "Acceptance Rate"
+        )
+    }
+
+    // --- 5. Implementation of AbstractAlgorithm.solve() ---
+    // This is the core logic of your algorithm.
+    @Override
+    protected ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters) {
+
+        // --- Get parameters ---
+        int maxIterations = (Integer) algorithmParameters.getOrDefault("maxIterations", 100)
+
+        // --- Initialization ---
+        List<IterationResult> iterationResults = new ArrayList<>()
+
+        // Use the CORRECT method from your Problem interface
+        List<String> currentSolution = problem.generateRandomSolution()
+
+        // Check if the problem is valid (e.g., Knapsack might return empty if no items fit)
+        if (!problem.isValidSolution(currentSolution)) {
+             log.warn("Initial random solution is invalid for this problem configuration.");
+             // Return an empty/error result
+             return new ExecutionResult(
+                Collections.emptyList(),
+                problem.isMaximization() ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY,
+                Collections.emptyList(),
+                Map.of()
+            );
+        }
+
+        double currentScore = problem.evaluateSolution(currentSolution)
+        List<String> bestSolution = new ArrayList<>(currentSolution)
+        double bestScore = currentScore
+        int acceptedMoves = 0
+
+        // --- Main algorithm loop ---
+        for (int i = 0; i < maxIterations; i++) {
+
+            // Use the CORRECT method from your Problem interface
+            List<String> neighbourSolution = problem.generateNeighborSolution(currentSolution)
+
+            if (!problem.isValidSolution(neighbourSolution)) {
+                // If neighbor is invalid, skip this iteration
+                continue;
+            }
+
+            double neighbourScore = problem.evaluateSolution(neighbourSolution)
+
+            // Simple Random Walk logic: always accept the neighbor
+            boolean accepted = true
+            if (accepted) {
+                currentSolution = new ArrayList<>(neighbourSolution) // Must be a copy
+                currentScore = neighbourScore
+                acceptedMoves++
+            }
+
+            // Check if this is the new best-so-far
+            boolean isNewBest = problem.isMaximization() ? (currentScore > bestScore) : (currentScore < bestScore)
+            if (isNewBest) {
+                bestSolution = new ArrayList<>(currentSolution) // Must be a copy
+                bestScore = currentScore
+            }
+
+            // Report results for this iteration
+            iterationResults.add(
+                IterationResult.builder()
+                    .iteration(i)
+                    .bestScore(bestScore)
+                    .bestSolution(new ArrayList<>(bestSolution)) // Send a copy
+                    .currentScore(currentScore)
+                    .currentSolution(new ArrayList<>(currentSolution)) // Send a copy
+                    .specificMetrics(Map.of()) // Add custom metrics here
+                    .build()
+            )
+        }
+
+        // --- Final metrics (optional) ---
+        Map<String, FinalMetricData> finalMetrics = Map.of(
+            "acceptance_rate", new FinalMetricData(
+                "Acceptance Rate",
+                (maxIterations > 0 ? (double) acceptedMoves / maxIterations : 0.0)
+            )
+        )
+
+        // --- Return the final result ---
+        return new ExecutionResult(
+            bestSolution,
+            bestScore,
+            iterationResults,
+            finalMetrics
+        )
+    }
+}

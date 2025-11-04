@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import InputField from "../../uiComponents/InputField"; // Upewnij się, że ścieżka jest poprawna
 
-// --- Sub-komponent dla konfiguracji TSP ---
+// --- Twój stary sub-komponent TspConfig (Przywrócony) ---
 const TspConfig = ({ onConfigChange }) => {
   const [inputMode, setInputMode] = useState('json'); // 'json' lub 'generate'
   const [cities, setCities] = useState('["1", "2", "3", "4", "5"]');
@@ -114,7 +115,7 @@ const TspConfig = ({ onConfigChange }) => {
   );
 };
 
-// --- Sub-komponent dla konfiguracji Problemu Plecakowego ---
+// --- Twój stary sub-komponent KnapsackConfig (Przywrócony) ---
 const KnapsackConfig = ({ onConfigChange }) => {
   const [inputMode, setInputMode] = useState('json'); // 'json' lub 'generate'
   const [capacity, setCapacity] = useState(50);
@@ -191,7 +192,7 @@ const KnapsackConfig = ({ onConfigChange }) => {
             <label>Pojemność plecaka</label>
             <input type="number" className="input" value={capacity} onChange={e => setCapacity(e.target.value)} />
           </div>
-           <div className="form-group">
+            <div className="form-group">
             <label>Przedmioty (jako tablica JSON)</label>
             <textarea className="input json-input" rows="2" value={items} onChange={e => setItems(e.target.value)} />
           </div>
@@ -199,7 +200,7 @@ const KnapsackConfig = ({ onConfigChange }) => {
             <label>Wagi (jako obiekt JSON)</label>
             <textarea className="input json-input" rows="3" value={weights} onChange={e => setWeights(e.target.value)} />
           </div>
-           <div className="form-group">
+            <div className="form-group">
             <label>Wartości (jako obiekt JSON)</label>
             <textarea className="input json-input" rows="3" value={values} onChange={e => setValues(e.target.value)} />
           </div>
@@ -226,40 +227,139 @@ const KnapsackConfig = ({ onConfigChange }) => {
   );
 };
 
+// --- Pomocnik do parsowania wartości na podstawie typu ---
+const parseValue = (value, type) => {
+  switch (type) {
+    case "INTEGER":
+      return parseInt(value, 10) || 0;
+    case "DOUBLE":
+      return parseFloat(value) || 0.0;
+    case "BOOLEAN":
+      return Boolean(value);
+    default:
+      return value;
+  }
+};
 
-// --- Główny komponent Panelu Problemu ---
-export default function ProblemPanel({ setProblemConfig }) {
-  const [selectedProblem, setSelectedProblem] = useState("");
+// --- NOWY, GŁÓWNY KOMPONENT HYBRYDOWY ---
+export default function ProblemPanel({ problems = [], setProblemConfig }) {
+  const [selectedProblemName, setSelectedProblemName] = useState("");
+  const [dynamicParams, setDynamicParams] = useState({});
 
+  // Znajdź pełny obiekt wybranego problemu
+  const selectedProblem = problems.find(p => p.name === selectedProblemName) || null;
+
+  // Funkcja wywoływana przy zmianie problemu w <select>
   const handleProblemChange = (e) => {
-    setSelectedProblem(e.target.value);
-    if (e.target.value === "") {
-        setProblemConfig({ name: null, parameters: {} });
+    const newName = e.target.value;
+    setSelectedProblemName(newName);
+
+    if (!newName) {
+      setProblemConfig({ name: null, parameters: {} });
+      setDynamicParams({});
+      return;
+    }
+
+    const problem = problems.find(p => p.name === newName);
+    
+    // Specjalna obsługa dla problemów z własnym UI
+    if (newName === "Traveling Salesman Problem (TSP)" || newName === "Knapsack Problem") {
+      // Te komponenty same wywołają setProblemConfig, więc tutaj nic nie robimy
+      // Ale czyścimy dynamiczne parametry
+      setDynamicParams({});
+    } 
+    // Obsługa problemów dynamicznych
+    else if (problem && problem.parameters) {
+      const initialParams = {};
+      problem.parameters.forEach(p => {
+        initialParams[p.name] = parseValue(p.defaultValue, p.type);
+      });
+      
+      setDynamicParams(initialParams);
+      setProblemConfig({ name: newName, parameters: initialParams });
+    } else {
+      // Problem bez parametrów
+      setDynamicParams({});
+      setProblemConfig({ name: newName, parameters: {} });
     }
   };
 
-  // --- ZMIANA: Usunięto <h3> i zewnętrzny div.panel ---
+  // Funkcja wywoływana przy zmianie wartości DYNAMICZNEGO parametru
+  const handleDynamicParamChange = (name, value, type) => {
+    const parsedValue = parseValue(value, type);
+    
+    const newParams = { ...dynamicParams, [name]: parsedValue };
+    setDynamicParams(newParams);
+    
+    setProblemConfig(prev => ({ ...prev, name: selectedProblemName, parameters: newParams }));
+  };
+
+  // --- Renderowanie dynamicznego formularza dla problemów niestandardowych ---
+  const renderDynamicForm = () => {
+    if (!selectedProblem || !selectedProblem.parameters || selectedProblem.parameters.length === 0) {
+      return <p className="info-text">Ten problem nie wymaga dodatkowej konfiguracji.</p>;
+    }
+
+    return (
+      <div className="dynamic-params-container" style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+        {selectedProblem.parameters.map((param) => (
+          <InputField
+            key={param.name}
+            label={param.displayName || param.name}
+            description={param.description}
+            type={param.type === "DOUBLE" || param.type === "INTEGER" ? "number" : "text"}
+            value={dynamicParams[param.name] ?? ''}
+            step={param.type === "DOUBLE" ? 0.1 : 1}
+            min={param.minValue}
+            max={param.maxValue}
+            isCheckbox={param.type === "BOOLEAN"}
+            onChange={(value) => handleDynamicParamChange(param.name, value, param.type)}
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="problem-panel">
       <div className="form-group">
         <label>Wybierz problem do analizy</label>
-        <select value={selectedProblem} onChange={handleProblemChange} className="select">
+        {/* Dropdown jest teraz dynamicznie ładowany z API */}
+        <select value={selectedProblemName} onChange={handleProblemChange} className="select">
           <option value="">-- Wybierz problem --</option>
-          <option value="Traveling Salesman Problem (TSP)">Problem Komiwojażera (TSP)</option>
-          <option value="Knapsack Problem">Problem Plecakowy (Knapsack)</option>
+          {problems.map((problem) => (
+            <option key={problem.name} value={problem.name}>
+              {problem.name}
+            </option>
+          ))}
         </select>
+        {selectedProblem && (
+          <p className="info-text" style={{padding: '8px 0 0 0', textAlign: 'left'}}>
+            <small>{selectedProblem.description}</small>
+          </p>
+        )}
       </div>
 
       <hr className="divider" />
 
-      {selectedProblem === "Traveling Salesman Problem (TSP)" && (
+      {/* --- Logika renderowania hybrydowego --- */}
+      
+      {/* 1. Renderuj stary komponent, jeśli nazwa pasuje */}
+      {selectedProblemName === "Traveling Salesman Problem (TSP)" && (
         <TspConfig onConfigChange={setProblemConfig} />
       )}
       
-      {selectedProblem === "Knapsack Problem" && (
+      {/* 2. Renderuj stary komponent, jeśli nazwa pasuje */}
+      {selectedProblemName === "Knapsack Problem" && (
         <KnapsackConfig onConfigChange={setProblemConfig} />
+      )}
+
+      {/* 3. Renderuj dynamiczny formularz dla WSZYSTKICH INNYCH problemów */}
+      {selectedProblemName &&
+        selectedProblemName !== "Traveling Salesman Problem (TSP)" &&
+        selectedProblemName !== "Knapsack Problem" && (
+        renderDynamicForm()
       )}
     </div>
   );
 }
-

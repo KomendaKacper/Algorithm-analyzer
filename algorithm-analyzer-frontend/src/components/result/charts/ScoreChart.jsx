@@ -43,7 +43,6 @@ export function ScoreChart({ results }) {
     <div className="chart-container">
       <h4>Zbieżność Wyniku w Kolejnych Iteracjach</h4>
       <ResponsiveContainer width="100%" height={300}>
-        {/* --- ZMIANA: Powrót do LineChart (bez poświaty) --- */}
         <LineChart
           data={chartData}
           margin={{ top: 5, right: 30, left: 20, bottom: 25 }}

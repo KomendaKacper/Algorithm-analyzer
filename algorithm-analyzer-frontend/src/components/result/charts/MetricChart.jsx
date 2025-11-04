@@ -40,7 +40,6 @@ export function MetricChart({ results, dataKey, name }) {
      return <div className="chart-placeholder">Brak wyników iteracji.</div>;
   }
 
-  // --- POPRAWKA: Sprawdzamy, czy *jakikolwiek* wynik ma tę metrykę ---
   const isSpecificMetric = results.some(r => r.iterationResults?.[0]?.specificMetrics?.hasOwnProperty(dataKey));
   
   if (!isSpecificMetric && !firstResult.hasOwnProperty(dataKey)) {
@@ -55,7 +54,6 @@ export function MetricChart({ results, dataKey, name }) {
     results.forEach(result => {
       const iteration = result.iterationResults?.[i];
       if (iteration) {
-        // --- POPRAWKA: Logika musi być elastyczna ---
         let value;
         if (iteration.specificMetrics?.hasOwnProperty(dataKey)) {
           value = iteration.specificMetrics[dataKey];
@@ -63,9 +61,8 @@ export function MetricChart({ results, dataKey, name }) {
           value = iteration[dataKey];
         }
         
-        // Unikamy crashu, jeśli wartość to obiekt (np. pheromoneStats)
         if (typeof value === 'object' && value !== null) {
-            dataPoint[result.algorithmName] = null; // Nie rysuj obiektu na wykresie liniowym
+            dataPoint[result.algorithmName] = null; 
         } else {
             dataPoint[result.algorithmName] = value;
         }
@@ -86,12 +83,11 @@ export function MetricChart({ results, dataKey, name }) {
           <XAxis dataKey="iteration" label={{ value: 'Iteracja', position: 'insideBottom', offset: -15 }} />
           <YAxis label={{ value: name, angle: -90, position: 'insideLeft' }} />
           <Tooltip
-            content={<CustomTooltip />} // Używamy kustomowego tooltipa
+            content={<CustomTooltip />} 
             labelFormatter={(label) => `Iteracja: ${label}`}
           />
           <Legend wrapperStyle={{ position: 'relative', marginTop: '10px' }} />
           {results.map((result, index) => {
-            // --- ZMIANA: Używamy kolorów z palety ---
             const color = CHART_COLORS_PALETTE[index % CHART_COLORS_PALETTE.length];
             return (
               <Line

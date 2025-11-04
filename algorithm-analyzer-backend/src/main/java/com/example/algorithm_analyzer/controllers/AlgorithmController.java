@@ -4,8 +4,9 @@ import com.example.algorithm_analyzer.algorithms.Algorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmInfo;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
-import com.example.algorithm_analyzer.services.AlgorithmService;
-import com.example.algorithm_analyzer.services.ProblemService;
+// import com.example.algorithm_analyzer.services.ProblemService; // <-- USUNIĘTE
+import com.example.algorithm_analyzer.services.DynamicProblemService; // <-- DODANE
+import com.example.algorithm_analyzer.services.DynamicAlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +23,13 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class AlgorithmController {
 
-    private final ProblemService problemService;
-    private final AlgorithmService algorithmService;
+    // private final ProblemService problemService; // <-- USUNIĘTE
+    private final DynamicProblemService dynamicProblemService; // <-- ZASTĄPIONE
+    private final DynamicAlgorithmService dynamicAlgorithmService;
 
     @GetMapping
     public ResponseEntity<List<AlgorithmInfo>> getAllAlgorithms() {
-        return ResponseEntity.ok(algorithmService.getAllAlgorithms());
+        return ResponseEntity.ok(dynamicAlgorithmService.getAllAlgorithmsInfo());
     }
 
     @PostMapping("/{algorithmName}/problems/{problemName}/execute")
@@ -36,41 +38,35 @@ public class AlgorithmController {
             @PathVariable String problemName,
             @RequestBody ExecutionRequest request
     ) {
-        log.info("Odebrano żądanie wykonania algorytmu: '{}' dla problemu: '{}'", algorithmName, problemName);
+        log.info("Received execution request for algorithm: '{}' on problem: '{}'", algorithmName, problemName);
 
         try {
-            // --- KLUCZOWA POPRAWKA ---
-            // Pobierz problem i sprawdź, czy nie jest nullem
-            Problem problem = problemService.getProblemByName(problemName);
-            if (problem == null) {
-                // Jeśli problem nie istnieje, rzuć wyjątek, który obsłużymy niżej
-                throw new NoSuchElementException("Nie znaleziono problemu o nazwie beana: " + problemName);
-            }
+            // --- POPRAWKA: Użyj nowego serwisu do pobierania problemów ---
+            Problem problem = dynamicProblemService.getProblemByName(problemName);
 
-            Algorithm algorithm = algorithmService.getAlgorithmByName(algorithmName)
-                    .orElseThrow(() -> new NoSuchElementException("Nie znaleziono algorytmu o nazwie: " + algorithmName));
+            Algorithm algorithm = dynamicAlgorithmService.getAlgorithmByName(algorithmName);
 
             Map<String, Object> problemParams = (request.getProblemParameters() != null)
                     ? request.getProblemParameters() : Collections.emptyMap();
             Map<String, Object> algorithmParams = (request.getAlgorithmParameters() != null)
                     ? request.getAlgorithmParameters() : Collections.emptyMap();
 
-            log.debug("Parametry problemu przekazane do inicjalizacji: {}", problemParams);
-            log.debug("Parametry algorytmu przekazane do wykonania: {}", algorithmParams);
+            log.debug("Problem parameters passed to initialize: {}", problemParams);
+            log.debug("Algorithm parameters passed to execute: {}", algorithmParams);
 
             AlgorithmResult result = algorithm.execute(problem, problemParams, algorithmParams);
 
             return ResponseEntity.ok(result);
 
         } catch (NoSuchElementException e) {
-            log.warn("Nie znaleziono zasobu: {}", e.getMessage());
+            log.warn("Resource not found: {}", e.getMessage());
             AlgorithmResult errorResult = new AlgorithmResult();
             errorResult.setError(e.getMessage());
-            return ResponseEntity.status(404).body(errorResult); // Zwróć błąd 404
+            return ResponseEntity.status(404).body(errorResult);
         } catch (Exception e) {
-            log.error("Wystąpił krytyczny błąd podczas wykonywania algorytmu", e);
+            log.error("Critical error during algorithm execution", e);
             AlgorithmResult errorResult = new AlgorithmResult();
-            errorResult.setError("Błąd serwera: " + e.getMessage());
+            errorResult.setError("Server error: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResult);
         }
     }
@@ -80,7 +76,7 @@ public class AlgorithmController {
             @PathVariable String problemName,
             @RequestBody Map<String, Object> parameters
     ) {
-        log.warn("Użyto przestarzałego endpointu /aco/{}/execute. Zalecana migracja do nowego API.", problemName);
+        log.warn("Deprecated endpoint /aco/{}/execute used. Recommend migrating to new API.", problemName);
 
         ExecutionRequest request = new ExecutionRequest();
         request.setAlgorithmParameters(parameters);
