@@ -1,20 +1,22 @@
 import React from 'react';
 import '../../App.css';
 
-export default function WelcomeScreen() {
+export default function WelcomeScreen({ onStartTour }) {
   return (
     <div className="welcome-screen">
       <div className="welcome-content">
         <div className="welcome-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-          </svg>
+          <img src="/appIcon.png" alt="App Icon" style={{ width: '64px', height: '64px' }} />
         </div>
         <h1 className="welcome-title">Algorithm Analyzer</h1>
         <p className="welcome-subtitle">
           Zaawansowane narzędzie do analizy, porównywania i wizualizacji algorytmów optymalizacyjnych.
           Rozpocznij swoją analizę w 4 prostych krokach:
         </p>
+        
+        <button className="tour-btn primary" style={{ marginBottom: '2rem', fontSize: '1rem', padding: '0.75rem 1.5rem' }} onClick={onStartTour}>
+          Rozpocznij Samouczek
+        </button>
         
         <div className="welcome-steps">
           <div className="step-card">

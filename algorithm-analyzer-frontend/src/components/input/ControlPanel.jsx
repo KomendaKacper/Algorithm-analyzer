@@ -42,7 +42,7 @@ export default function ControlPanel({
       </div>
 
       <div className="panels-container">
-        <CollapsiblePanel title="1. Definicja Problemu" startOpen={true}>
+        <CollapsiblePanel title="1. Definicja Problemu" startOpen={true} data-tour="step-problem">
           {/* Przekaż listę problemów do panelu */}
           <ProblemPanel 
             problems={problems} 
@@ -50,7 +50,7 @@ export default function ControlPanel({
           />
         </CollapsiblePanel>
 
-        <CollapsiblePanel title="2. Konfiguracja Algorytmów" startOpen={true}>
+        <CollapsiblePanel title="2. Konfiguracja Algorytmów" startOpen={true} data-tour="step-algorithm">
           <div className="algorithm-panels-wrapper">
             {tasks.map((_, index) => (
               <AlgorithmPanel
@@ -70,7 +70,7 @@ export default function ControlPanel({
           </div>
         </CollapsiblePanel>
 
-        <CollapsiblePanel title="3. Analiza Zaawansowana" startOpen={false}>
+        <CollapsiblePanel title="3. Analiza Zaawansowana" startOpen={false} data-tour="step-analysis">
           <div className="form-group">
             <label htmlFor="runCountInput">Liczba przebiegów</label>
             <input 
@@ -89,7 +89,7 @@ export default function ControlPanel({
               disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
               title={!problemConfig.name ? "Wybierz problem, aby uruchomić analizę." : "Uruchamia wszystkie skonfigurowane algorytmy N razy, aby zbadać powtarzalność ich wyników."}
             >
-              📊 Uruchom Analizę Stabilności
+              Uruchom Analizę Stabilności
           </button>
           <button 
               className="panel-button secondary"
@@ -97,7 +97,7 @@ export default function ControlPanel({
               disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
               title={!problemConfig.name ? "Wybierz problem, aby uruchomić analizę." : "Uruchamia wszystkie skonfigurowane algorytmy N razy i dodaje wyniki do globalnego wykresu rozrzutu."}
             >
-              ✨ Uruchom Analizę Rozrzutu
+              Uruchom Analizę Rozrzutu
           </button>
         </CollapsiblePanel>
         
@@ -108,7 +108,7 @@ export default function ControlPanel({
               className="panel-button secondary"
               title="Dodaj własną implementację algorytmu przez edytor kodu."
             >
-              ➕ Dodaj własny algorytm
+              Dodaj własny algorytm
             </button>
             {/* --- NOWY PRZYCISK --- */}
             <button 
@@ -116,7 +116,7 @@ export default function ControlPanel({
               className="panel-button secondary"
               title="Dodaj własną implementację problemu przez edytor kodu."
             >
-              ➕ Dodaj własny problem
+              Dodaj własny problem
             </button>
           </div>
         </CollapsiblePanel>
@@ -127,8 +127,9 @@ export default function ControlPanel({
         className="panel-button"
         onClick={handleExecuteCurrentTask}
         disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
+        data-tour="step-run"
       >
-        {isAlgorithmRunning ? "Pracuję..." : "🚀 Wykonaj Analizę"}
+        {isAlgorithmRunning ? "Pracuję..." : "Wykonaj Analizę"}
       </button>
     </div>
   );

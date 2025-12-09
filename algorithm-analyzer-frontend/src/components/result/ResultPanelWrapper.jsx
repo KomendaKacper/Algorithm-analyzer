@@ -17,11 +17,11 @@ export default function ResultPanelWrapper({
   const hasPheromones = results.some(r => r.iterationResults?.[0]?.specificMetrics?.hasOwnProperty('pheromoneSnapshot'));
 
   const commonChartButtons = [
-    { type: "charts-score", label: "📈 Wykres Zbieżności" },
-    { type: "charts-time", label: "🕒 Czas iteracji" },
-    { type: "charts-improvements", label: "🚀 Częstotliwość poprawy" },
-    { type: "charts-relative-improvement", label: "📊 Skoki Poprawy" },
-    { type: "charts-stagnation", label: "⏳ Stagnacja" },
+    { type: "charts-score", label: "Wykres Zbieżności" },
+    { type: "charts-time", label: "Czas iteracji" },
+    { type: "charts-improvements", label: "Częstotliwość poprawy" },
+    { type: "charts-relative-improvement", label: "Skoki Poprawy" },
+    { type: "charts-stagnation", label: "Stagnacja" },
   ];
 
   return (
@@ -50,7 +50,7 @@ export default function ResultPanelWrapper({
                   className="result-button specific-view" 
                   onClick={() => addPanel('animated-matrix-pheromones', results)}
                 >
-                  📽️ Porównanie Feromonów
+                  Porównanie Feromonów
                 </button>
             )}
           </div>

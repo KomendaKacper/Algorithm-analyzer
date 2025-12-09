@@ -37,9 +37,9 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("tabuListSize", "🔒 Rozmiar Listy Tabu");
-        labels.put("aspirationsMet", "✨ Użycie Kryterium Aspiracji");
-        labels.put("exploration", "🔀 Wymuszone ruchy (wszyscy sąsiedzi Tabu)");
+        labels.put("tabuListSize", "Rozmiar Listy Tabu");
+        labels.put("aspirationsMet", "Użycie Kryterium Aspiracji");
+        labels.put("exploration", "Wymuszone ruchy (wszyscy sąsiedzi Tabu)");
         return labels;
     }
 
@@ -136,7 +136,6 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                             .bestScore(bestScore)
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
-                            // --- NOWA LINIA: Zapisujemy, gdzie algorytm jest TERAZ ---
                             .currentSolution(new ArrayList<>(currentSolution))
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
@@ -156,19 +155,14 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
             }
         }
 
+        // --- ZMIANA: Usunięto dodawanie macierzy odległości ---
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
-        if (problem.getProblemData().containsKey("distances")) {
-            finalMetrics.put("distances", new FinalMetricData("🗺️ Macierz Odległości", problem.getProblemData().get("distances")));
-        }
 
         return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);
     }
 
     private record TsParameters(int iterations, int tabuTenure, int neighborhoodSampleSize, int maxIterationsWithoutImprovement) {
         TsParameters(Map<String, Object> params) {
-            // --- KLUCZOWA ZMIANA: PANCERNY KONSTRUKTOR (POPRAWIONY) ---
-            // Wywołanie 'this()' musi być pierwszą instrukcją.
-            // Używamy operatora trójargumentowego, aby sprawdzić 'params' przed przekazaniem.
             this(
                     ((Number) (params != null ? params.getOrDefault("iterations", 1000) : 1000)).intValue(),
                     ((Number) (params != null ? params.getOrDefault("tabuTenure", 15) : 15)).intValue(),

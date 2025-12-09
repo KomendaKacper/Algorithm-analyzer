@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: ./algorithm-analyzer-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  frontend:
+    build: ./algorithm-analyzer-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

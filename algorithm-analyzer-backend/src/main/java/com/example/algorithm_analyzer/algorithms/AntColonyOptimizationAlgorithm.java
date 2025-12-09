@@ -23,20 +23,20 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
     @Override
     public List<ParameterDefinition> getParameterDefinitions() {
         return Arrays.asList(
-                new ParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 20, 1, 1000, "Liczba mrówek w kolonii", true),
+                new ParameterDefinition("antCount", "Liczba mrówek", ParameterType.INTEGER, 2, 1, 1000, "Liczba mrówek w kolonii", true),
                 new ParameterDefinition("iterations", "Liczba iteracji", ParameterType.INTEGER, 1000, 1, 10000, "Maksymalna liczba iteracji", true),
                 new ParameterDefinition("alpha", "Alpha (feromony)", ParameterType.DOUBLE, 0.7, 0.1, 5.0, "Waga feromonów", true),
                 new ParameterDefinition("beta", "Beta (heurystyka)", ParameterType.DOUBLE, 0.7, 0.1, 10.0, "Waga heurystyki", true),
                 new ParameterDefinition("evaporationRate", "Współczynnik parowania", ParameterType.DOUBLE, 0.2, 0.1, 1.0, "Tempo parowania feromonów", true),
                 new ParameterDefinition("pheromoneDeposit", "Depozyt feromonów", ParameterType.DOUBLE, 0.3, 0.1, 5.0, "Ilość feromonów odkładanych przez mrówkę", true),
-                new ParameterDefinition("elitistWeight", "Współczynnik elitarny", ParameterType.DOUBLE, 1.5, 1.0, 10.0, "Współczynnik wzmacniający najlepszą globalną ścieżkę", true),
-                new ParameterDefinition("enableFullPheromoneTracking", "Śledź pełny rozkład feromonów", ParameterType.BOOLEAN, false, null, null, "Uwaga: Znacząco zwiększa zużycie pamięci i rozmiar odpowiedzi.", false)
+                new ParameterDefinition("elitistWeight", "Współczynnik elitarny", ParameterType.DOUBLE, 1.5, 1.0, 10.0, "Współczynnik wzmacniający najlepszą globalną ścieżkę", true)
+                // Usunięto: enableFullPheromoneTracking
         );
     }
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of("pheromoneStats", "🐜 Statystyki Feromonów");
+        return Map.of("pheromoneStats", "Statystyki Feromonów");
     }
 
     @Override
@@ -95,21 +95,20 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
             metrics.put("stagnation", iter - lastImprovementIter);
             metrics.put("improvements", improvementCount);
             metrics.put("relativeImprovement", relativeImprovement);
-            metrics.put("pheromoneStats", calculatePheromoneStatistics(pheromones));
-            if (params.enableFullPheromoneTracking()) {
-                metrics.put("pheromoneSnapshot", new HashMap<>(pheromones));
-            }
 
-            // --- NOWA LOGIKA: Pobierz ścieżkę najlepszej mrówki z tej iteracji ---
+            // Zostawiamy tylko lekkie statystyki (min/max/avg)
+            metrics.put("pheromoneStats", calculatePheromoneStatistics(pheromones));
+
+            // USUNIĘTO: Zapisywanie pełnego snapshotu feromonów (params.enableFullPheromoneTracking)
+
             List<String> currentBestPath = iterStats.bestSolutionThisIteration() != null ? iterStats.bestSolutionThisIteration().path() : null;
 
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iter).bestScore(bestFitnessGlobal)
                             .bestSolution(bestSolutionPathGlobal != null ? problem.convertPathToSolution(bestSolutionPathGlobal) : Collections.emptyList())
-                            // --- NOWA LINIA: Zapisujemy najlepsze rozwiązanie z BIEŻĄCEJ iteracji ---
                             .currentSolution(currentBestPath != null ? problem.convertPathToSolution(currentBestPath) : null)
-                            .currentScore(iterStats.bestFitnessThisIteration()) // Używamy 'bestFitnessThisIteration' jako 'currentScore'
+                            .currentScore(iterStats.bestFitnessThisIteration())
                             .averageScore(iterStats.averageFitness()).worstScore(iterStats.worstFitness())
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(metrics).build());
@@ -118,7 +117,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
         List<String> finalSolution = (bestSolutionPathGlobal != null) ? problem.convertPathToSolution(bestSolutionPathGlobal) : Collections.emptyList();
 
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
-        finalMetrics.put("pheromones", new FinalMetricData("🗺️ Macierz Feromonów (Końcowa)", pheromones));
+        // USUNIĘTO: finalMetrics.put("pheromones", ...); - nie zwracamy wielkiej mapy na koniec
 
         return new ExecutionResult(finalSolution, bestFitnessGlobal, iterationResults, finalMetrics);
     }
@@ -137,7 +136,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
             totalProbability += probability;
         }
 
-        Random rand = ThreadLocalRandom.current(); // --- ZMIANA: Używamy lepszego generatora ---
+        Random rand = ThreadLocalRandom.current();
         if (totalProbability == 0) {
             return candidates.get(rand.nextInt(candidates.size()));
         }
@@ -160,7 +159,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
     private double calculateSetDiversity(List<List<String>> solutions) { if (solutions == null || solutions.size() < 2) return 0.0; List<Set<String>> solutionSets = solutions.stream().map(HashSet::new).collect(Collectors.toList()); double totalDistance = 0; int pairCount = 0; for (int i = 0; i < solutionSets.size(); i++) { for (int j = i + 1; j < solutionSets.size(); j++) { Set<String> set1 = solutionSets.get(i), set2 = solutionSets.get(j); if (set1.isEmpty() && set2.isEmpty()) continue; Set<String> intersection = new HashSet<>(set1); intersection.retainAll(set2); Set<String> union = new HashSet<>(set1); union.addAll(set2); if (union.isEmpty()) continue; totalDistance += 1.0 - ((double) intersection.size() / union.size()); pairCount++; } } return (pairCount > 0) ? totalDistance / pairCount : 0.0; }
     private Map<String, Object> calculatePheromoneStatistics(Map<String, Double> pheromones) { if (pheromones.isEmpty()) return Map.of("min", 0.0, "max", 0.0, "average", 0.0); DoubleSummaryStatistics summary = pheromones.values().stream().mapToDouble(d -> d).summaryStatistics(); return Map.of("min", summary.getMin(), "max", summary.getMax(), "average", summary.getAverage()); }
 
-    private record AcoParameters(int antCount, int iterations, double alpha, double beta, double evaporationRate, double pheromoneDeposit, double elitistWeight, boolean enableFullPheromoneTracking) {
+    private record AcoParameters(int antCount, int iterations, double alpha, double beta, double evaporationRate, double pheromoneDeposit, double elitistWeight) {
         AcoParameters(Map<String, Object> params) {
             this(
                     ((Number) (params != null ? params.getOrDefault("antCount", 20) : 20)).intValue(),
@@ -169,8 +168,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
                     ((Number) (params != null ? params.getOrDefault("beta", 0.7) : 0.7)).doubleValue(),
                     ((Number) (params != null ? params.getOrDefault("evaporationRate", 0.2) : 0.2)).doubleValue(),
                     ((Number) (params != null ? params.getOrDefault("pheromoneDeposit", 0.3) : 0.3)).doubleValue(),
-                    ((Number) (params != null ? params.getOrDefault("elitistWeight", 1.5) : 1.5)).doubleValue(),
-                    (Boolean) (params != null ? params.getOrDefault("enableFullPheromoneTracking", false) : false)
+                    ((Number) (params != null ? params.getOrDefault("elitistWeight", 1.5) : 1.5)).doubleValue()
             );
         }
     }

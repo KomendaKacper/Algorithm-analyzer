@@ -5,13 +5,16 @@ import '../App.css';
  * Nowy, reużywalny komponent do tworzenia zwijanych sekcji.
  * Zarządza swoim własnym stanem otwarcia/zamknięcia.
  */
-export default function CollapsiblePanel({ title, children, startOpen = true }) {
+export default function CollapsiblePanel({ title, children, startOpen = true, ...props }) {
   const [isOpen, setIsOpen] = useState(startOpen);
 
   return (
-    <div className="panel collapsible-panel">
+    <div className="panel collapsible-panel" {...props}>
       {/* Nagłówek jest teraz przyciskiem */}
-      <button className="panel-header-toggle" onClick={() => setIsOpen(!isOpen)}>
+      <button 
+        className={`panel-header-toggle ${isOpen ? 'open' : ''}`} 
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <span className="panel-title">{title}</span>
         {/* Ikona strzałki z animacją obrotu */}
         <svg 

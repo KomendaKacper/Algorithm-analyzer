@@ -141,14 +141,14 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             {displayableMetrics.map(([key, label]) => {
                 return (
                     <button key={`chart-${key}`} className="action-btn chart-btn" onClick={() => addPanel(`charts-specific-${key}`, [result])}>
-                        📈 {label}
+                        {label}
                     </button>
                 )
             })}
 
             {/* Tabela */}
             <button className="action-btn table-btn" onClick={() => addPanel("table", result)}>
-               📅 Tabela wyników
+               Tabela wyników
             </button>
 
             {/* Macierze - USUNIĘTE NA ŻYCZENIE */}
@@ -156,7 +156,7 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
                 if (key === 'pheromones' && hasPheromoneSnapshots) return null;
                 return (
                     <button key={key} className="action-btn matrix-btn" onClick={() => addPanel(`matrix-${key}`, { title: metricData.label, nodes: result.nodes, matrixData: metricData.data })}>
-                       🗺️ {metricData.label || key}
+                       {metricData.label || key}
                     </button>
                 )
             })} */}
@@ -164,15 +164,15 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
             {/* Animacja */}
             {hasPheromoneSnapshots && (
                 <button className="action-btn anim-btn" onClick={() => addPanel('animated-matrix-pheromones', [result])}>
-                  📽️ Animacja
+                  Animacja
                 </button>
             )}
 
             {/* Wykresy standardowe */}
             {!isComparisonMode && (
                 <>
-                    <button className="action-btn chart-btn" onClick={() => addPanel("charts-score", [result])}>📈 Zbieżność</button>
-                    <button className="action-btn chart-btn" onClick={() => addPanel("charts-stagnation", [result])}>⏳ Stagnacja</button>
+                    <button className="action-btn chart-btn" onClick={() => addPanel("charts-score", [result])}>Zbieżność</button>
+                    <button className="action-btn chart-btn" onClick={() => addPanel("charts-stagnation", [result])}>Stagnacja</button>
                 </>
             )}
           </div>

@@ -10,7 +10,31 @@ import { SolutionGraphPanel } from "./components/result/charts/SolutionGraphPane
 import AddAlgorithmModal from './components/input/AddAlgorithmModal';
 import AddProblemModal from './components/input/AddProblemModal'; // --- NOWY IMPORT ---
 import WelcomeScreen from "./components/view/WelcomeScreen";
+import TourGuide from "./components/view/TourGuide";
 import "./App.css";
+
+const TOUR_STEPS = [
+  {
+    selector: '[data-tour="step-problem"]',
+    title: '1. Zdefiniuj Problem',
+    content: 'Wybierz typ problemu (np. TSP, Plecakowy) i skonfiguruj jego parametry, takie jak liczba miast czy pojemność.'
+  },
+  {
+    selector: '[data-tour="step-algorithm"]',
+    title: '2. Wybierz Algorytmy',
+    content: 'Dodaj jeden lub więcej algorytmów do porównania. Możesz dostosować ich parametry indywidualnie.'
+  },
+  {
+    selector: '[data-tour="step-analysis"]',
+    title: '3. Analiza Zaawansowana',
+    content: 'Tutaj możesz uruchomić wielokrotne przebiegi, aby zbadać stabilność wyników i rozrzut rozwiązań.'
+  },
+  {
+    selector: '[data-tour="step-run"]',
+    title: '4. Uruchom',
+    content: 'Gdy wszystko gotowe, kliknij ten przycisk, aby rozpocząć symulację i zobaczyć wyniki na żywo!'
+  }
+];
 
 export default function App() {
   const [algorithms, setAlgorithms] = useState([]);
@@ -32,6 +56,7 @@ export default function App() {
   
   const [isAddAlgoModalOpen, setIsAddAlgoModalOpen] = useState(false);
   const [isAddProblemModalOpen, setIsAddProblemModalOpen] = useState(false); // --- NOWY STAN ---
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");
@@ -228,7 +253,7 @@ export default function App() {
         <div className="main-content">
             
             {!showResultsWrapper && openPanels.length === 0 && (
-              <WelcomeScreen />
+              <WelcomeScreen onStartTour={() => setIsTourOpen(true)} />
             )}
 
             {showResultsWrapper && (
@@ -269,6 +294,12 @@ export default function App() {
         isOpen={isAddProblemModalOpen}
         onClose={() => setIsAddProblemModalOpen(false)}
         onProblemAdded={refreshProblems}
+      />
+
+      <TourGuide 
+        steps={TOUR_STEPS}
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
       />
     </div>
   );

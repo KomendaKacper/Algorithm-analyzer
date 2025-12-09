@@ -8,7 +8,7 @@ import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import org.springframework.stereotype.Component;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom; // --- NOWY IMPORT ---
+import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
@@ -27,6 +27,15 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                 new ParameterDefinition("stoppingTemperature", "Temperatura końcowa", ParameterType.DOUBLE, 0.1, 0.001, 100.0, "Próg zatrzymania algorytmu.", true),
                 new ParameterDefinition("iterationsPerTemp", "Iteracje na poziom temp.", ParameterType.INTEGER, 100, 1, 10000, "Liczba prób na każdym poziomie temperatury.", true)
         );
+    }
+
+    @Override
+    protected Map<String, String> getSpecificMetricLabels() {
+        // Poprawione etykiety właściwe dla SA (wcześniej były tu omyłkowo feromony z ACO)
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("temperature", "Temperatura");
+        labels.put("acceptanceProbability", "Prawdopodobieństwo Akceptacji");
+        return labels;
     }
 
     @Override
@@ -58,7 +67,6 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                 double neighborScore = problem.evaluateSolution(neighborSolution);
                 double deltaScore = problem.isMaximization() ? neighborScore - currentScore : currentScore - neighborScore;
 
-                // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
                 if (deltaScore > 0 || Math.exp(deltaScore / temperature) > ThreadLocalRandom.current().nextDouble()) {
                     currentSolution = new ArrayList<>(neighborSolution);
                     currentScore = neighborScore;
@@ -89,7 +97,6 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                             .bestScore(bestScore)
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
-                            // --- NOWA LINIA: Zapisujemy, gdzie algorytm jest TERAZ ---
                             .currentSolution(new ArrayList<>(currentSolution))
                             .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
@@ -107,17 +114,14 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             iteration++;
         }
 
+        // --- ZMIANA: Usunięto dodawanie macierzy odległości ---
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
-        if (problem.getProblemData().containsKey("distances")) {
-            finalMetrics.put("distances", new FinalMetricData("🗺️ Macierz Odległości", problem.getProblemData().get("distances")));
-        }
 
         return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);
     }
 
     private record SaParameters(double initialTemperature, double coolingRate, double stoppingTemperature, int iterationsPerTemp) {
         SaParameters(Map<String, Object> params) {
-            // --- KLUCZOWA ZMIANA: PANCERNY KONSTRUKTOR (POPRAWIONY) ---
             this(
                     ((Number) (params != null ? params.getOrDefault("initialTemperature", 10000.0) : 10000.0)).doubleValue(),
                     ((Number) (params != null ? params.getOrDefault("coolingRate", 0.995) : 0.995)).doubleValue(),
@@ -125,13 +129,5 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                     ((Number) (params != null ? params.getOrDefault("iterationsPerTemp", 100) : 100)).intValue()
             );
         }
-    }
-
-    @Override
-    protected Map<String, String> getSpecificMetricLabels() {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("pheromoneStats", "🐜 Statystyki Feromonów (Średnia)");
-        labels.put("exploration", "🌍 Dywersyfikacja (Różnorodność ścieżek)");
-        return labels;
     }
 }
