@@ -107,6 +107,12 @@ body {
   transition: opacity 0.3s, visibility 0.3s;
 }
 
+.panels-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .main-content {
   position: relative;
   overflow: auto;
@@ -463,20 +469,28 @@ body.dark .panel textarea.json-input {
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease-in-out;
   overflow: hidden;
+  height: 100%; /* Ważne dla wyrównania w Gridzie */
 }
 .result-panel:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
 .result-panel-header {
+  padding: 12px 16px;
+  background-color: var(--color-panel-header); /* Delikatnie inny tło nagłówka */
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--color-border);
-  cursor: default;
 }
-.result-panel h3 { font-size: 1.1rem; padding: 0; border-bottom: none; margin: 0; }
+.result-panel-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85%;
+}
 
 .panel-minimize-button {
   background: transparent;
@@ -493,12 +507,12 @@ body.dark .panel textarea.json-input {
 }
 .panel-minimize-button:hover { color: var(--color-primary-static); }
 
-.result-content { 
-  padding: 16px; 
-  display: grid; 
-  grid-template-columns: 1fr 1fr; 
+.result-content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  transition: all 0.3s ease-in-out;
+  flex-grow: 1;
 }
 
 .result-panel.minimized .result-content,
@@ -880,4 +894,321 @@ body.dark .graph-legend .legend-color-box {
 /* Użyj przycisku z Twojego design systemu */
 .modal-footer .panel-button {
   margin-top: 0; /* Zresetuj margines z panel-button */
+}
+
+.primary-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  border-bottom: 1px dashed var(--color-border);
+  padding-bottom: 12px;
+}
+
+.primary-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.p-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.p-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.p-value.highlight {
+  color: var(--color-primary-static);
+}
+
+/* 2. Rozwiązanie (Ścieżka) */
+.solution-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.solution-box {
+  background: var(--color-surface-secondary);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-family: var(--font-family-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 3. Szczegółowe Metryki (Szary Boks) */
+.secondary-metrics-box {
+  background-color: #f8fafc; /* Bardzo jasny szary */
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 10px;
+}
+body.dark .secondary-metrics-box {
+    background-color: rgba(255,255,255, 0.03);
+}
+
+.box-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.metrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding-bottom: 4px;
+}
+.metric-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.m-label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.m-value {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+/* Tagi dla obiektów (np. feromony) */
+.nested-metric-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.metric-tag {
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    display: flex;
+    gap: 4px;
+}
+body.dark .metric-tag {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+.tag-label { color: #94a3b8; }
+.tag-value { font-weight: bold; color: var(--color-text-primary); }
+
+
+/* 4. Sekcja Przycisków (Flexbox) */
+.actions-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto; /* Dopycha do dołu */
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.action-btn {
+  flex: 1 0 calc(50% - 8px); /* Domyślnie 2 w rzędzie */
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  background: white;
+  color: var(--color-text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+  min-width: 0; /* Zapobiega wyjeżdżaniu tekstu */
+}
+body.dark .action-btn {
+    background: var(--color-surface-secondary);
+}
+
+.action-btn:hover {
+  border-color: var(--color-primary-static);
+  color: var(--color-primary-static);
+  background: #fff7ed;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+body.dark .action-btn:hover {
+    background: rgba(249, 115, 22, 0.1);
+}
+
+/* Wyróżnienia typów przycisków */
+.table-btn { 
+    flex: 1 0 100%; /* Tabela zawsze na całą szerokość */
+    margin-top: 4px;
+    margin-bottom: 4px;
+    background-color: #f8fafc;
+    border-style: dashed;
+}
+body.dark .table-btn {
+    background-color: rgba(255,255,255,0.03);
+}
+
+.table-btn:hover {
+    background-color: var(--color-primary-static);
+    color: white;
+    border-style: solid;
+}
+
+.solution-box.expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.algorithm-overlay.finished {
+  background: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Welcome Screen Styles
+   ========================================================================== */
+
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  animation: fadeIn 0.5s ease-out;
+}
+
+.welcome-content {
+  max-width: 800px;
+  background: var(--color-surface);
+  padding: 3rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+}
+
+.welcome-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+  background: var(--gradient-primary);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+}
+
+.welcome-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--color-text-primary);
+  letter-spacing: -0.025em;
+}
+
+.welcome-subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.welcome-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.step-card {
+  background: var(--color-surface-secondary);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary-static);
+}
+
+.step-number {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--color-text-primary);
+  opacity: 0.05;
+  line-height: 1;
+}
+
+.step-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.step-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-primary);
+}
+
+.step-card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

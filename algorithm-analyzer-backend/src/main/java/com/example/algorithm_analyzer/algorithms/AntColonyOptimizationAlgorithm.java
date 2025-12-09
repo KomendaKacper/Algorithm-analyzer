@@ -8,7 +8,7 @@ import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import org.springframework.stereotype.Component;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom; // NOWY IMPORT
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Component
@@ -162,7 +162,6 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
 
     private record AcoParameters(int antCount, int iterations, double alpha, double beta, double evaporationRate, double pheromoneDeposit, double elitistWeight, boolean enableFullPheromoneTracking) {
         AcoParameters(Map<String, Object> params) {
-            // --- KLUCZOWA ZMIANA: PANCERNY KONSTRUKTOR (POPRAWIONY) ---
             this(
                     ((Number) (params != null ? params.getOrDefault("antCount", 20) : 20)).intValue(),
                     ((Number) (params != null ? params.getOrDefault("iterations", 1000) : 1000)).intValue(),

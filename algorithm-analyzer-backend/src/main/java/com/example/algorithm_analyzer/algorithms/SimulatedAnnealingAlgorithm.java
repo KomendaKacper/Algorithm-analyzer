@@ -30,11 +30,6 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of("temperature", "🌡️ Temperatura", "acceptanceProbability", "🎲 Prawdopodobieństwo Akceptacji");
-    }
-
-    @Override
     protected ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters) {
         SaParameters params = new SaParameters(algorithmParameters);
 
@@ -130,5 +125,13 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                     ((Number) (params != null ? params.getOrDefault("iterationsPerTemp", 100) : 100)).intValue()
             );
         }
+    }
+
+    @Override
+    protected Map<String, String> getSpecificMetricLabels() {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("pheromoneStats", "🐜 Statystyki Feromonów (Średnia)");
+        labels.put("exploration", "🌍 Dywersyfikacja (Różnorodność ścieżek)");
+        return labels;
     }
 }

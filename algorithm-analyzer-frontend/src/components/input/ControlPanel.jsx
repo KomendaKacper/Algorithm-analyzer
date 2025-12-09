@@ -86,16 +86,16 @@ export default function ControlPanel({
           <button 
               className="panel-button secondary"
               onClick={() => handleRunStabilityAnalysis(runCount)}
-              disabled={tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
-              title="Uruchamia wszystkie skonfigurowane algorytmy N razy, aby zbadać powtarzalność ich wyników."
+              disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
+              title={!problemConfig.name ? "Wybierz problem, aby uruchomić analizę." : "Uruchamia wszystkie skonfigurowane algorytmy N razy, aby zbadać powtarzalność ich wyników."}
             >
               📊 Uruchom Analizę Stabilności
           </button>
           <button 
               className="panel-button secondary"
               onClick={() => handleRunScatterAnalysis(runCount)}
-              disabled={tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
-              title="Uruchamia wszystkie skonfigurowane algorytmy N razy i dodaje wyniki do globalnego wykresu rozrzutu."
+              disabled={!problemConfig.name || tasks.length === 0 || tasks.some(t => !t || !t.name) || isAlgorithmRunning}
+              title={!problemConfig.name ? "Wybierz problem, aby uruchomić analizę." : "Uruchamia wszystkie skonfigurowane algorytmy N razy i dodaje wyniki do globalnego wykresu rozrzutu."}
             >
               ✨ Uruchom Analizę Rozrzutu
           </button>

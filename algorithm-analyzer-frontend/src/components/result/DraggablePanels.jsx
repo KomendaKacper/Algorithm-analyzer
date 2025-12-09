@@ -1,3 +1,4 @@
+// src/components/result/DraggablePanels.jsx
 import React, { useRef, useCallback } from "react";
 import IterationTable from "./IterationTable";
 import { MetricChart } from "./charts/MetricChart";
@@ -7,14 +8,14 @@ import { MatrixHeatmap } from "./charts/MatrixHeatmap";
 import { AnimatedMatrixHeatmap } from "./charts/AnimatedMatrixHeatmap";
 import { StabilityChart } from "./charts/StabilityChart"; 
 import { ScatterPlotChart } from "./charts/ScatterPlotChart";
+import { ObjectMetricChart } from "./charts/ObjectMetricChart";
 
-// --- ZMIANA: Zaktualizowana lista tytułów ---
 const PANEL_TITLES = {
   table: 'Tabela Iteracji',
   'charts-score': 'Wykres: Zbieżność Wyniku',
   'charts-time': 'Wykres: Czas wykonania',
   'charts-improvements': 'Wykres: Częstotliwość Poprawy',
-  'charts-relative-improvement': 'Wykres: Skoki Poprawy',
+  'charts-relative-improvement': 'Wykres: Skoki Poprawy (%)',
   'charts-stagnation': 'Wykres: Stagnacja',
   'animated-matrix-pheromones': 'Animacja: Ewolucja Feromonów',
   'stability-chart': 'Analiza: Stabilność Wyników',
@@ -32,13 +33,14 @@ export default function DraggablePanels({
   const interactionInfo = useRef(null);
   const panelRefs = useRef({});
 
+  // --- Logika Drag & Drop i Resize ---
   const handleInteractionStart = useCallback((e, id, type) => {
-    if (e.target.closest('button')) return;
+    if (e.target.closest('button')) return; // Nie uruchamiaj przeciągania na przyciskach
     e.preventDefault();
     e.stopPropagation();
     const panelElement = panelRefs.current[id];
     if (!panelElement) return;
-    const startPos = panelPositions[id];
+    const startPos = panelPositions[id] || { top: 50, left: 50, width: 600, height: 400 };
     interactionInfo.current = { id, type, startX: e.clientX, startY: e.clientY, initialLeft: startPos.left, initialTop: startPos.top, initialWidth: startPos.width, initialHeight: startPos.height };
     panelElement.classList.add('dragging');
     window.addEventListener("mousemove", handleMouseMove);
@@ -47,11 +49,12 @@ export default function DraggablePanels({
 
   const handleMouseMove = useCallback((e) => {
     if (!interactionInfo.current) return;
-    const { id, type, startX, startY, initialWidth, initialHeight } = interactionInfo.current;
+    const { id, type, startX, startY, initialLeft, initialTop, initialWidth, initialHeight } = interactionInfo.current;
     const panelElement = panelRefs.current[id];
     if (!panelElement) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+
     if (type === 'drag') {
       panelElement.style.transform = `translate(${dx}px, ${dy}px)`;
     } else if (type === 'resize') {
@@ -87,6 +90,7 @@ export default function DraggablePanels({
     window.removeEventListener("mouseup", handleMouseUp);
   }, [setPanelPositions]);
 
+  // --- Rendering Paneli ---
   return (
     <>
       {openPanels.map((panel) => {
@@ -94,21 +98,28 @@ export default function DraggablePanels({
         const isComparison = Array.isArray(panel.data);
         const results = isComparison ? panel.data : [panel.data];
         
+        // Logika tytułów
         const getPanelTitle = (type) => { 
             if (PANEL_TITLES[type]) return PANEL_TITLES[type];
             if (type.startsWith('matrix-')) return panel.data?.title || 'Macierz';
+            
+            // Obsługa dynamicznych wykresów
             if (type.startsWith('charts-specific-')) {
                 const key = type.replace('charts-specific-', '');
-                return `Wykres: ${results[0]?.specificMetricLabels?.[key] || key}`;
+                // Próbujemy pobrać ładną nazwę z pierwszego wyniku
+                const label = results[0]?.specificMetricLabels?.[key] || key;
+                return `Wykres: ${label}`;
             }
             return 'Panel';
         };
+
+        const panelTitle = getPanelTitle(panel.type);
 
         return (
           <div
             key={panel.id}
             ref={el => panelRefs.current[panel.id] = el}
-            className={`draggable-panel ${panel.type.startsWith("charts") || panel.type.startsWith("matrix") || panel.type.startsWith("animated") || panel.type.includes('plot') || panel.type.includes('chart') ? "panel-charts" : "panel-table"} ${panel.minimized ? "minimized" : ""}`}
+            className={`draggable-panel ${panel.type.includes('chart') || panel.type.includes('matrix') || panel.type.includes('plot') ? "panel-charts" : "panel-table"} ${panel.minimized ? "minimized" : ""}`}
             style={{ 
                 top: `${pos.top}px`, 
                 left: `${pos.left}px`,
@@ -117,7 +128,7 @@ export default function DraggablePanels({
             }}
           >
             <div className="panel-header" onMouseDown={(e) => handleInteractionStart(e, panel.id, 'drag')}>
-              <span className="panel-title">{getPanelTitle(panel.type)}</span>
+              <span className="panel-title">{panelTitle}</span>
               <div className="panel-header-buttons">
                 <button onClick={() => toggleMinimize(panel.id)} className="panel-minimize-button" title={panel.minimized ? "Rozwiń" : "Zwiń"}>
                   {panel.minimized ? '⤢' : '—'}
@@ -135,20 +146,40 @@ export default function DraggablePanels({
                 {panel.type === "charts-relative-improvement" && <SpikeChart results={results} dataKey="relativeImprovement" name="Względna Poprawa (%)" />}
                 {panel.type === "charts-stagnation" && <MetricChart results={results} dataKey="stagnation" name="Stagnacja" />}
                 
-                {panel.type.startsWith('charts-specific-') && <MetricChart results={results} dataKey={panel.type.replace('charts-specific-', '')} name={getPanelTitle(panel.type).replace('Wykres: ', '')} />}
+                {/* Dynamiczne wykresy specyficzne dla algorytmu */}
+                {panel.type.startsWith('charts-specific-') && (
+                    (() => {
+                        const key = panel.type.replace('charts-specific-', '');
+                        const firstVal = results[0]?.iterationResults?.[0]?.specificMetrics?.[key];
+                        const isObject = typeof firstVal === 'object' && firstVal !== null;
+
+                        if (isObject) {
+                             return <ObjectMetricChart 
+                                results={results} 
+                                dataKey={key} 
+                                name={panelTitle.replace('Wykres: ', '')} 
+                            />
+                        } else {
+                            return <MetricChart 
+                                results={results} 
+                                dataKey={key} 
+                                name={panelTitle.replace('Wykres: ', '')} 
+                            />
+                        }
+                    })()
+                )}
+
+                {/* Macierze */}
                 {panel.type.startsWith('matrix-') && !panel.type.startsWith('animated-matrix') && <MatrixHeatmap title={panel.data.title} nodes={panel.data.nodes} matrixData={panel.data.matrixData} />}
                 {panel.type === 'animated-matrix-pheromones' && <AnimatedMatrixHeatmap results={results} />}
 
-                {/* --- ZMIANA: Poprawka typu z 'box-plot' na 'stability-chart' --- */}
+                {/* Statystyki */}
                 {panel.type === 'stability-chart' && <StabilityChart results={panel.data} />}
                 {panel.type === 'scatter-plot' && <ScatterPlotChart data={scatterPlotData} />}
               </div>
             )}
             {!panel.minimized && (
-                <div 
-                    className="resizable-handle" 
-                    onMouseDown={(e) => handleInteractionStart(e, panel.id, 'resize')}
-                ></div>
+                <div className="resizable-handle" onMouseDown={(e) => handleInteractionStart(e, panel.id, 'resize')}></div>
             )}
           </div>
         );
@@ -156,4 +187,3 @@ export default function DraggablePanels({
     </>
   );
 }
-

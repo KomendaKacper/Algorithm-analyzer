@@ -1,32 +1,29 @@
 // src/components/AlgorithmOverlay.jsx
 import { useEffect, useState } from "react";
-import FallingText from "../../uiComponents/FallingText";
+import FallingText from "../../uiComponents/FallingText"; // Upewnij się, że masz ten komponent
 
 export default function AlgorithmOverlay({ isAlgorithmRunning }) {
   const [gravity, setGravity] = useState(0);
   const [visible, setVisible] = useState(false);
   const [trigger, setTrigger] = useState("none");
-  const [componentKey, setComponentKey] = useState(0); // 🔹 klucz do wymuszenia resetu
+  const [componentKey, setComponentKey] = useState(0);
 
   useEffect(() => {
     if (isAlgorithmRunning) {
-      // 🔹 Algorytm startuje → pokazujemy overlay, resetujemy komponent
-      setVisible(true);
-      setGravity(0);
-      setTrigger("none");
-      setComponentKey(prev => prev + 1); // 🔹 wymuszamy nowy mount
+      if (!visible) {
+        setVisible(true);
+        setGravity(0);
+        setTrigger("none");
+        setComponentKey(prev => prev + 1);
+      }
     } else if (visible) {
-      // 🔹 Algorytm się kończy → uruchamiamy spadanie automatycznie
       setGravity(0.56);
       setTrigger("auto");
-
-      // 🔹 po kilku sekundach usuwamy overlay
       const timeout = setTimeout(() => {
         setVisible(false);
         setGravity(0);
         setTrigger("none");
       }, 4000);
-
       return () => clearTimeout(timeout);
     }
   }, [isAlgorithmRunning, visible]);
@@ -34,11 +31,11 @@ export default function AlgorithmOverlay({ isAlgorithmRunning }) {
   if (!visible) return null;
 
   return (
-    <div className="algorithm-overlay">
+    <div className={`algorithm-overlay ${!isAlgorithmRunning ? "finished" : ""}`}>
       <FallingText
-        key={componentKey} // 🔹 wymusza pełny remount przy każdym uruchomieniu
-        text="⏳ Wykonywanie algorytmu... proszę czekać"
-        highlightWords={["algorytmu"]}
+        key={componentKey}
+        text="⏳ Obliczanie... proszę czekać"
+        highlightWords={["Obliczanie..."]}
         highlightClass="highlighted"
         backgroundColor="transparent"
         gravity={gravity}

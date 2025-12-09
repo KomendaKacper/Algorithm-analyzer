@@ -63,24 +63,23 @@ export function StabilityChart({ results }) {
       <ResponsiveContainer width="100%" height={300}>
         <BarChart 
             data={chartData} 
-            margin={{ top: 20, right: 30, left: 20, bottom: 25 }}
+            margin={{ top: 30, right: 30, left: 50, bottom: 25 }}
         >
           {/* --- ZMIANA: Dodajemy definicje gradientów --- */}
           <defs>
             {CHART_COLORS_PALETTE.map((color, index) => (
-              <linearGradient key={color.id} id={color.id} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color.start} stopOpacity={0.9}/>
-                <stop offset="95%" stopColor={color.stop} stopOpacity={0.7}/>
+              <linearGradient key={`grad-${index}`} id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={color.line} stopOpacity={0.9}/>
+                <stop offset="95%" stopColor={color.line} stopOpacity={0.6}/>
               </linearGradient>
             ))}
           </defs>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" label={{ value: 'Algorytm', position: 'insideBottom', offset: -15 }} />
           <YAxis 
-            label={{ value: 'Średni Wynik', angle: -90, position: 'insideLeft' }}
+            label={{ value: 'Średni Wynik', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
             domain={['auto', 'auto']}
             padding={{ top: 20, bottom: 20 }}
-            reversed={!isMaximization}
             tickFormatter={(tick) => tick.toFixed(0)}
           />
           <Tooltip
@@ -89,8 +88,8 @@ export function StabilityChart({ results }) {
           />
           <Bar dataKey="mean" name="Średni Wynik">
              {chartData.map((entry, index) => {
-                const color = CHART_COLORS_PALETTE[index % CHART_COLORS_PALETTE.length];
-                return <Cell key={`cell-${index}`} fill={`url(#${color.id})`} />
+                const gradientId = `grad-${index % CHART_COLORS_PALETTE.length}`;
+                return <Cell key={`cell-${index}`} fill={`url(#${gradientId})`} />
              })}
              {/* --- POPRAWKA: Kolor wąsów w trybie ciemnym --- */}
              <ErrorBar dataKey="errorRange" width={4} strokeWidth={2} stroke="var(--color-text-secondary)" direction="y" />

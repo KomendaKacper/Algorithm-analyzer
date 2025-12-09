@@ -36,10 +36,11 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of(
-                "tabuListSize", "🔒 Rozmiar Listy Tabu",
-                "aspirationsMet", "✨ Liczba Aspiracji"
-        );
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("tabuListSize", "🔒 Rozmiar Listy Tabu");
+        labels.put("aspirationsMet", "✨ Użycie Kryterium Aspiracji");
+        labels.put("exploration", "🔀 Wymuszone ruchy (wszyscy sąsiedzi Tabu)");
+        return labels;
     }
 
     @Override

@@ -9,6 +9,7 @@ import ResultPanelWrapper from "./components/result/ResultPanelWrapper";
 import { SolutionGraphPanel } from "./components/result/charts/SolutionGraphPanel";
 import AddAlgorithmModal from './components/input/AddAlgorithmModal';
 import AddProblemModal from './components/input/AddProblemModal'; // --- NOWY IMPORT ---
+import WelcomeScreen from "./components/view/WelcomeScreen";
 import "./App.css";
 
 export default function App() {
@@ -71,11 +72,11 @@ export default function App() {
     refreshProblems(); // --- POBIERZ PROBLEMY PRZY STARCIE ---
   }, [refreshAlgorithms, refreshProblems]);
   
-  const runAnalysis = async (tasksToRun) => {
+  const runAnalysis = async (tasksToRun, manageState = true) => {
     if (!problemConfig.name || tasksToRun.length === 0 || tasksToRun.some(t => !t || !t.name)) {
       return [{ success: false, errorMessage: "Upewnij się, że problem oraz wszystkie algorytmy są w pełni skonfigurowane." }];
     }
-    setIsAlgorithmRunning(true);
+    if (manageState) setIsAlgorithmRunning(true);
     const payload = {
       problemParameters: problemConfig.parameters,
       algorithms: tasksToRun.map(task => ({
@@ -90,7 +91,7 @@ export default function App() {
       console.error("Błąd wykonania porównania:", error);
       return [{ success: false, errorMessage: error.response?.data?.errorMessage || error.message || "Błąd sieci" }];
     } finally {
-      setIsAlgorithmRunning(false);
+      if (manageState) setIsAlgorithmRunning(false);
     }
   };
 
@@ -116,7 +117,7 @@ export default function App() {
         for (let i = 0; i < runCount; i++) {
             await new Promise(resolve => setTimeout(resolve, 10 + Math.random() * 50)); 
             const singleTaskPayload = [{ name: task.name, algorithmParameters: task.algorithmParameters }];
-            const response = await runAnalysis(singleTaskPayload);
+            const response = await runAnalysis(singleTaskPayload, false);
             if (response && response[0] && response[0].success) {
                 taskResults.push(response[0]);
             }
@@ -146,7 +147,7 @@ export default function App() {
           for (let i = 0; i < runCount; i++) {
               await new Promise(resolve => setTimeout(resolve, 10 + Math.random() * 50)); 
               const singleTaskPayload = [{ name: task.name, algorithmParameters: task.algorithmParameters }];
-              const response = await runAnalysis(singleTaskPayload);
+              const response = await runAnalysis(singleTaskPayload, false);
               if (response && response[0] && response[0].success) {
                   scatterResults.push(response[0]);
               }
@@ -166,12 +167,27 @@ export default function App() {
   const addPanel = (type, data) => {
     const id = `${type}-${Date.now()}`;
     setOpenPanels(prev => [...prev, { id, type, data, minimized: false }]);
-    const panelStartLeft = isSidebarCollapsed ? 80 : 450;
+    
     const isChartPanel = type.startsWith('charts') || type.startsWith('matrix') || type.startsWith('animated') || type.includes('plot') || type.includes('chart');
-    setPanelPositions(prev => ({ ...prev, [id]: { top: 120 + Object.keys(prev).length * 30, left: panelStartLeft + Object.keys(prev).length * 30, width: isChartPanel ? 900 : 800, height: 500 } }));
+    const width = isChartPanel ? 900 : 800;
+    const height = 500;
+
+    // Centrowanie z lekkim przesunięciem dla kolejnych okien
+    const offset = openPanels.length * 30;
+    const left = Math.max(100, (window.innerWidth - width) / 2 + offset);
+    const top = Math.max(50, (window.innerHeight - height) / 2 + offset);
+
+    setPanelPositions(prev => ({ ...prev, [id]: { top, left, width, height } }));
   };
 
-  const removePanel = (id) => { setOpenPanels(prev => prev.filter((p) => p.id !== id)); };
+  const removePanel = (id) => { 
+    setOpenPanels(prev => prev.filter((p) => p.id !== id));
+    setPanelPositions(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+    });
+  };
   const togglePanelMinimize = (id) => { setOpenPanels(prev => prev.map(p => (p.id === id ? { ...p, minimized: !p.minimized } : p))); };
 
   const toggleMinimizePanel = (panelId) => {
@@ -211,6 +227,10 @@ export default function App() {
         </div>
         <div className="main-content">
             
+            {!showResultsWrapper && openPanels.length === 0 && (
+              <WelcomeScreen />
+            )}
+
             {showResultsWrapper && (
               <ResultPanelWrapper 
                 results={results} 

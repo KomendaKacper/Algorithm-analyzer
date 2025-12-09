@@ -1,5 +1,3 @@
-// Plik: com/example/algorithm_analyzer/algorithms/AbstractAlgorithm.java
-
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
@@ -9,14 +7,14 @@ import com.example.algorithm_analyzer.problems.Problem;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap; // Ważne dla kolejności wykresów
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*; // Importy dla ExecutorService
+import java.util.concurrent.*;
 
 @Slf4j
 public abstract class AbstractAlgorithm implements Algorithm {
 
-    // Użyj tej stałej do limitu czasu, możesz ją też pobierać z parametrów
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
     @Override
@@ -26,7 +24,6 @@ public abstract class AbstractAlgorithm implements Algorithm {
         result.setAlgorithmName(this.getName());
         result.setProblemName(problem.getName());
 
-        // Pobierz niestandardowy limit czasu lub użyj domyślnego
         int timeout;
         try {
             timeout = (Integer) algorithmParameters.getOrDefault("executionTimeout", DEFAULT_TIMEOUT_SECONDS);
@@ -35,16 +32,14 @@ public abstract class AbstractAlgorithm implements Algorithm {
         }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        // Zadanie do wykonania w osobnym wątku
         Callable<ExecutionResult> solveTask = () -> {
-            problem.initialize(problemParameters); // Inicjalizacja teraz tutaj
+            problem.initialize(problemParameters);
             return solve(problem, algorithmParameters);
         };
 
         Future<ExecutionResult> future = executor.submit(solveTask);
 
         try {
-            // Czekaj na wynik, ale nie dłużej niż limit czasu
             ExecutionResult executionResult = future.get(timeout, TimeUnit.SECONDS);
 
             result.setSuccess(true);
@@ -52,40 +47,41 @@ public abstract class AbstractAlgorithm implements Algorithm {
             result.setIterationResults(new ArrayList<>(executionResult.iterationResults()));
             result.setNodes(problem.getAllElements());
             result.setFinalMetrics(executionResult.finalMetrics());
-            result.setSpecificMetricLabels(getSpecificMetricLabels());
 
         } catch (TimeoutException e) {
-            future.cancel(true); // Przerwij wątek!
-            log.warn("Algorytm '{}' przekroczył limit czasu ({}s).", this.getName(), timeout, e);
-            result.setError("Przekroczono limit czasu (" + timeout + "s). Możliwa pętla nieskończona.");
+            future.cancel(true);
+            log.warn("Algorytm '{}' przekroczył limit czasu ({}s).", this.getName(), timeout);
+            result.setError("Przekroczono limit czasu (" + timeout + "s).");
             result.setSuccess(false);
+            // Jeśli mamy jakieś cząstkowe wyniki (niezaimplementowane tutaj, ale możliwe w przyszłości), tu moglibyśmy je dodać
         } catch (InterruptedException e) {
             future.cancel(true);
             log.warn("Wątek algorytmu '{}' został przerwany.", this.getName(), e);
-            result.setError("Wykonanie algorytmu zostało przerwane.");
+            result.setError("Wykonanie przerwane.");
             result.setSuccess(false);
         } catch (Exception e) {
-            // Błędy rzucone przez sam algorytm (np. błąd w kodzie Groovy)
-            log.error("Błąd podczas wykonywania algorytmu '{}'", this.getName(), e.getCause() != null ? e.getCause() : e);
+            log.error("Błąd algorytmu '{}'", this.getName(), e);
             result.setError(e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
             result.setSuccess(false);
         } finally {
-            executor.shutdownNow(); // Zawsze zamykaj executor
+            executor.shutdownNow();
         }
+
+        // --- ZMIANA: Ustawiamy etykiety ZAWSZE, nawet po błędzie ---
+        // Dzięki temu frontend wie, jakie wykresy 'powinien' był pokazać
+        result.setSpecificMetricLabels(getSpecificMetricLabels());
 
         result.setExecutionDurationMs(System.currentTimeMillis() - startTime);
         return result;
     }
 
-    // Ta metoda pozostaje bez zmian
     protected abstract ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters);
 
-    // Ta metoda pozostaje bez zmian
+    // Domyślna implementacja - pusta mapa (LinkedHashMap dla zachowania kolejności w razie nadpisania)
     protected Map<String, String> getSpecificMetricLabels() {
-        return Map.of();
+        return new LinkedHashMap<>();
     }
 
-    // Ta metoda pozostaje bez zmian
     protected record ExecutionResult(
             List<String> bestSolution,
             double bestScore,
