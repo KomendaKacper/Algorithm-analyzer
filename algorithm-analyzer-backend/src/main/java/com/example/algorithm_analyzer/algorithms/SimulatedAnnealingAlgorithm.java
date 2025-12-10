@@ -1,9 +1,8 @@
-// src/main/java/com/example/algorithm_analyzer/algorithms/SimulatedAnnealingAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
-import com.example.algorithm_analyzer.dto.FinalMetricData;
-import com.example.algorithm_analyzer.dto.IterationResult;
-import com.example.algorithm_analyzer.dto.ParameterDefinition;
+import com.example.algorithm_analyzer.dtos.FinalMetricData;
+import com.example.algorithm_analyzer.dtos.IterationResult;
+import com.example.algorithm_analyzer.dtos.ParameterDefinition;
 import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import org.springframework.stereotype.Component;
@@ -31,7 +30,6 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
 
     @Override
     protected Map<String, String> getSpecificMetricLabels() {
-        // Poprawione etykiety właściwe dla SA (wcześniej były tu omyłkowo feromony z ACO)
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("temperature", "Temperatura");
         labels.put("acceptanceProbability", "Prawdopodobieństwo Akceptacji");
@@ -115,7 +113,6 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             iteration++;
         }
 
-        // --- ZMIANA: Usunięto dodawanie macierzy odległości ---
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
 
         return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);

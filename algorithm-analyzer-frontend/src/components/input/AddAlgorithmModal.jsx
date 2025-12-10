@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { java } from '@codemirror/lang-java';
 import { getAlgorithmTemplate, compileAlgorithm } from '../../api/customAlgorithmApi';
+import ImplementationGuide from '../view/ImplementationGuide';
 import '../../App.css'; // Stworzymy ten plik w kroku 6
 
 /**
@@ -17,6 +18,7 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
   const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   // 1. Pobierz szablon, gdy modal się otwiera
   useEffect(() => {
@@ -78,9 +80,24 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
 
   return (
     <div className="modal-overlay">
+      {showGuide && (
+        <ImplementationGuide 
+          type="algorithm" 
+          onClose={() => setShowGuide(false)} 
+        />
+      )}
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Dodaj własny algorytm (Groovy/Java)</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2>Dodaj własny algorytm (Groovy/Java)</h2>
+            <button 
+              className="panel-button small-button" 
+              onClick={() => setShowGuide(true)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            >
+              Jak zaimplementować?
+            </button>
+          </div>
           <button onClick={onClose} className="modal-close-btn">&times;</button>
         </div>
 

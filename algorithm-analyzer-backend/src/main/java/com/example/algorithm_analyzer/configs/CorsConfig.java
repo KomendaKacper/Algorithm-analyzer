@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.config;
+package com.example.algorithm_analyzer.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

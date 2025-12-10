@@ -1,8 +1,8 @@
 package com.example.algorithm_analyzer.controllers;
 
 import com.example.algorithm_analyzer.algorithms.Algorithm;
-import com.example.algorithm_analyzer.dto.AlgorithmInfo;
-import com.example.algorithm_analyzer.dto.AlgorithmResult;
+import com.example.algorithm_analyzer.dtos.AlgorithmInfo;
+import com.example.algorithm_analyzer.dtos.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
 import com.example.algorithm_analyzer.services.ProblemService;
 import com.example.algorithm_analyzer.services.AlgorithmService;
@@ -39,9 +39,7 @@ public class AlgorithmController {
         log.info("Received execution request for algorithm: '{}' on problem: '{}'", algorithmName, problemName);
 
         try {
-            // --- POPRAWKA: Użyj nowego serwisu do pobierania problemów ---
             Problem problem = problemService.getProblemByName(problemName);
-
             Algorithm algorithm = algorithmService.getAlgorithmByName(algorithmName);
 
             Map<String, Object> problemParams = (request.getProblemParameters() != null)

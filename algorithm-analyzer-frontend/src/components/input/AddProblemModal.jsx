@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import {java} from '@codemirror/lang-java';
 import { getProblemTemplate, compileProblem } from '../../api/customProblemApi';
+import ImplementationGuide from '../view/ImplementationGuide';
 // Użyjemy tych samych stylów co AddAlgorithmModal
 // import './AddAlgorithmModal.css'; 
 
@@ -18,6 +19,7 @@ export default function AddProblemModal({ isOpen, onClose, onProblemAdded }) {
   const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
 
   // 1. Pobierz szablon, gdy modal się otwiera
   useEffect(() => {
@@ -72,9 +74,24 @@ export default function AddProblemModal({ isOpen, onClose, onProblemAdded }) {
 
   return (
     <div className="modal-overlay">
+      {showGuide && (
+        <ImplementationGuide 
+          type="problem" 
+          onClose={() => setShowGuide(false)} 
+        />
+      )}
       <div className="modal-content">
         <div className="modal-header">
-          <h2>Dodaj własny problem (Groovy/Java)</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2>Dodaj własny problem (Groovy/Java)</h2>
+            <button 
+              className="panel-button small-button" 
+              onClick={() => setShowGuide(true)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            >
+              Jak zaimplementować?
+            </button>
+          </div>
           <button onClick={onClose} className="modal-close-btn">&times;</button>
         </div>
 

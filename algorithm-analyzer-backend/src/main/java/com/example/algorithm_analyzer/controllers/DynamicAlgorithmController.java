@@ -3,7 +3,6 @@ package com.example.algorithm_analyzer.controllers;
 import com.example.algorithm_analyzer.services.AlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -61,8 +60,14 @@ public class DynamicAlgorithmController {
                     .body(Map.of("message", "Algorytm został pomyślnie skompilowany i dodany."));
         } catch (MultipleCompilationErrorsException e) {
             // Błąd kompilacji Groovy
-            ErrorCollector errorCollector = e.getErrorCollector();
-            String errorMessage = errorCollector.getError(0).toString(); // Weź pierwszy błąd
+            // Używamy e.getMessage(), który zazwyczaj zawiera sformatowaną listę błędów
+            String errorMessage = e.getMessage();
+            
+            // Opcjonalnie: spróbuj wyciągnąć bardziej zwięzły komunikat
+            if (errorMessage.contains("startup failed:")) {
+                errorMessage = errorMessage.substring(errorMessage.indexOf("startup failed:"));
+            }
+
             log.warn("Błąd kompilacji: {}", errorMessage);
             return ResponseEntity.badRequest().body(Map.of("error", "Błąd kompilacji: " + errorMessage));
         } catch (IllegalArgumentException e) {

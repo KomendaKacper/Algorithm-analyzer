@@ -3,7 +3,7 @@
 package com.example.algorithm_analyzer.services;
 
 import com.example.algorithm_analyzer.algorithms.Algorithm;
-import com.example.algorithm_analyzer.dto.AlgorithmInfo; // <-- WAŻNY IMPORT
+import com.example.algorithm_analyzer.dtos.AlgorithmInfo; // <-- WAŻNY IMPORT
 import groovy.lang.GroovyClassLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.CompilerConfiguration;

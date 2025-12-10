@@ -1,6 +1,6 @@
 package com.example.algorithm_analyzer.problems;
 
-import com.example.algorithm_analyzer.dto.ParameterDefinition;
+import com.example.algorithm_analyzer.dtos.ParameterDefinition;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
@@ -26,12 +26,12 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     @SuppressWarnings("unchecked")
     public void initialize(Map<String, Object> parameters) {
-        log.info("Rozpoczynam inicjalizację TravelingSalesmanProblem...");
+        log.info("Initializing TravelingSalesmanProblem...");
         try {
             this.cities = convertToStringList(getParameter(parameters, "cities", new ArrayList<>()));
             Object distancesObj = getParameter(parameters, "distances", new HashMap<>());
 
-            if (!(distancesObj instanceof Map)) throw new IllegalArgumentException("Parametr 'distances' musi być mapą.");
+            if (!(distancesObj instanceof Map)) throw new IllegalArgumentException("Parameter 'distances' must be a map.");
 
             this.distances = new HashMap<>();
             ((Map<?, ?>) distancesObj).forEach((fromCity, toMapObj) -> {
@@ -45,13 +45,12 @@ public class TravelingSalesmanProblem extends AbstractProblem {
                 return;
             }
 
-            // Logika: Pierwsze miasto na liście jest zawsze miastem startowym dla każdego algorytmu.
-            log.info("Punkt startowy ustalony na: {}", cities.get(0));
+            log.info("Start point set to: {}", cities.get(0));
 
             this.initialized = true;
-            log.info("Inicjalizacja TSP zakończona pomyślnie. Załadowano {} miast.", this.cities.size());
+            log.info("TSP initialization successful. Loaded {} cities.", this.cities.size());
         } catch (Exception e) {
-            log.error("Krytyczny błąd podczas inicjalizacji TSP: {}", e.getMessage(), e);
+            log.error("Critical error during TSP initialization: {}", e.getMessage(), e);
             this.initialized = false;
         }
     }
@@ -64,7 +63,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         for (int i = 0; i < solution.size() - 1; i++) {
             totalDistance += getDistance(solution.get(i), solution.get(i + 1));
         }
-        // Dodaj powrót do początku
         totalDistance += getDistance(solution.get(solution.size() - 1), solution.get(0));
         return totalDistance;
     }
@@ -72,11 +70,10 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     public boolean isValidSolution(List<String> solution) {
         checkInitialized();
-        // Rozwiązanie jest poprawne, jeśli zawiera wszystkie miasta i zaczyna się od ustalonego startu
         return solution != null
                 && solution.size() == cities.size()
                 && new HashSet<>(solution).size() == cities.size()
-                && solution.get(0).equals(cities.get(0)); // WAŻNE: Weryfikacja startu
+                && solution.get(0).equals(cities.get(0));
     }
 
     @Override
@@ -108,7 +105,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
 
     @Override
     public String getStartElement() {
-        // Zawsze zwracamy pierwsze miasto z listy (indeks 0)
         return cities.isEmpty() ? null : cities.get(0);
     }
 
@@ -121,27 +117,21 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     @Override
     public Map<String, Object> getProblemData() { return Map.of("distances", this.distances); }
 
-    // --- KLUCZOWE ZMIANY DLA ALGORYTMÓW SA I GENETYCZNYCH ---
-
     @Override
     public List<String> generateRandomSolution() {
         checkInitialized();
         List<String> solution = new ArrayList<>(cities);
 
-        // Zabezpieczenie: jeśli mamy mniej niż 2 miasta, nie ma co tasować
         if (solution.size() < 2) return solution;
 
-        // WAŻNE: Tasujemy tylko podlistę od indeksu 1 do końca.
-        // Indeks 0 (Start) pozostaje nienaruszony.
         Collections.shuffle(solution.subList(1, solution.size()), ThreadLocalRandom.current());
 
-        log.debug("Wygenerowano losowe rozwiązanie ze stałym startem: {}", solution);
+        log.debug("Generated random solution with fixed start: {}", solution);
         return solution;
     }
 
     @Override
     public List<String> generateNeighborSolution(List<String> currentSolution) {
-        // Dla SA generowanie sąsiada to mutacja, która NIE MOŻE ruszać startu
         return mutate(currentSolution);
     }
 
@@ -149,12 +139,10 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         checkInitialized();
         List<String> mutated = new ArrayList<>(solution);
         int size = mutated.size();
-        if (size < 3) return mutated; // Zbyt mało elementów, by zamieniać cokolwiek poza startem
+        if (size < 3) return mutated;
 
         Random rand = ThreadLocalRandom.current();
 
-        // WAŻNE: Losujemy indeksy z zakresu [1, size).
-        // Indeks 0 jest wykluczony z losowania.
         int i = rand.nextInt(size - 1) + 1;
         int j = rand.nextInt(size - 1) + 1;
 
@@ -166,7 +154,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
             int temp = i; i = j; j = temp;
         }
 
-        // Standardowy 2-opt swap, ale bezpieczny dla indeksu 0
         while (i < j) {
             Collections.swap(mutated, i, j);
             i++;

@@ -30,8 +30,13 @@ const TOUR_STEPS = [
     content: 'Tutaj możesz uruchomić wielokrotne przebiegi, aby zbadać stabilność wyników i rozrzut rozwiązań.'
   },
   {
+    selector: '[data-tour="step-extensions"]',
+    title: '4. Rozszerzenia',
+    content: 'W tym panelu możesz dodać własne implementacje algorytmów lub problemów, korzystając z wbudowanego edytora kodu.'
+  },
+  {
     selector: '[data-tour="step-run"]',
-    title: '4. Uruchom',
+    title: '5. Uruchom',
     content: 'Gdy wszystko gotowe, kliknij ten przycisk, aby rozpocząć symulację i zobaczyć wyniki na żywo!'
   }
 ];

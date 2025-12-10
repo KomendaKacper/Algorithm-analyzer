@@ -192,7 +192,7 @@ export function SolutionGraphPanel({ results }) {
         nodeLabel={node => `
           <div class="graph-tooltip">
             <div><b>Rozwiązanie:</b> ${node.id}</div>
-            <div><b>Wynik:</b> ${node.score.toFixed(2)}</div>
+            <div><b>Wynik:</b> ${typeof node.score === 'number' ? node.score.toFixed(2) : node.score}</div>
             <div><b>Odwiedziny (próbki):</b> ${node.visitCount}</div>
           	<div><b>Pierwsza iteracja:</b> ${node.firstSeen}</div>
             <div><b>Odwiedzone przez:</b> ${Array.from(node.visitedByAlgos).join(', ')}</div>

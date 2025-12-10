@@ -24,17 +24,21 @@ export default function ResultPanelWrapper({
     { type: "charts-stagnation", label: "Stagnacja" },
   ];
 
+  // --- LOGIKA DLA POJEDYNCZEGO WYNIKU ---
+  // W tym wariancie używamy tych samych przycisków co w trybie porównawczym
+  // aby zachować spójność interfejsu.
+
   return (
     <>
-      {/* Panel Porównawczy (Tylko gdy > 1 wynik) */}
-      {isComparison && (
-        <div className={`result-buttons-wrapper ${isComparisonMinimized ? "minimized" : ""}`}>
+      {/* Panel Narzędzi (Wspólny dla obu trybów) */}
+      <div className={`result-buttons-wrapper ${isComparisonMinimized ? "minimized" : ""}`}>
           <div className="result-panel-header">
-            <h3>Narzędzia Porównawcze</h3>
+            <h3>{isComparison ? "Narzędzia Porównawcze" : "Panel Analizy"}</h3>
             <button onClick={toggleComparisonMinimize} className="panel-minimize-button">
               {isComparisonMinimized ? '⤢' : '—'}
             </button>
           </div>
+          
           <div className="result-buttons"> 
             {commonChartButtons.map(btn => (
               <button 
@@ -50,12 +54,11 @@ export default function ResultPanelWrapper({
                   className="result-button specific-view" 
                   onClick={() => addPanel('animated-matrix-pheromones', results)}
                 >
-                  Porównanie Feromonów
+                  {isComparison ? "Porównanie Feromonów" : "Animacja Feromonów"}
                 </button>
             )}
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Indywidualne karty wyników */}
       <div className="result-wrapper">

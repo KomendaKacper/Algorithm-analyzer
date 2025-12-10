@@ -1,11 +1,10 @@
 package com.example.algorithm_analyzer.problems;
 
-import com.example.algorithm_analyzer.dto.ParameterDefinition;
+import com.example.algorithm_analyzer.dtos.ParameterDefinition;
 import java.util.List;
 import java.util.Map;
 
 public interface Problem {
-    // Metody Podstawowe
     String getName();
     String getDescription();
     boolean isMaximization();
@@ -15,7 +14,6 @@ public interface Problem {
     List<String> getAllElements();
     Map<String, Object> getProblemData();
 
-    // Metody dla Algorytmów Konstrukcyjnych (np. ACO)
     List<String> getPossibleNextElements(String current, List<String> visited);
     boolean isSolutionComplete(List<String> path);
     double getHeuristicValue(String from, String to);
@@ -23,11 +21,9 @@ public interface Problem {
     String getPheromoneKey(String from, String to);
     List<String> convertPathToSolution(List<String> path);
 
-    // Metody dla Algorytmów Przeszukiwania Lokalnego (np. SA, TS)
     List<String> generateRandomSolution();
     List<String> generateNeighborSolution(List<String> currentSolution);
 
-    // Metody Pomocnicze
     List<ParameterDefinition> getParameters();
 }
 

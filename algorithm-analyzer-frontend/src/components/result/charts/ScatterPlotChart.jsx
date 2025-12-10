@@ -9,8 +9,8 @@ const CustomTooltip = ({ active, payload }) => {
     return (
       <div className="custom-tooltip">
         <p className="tooltip-label">{payload[0].name}</p>
-        <p>Czas: {data.x.toFixed(0)} ms</p>
-        <p>Wynik: {data.y.toFixed(2)}</p>
+        <p>Czas: {typeof data.x === 'number' ? data.x.toFixed(0) : data.x} ms</p>
+        <p>Wynik: {typeof data.y === 'number' ? data.y.toFixed(2) : data.y}</p>
       </div>
     );
   }

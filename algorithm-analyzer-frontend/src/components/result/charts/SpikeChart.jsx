@@ -17,7 +17,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             const color = pld.fill; 
             return (
               <p key={`item-${index}`} className="tooltip-item" style={{ color: color }}>
-                {`${pld.name} : ${pld.value.toFixed(2)}%`}
+                {`${pld.name} : ${typeof pld.value === 'number' ? pld.value.toFixed(2) : pld.value}%`}
               </p>
             )
         })}

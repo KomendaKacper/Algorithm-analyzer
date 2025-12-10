@@ -1,7 +1,7 @@
 package com.example.algorithm_analyzer.controllers;
 
 import com.example.algorithm_analyzer.algorithms.Algorithm;
-import com.example.algorithm_analyzer.dto.AlgorithmResult;
+import com.example.algorithm_analyzer.dtos.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
 import com.example.algorithm_analyzer.services.ProblemService;
 import com.example.algorithm_analyzer.services.AlgorithmService;
@@ -32,7 +32,6 @@ public class ComparisonController {
     ) {
         log.info("Starting comparative analysis for problem: {}", problemName);
 
-        // --- POPRAWKA: Użyj nowego serwisu do pobierania problemów ---
         Problem problem = problemService.getProblemByName(problemName);
 
         List<AlgorithmResult> results = new ArrayList<>();

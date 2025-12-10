@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.dto;
+package com.example.algorithm_analyzer.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

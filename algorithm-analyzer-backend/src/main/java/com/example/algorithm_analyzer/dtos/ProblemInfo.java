@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.dto;
+package com.example.algorithm_analyzer.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AlgorithmInfo {
+public class ProblemInfo {
     private String name;
     private String description;
     private List<ParameterDefinition> parameters;

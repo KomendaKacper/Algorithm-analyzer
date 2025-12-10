@@ -1,6 +1,6 @@
 package com.example.algorithm_analyzer.services;
 
-import com.example.algorithm_analyzer.dto.ProblemInfo;
+import com.example.algorithm_analyzer.dtos.ProblemInfo;
 import com.example.algorithm_analyzer.problems.Problem;
 import groovy.lang.GroovyClassLoader;
 import lombok.extern.slf4j.Slf4j;

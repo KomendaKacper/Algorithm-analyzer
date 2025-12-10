@@ -16,7 +16,7 @@ package templates;/* ===========================================================
 
 // Package imports (whitelisted in GroovySandboxConfig)
 import com.example.algorithm_analyzer.problems.AbstractProblem
-import com.example.algorithm_analyzer.dto.ParameterDefinition
+import com.example.algorithm_analyzer.dtos.ParameterDefinition
 import com.example.algorithm_analyzer.enums.ParameterType
 
 // Java utility imports (whitelisted in GroovySandboxConfig)
@@ -107,7 +107,6 @@ public class MyCustomProblem extends AbstractProblem {
         return solution
     }
     
-    @Override
     public List<String> mutate(List<String> solution) {
         checkInitialized()
         List<String> neighbor = new ArrayList<>(solution)
@@ -131,7 +130,6 @@ public class MyCustomProblem extends AbstractProblem {
         return mutate(currentSolution)
     }
 
-    @Override
     public List<String> crossover(List<String> parent1, List<String> parent2) {
         // Standard one-point crossover
         checkInitialized()

@@ -1,9 +1,9 @@
 // src/main/java/com/example/algorithm_analyzer/algorithms/TabuSearchAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
-import com.example.algorithm_analyzer.dto.FinalMetricData;
-import com.example.algorithm_analyzer.dto.IterationResult;
-import com.example.algorithm_analyzer.dto.ParameterDefinition;
+import com.example.algorithm_analyzer.dtos.FinalMetricData;
+import com.example.algorithm_analyzer.dtos.IterationResult;
+import com.example.algorithm_analyzer.dtos.ParameterDefinition;
 import com.example.algorithm_analyzer.enums.ParameterType;
 import com.example.algorithm_analyzer.problems.Problem;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,6 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
         double bestScore = currentScore;
         double previousBestScore = bestScore;
 
-        // Używamy Set dla szybszego sprawdzania 'contains'
         Queue<List<String>> tabuListQueue = new LinkedList<>();
         Set<List<String>> tabuSet = new HashSet<>();
 
@@ -94,7 +93,6 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
             }
 
             if (bestNeighbor == null) {
-                // Jeśli wszyscy sąsiedzi są tabu i nie ma aspiracji, wybierz losowy (lub najlepszy z tabu)
                 bestNeighbor = problem.generateNeighborSolution(currentSolution);
                 bestNeighborScore = problem.evaluateSolution(bestNeighbor);
             }
@@ -107,12 +105,11 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
             currentSolution = new ArrayList<>(bestNeighbor);
             currentScore = bestNeighborScore;
 
-            // Zarządzanie listą tabu (kolejka + set)
             tabuListQueue.add(currentSolution);
             tabuSet.add(currentSolution);
             if (tabuListQueue.size() > params.tabuTenure()) {
                 List<String> removedSolution = tabuListQueue.poll();
-                tabuSet.remove(removedSolution); // Usuń z setu, gdy wypada z kolejki
+                tabuSet.remove(removedSolution);
             }
 
             boolean isCurrentBest = problem.isMaximization() ? currentScore > bestScore : currentScore < bestScore;
@@ -151,12 +148,11 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
             );
 
             if (iterationsWithoutImprovement >= params.maxIterationsWithoutImprovement()) {
-                log.info("Zatrzymano Tabu Search z powodu braku poprawy przez {} iteracji.", params.maxIterationsWithoutImprovement());
+                log.info("Tabu Search stopped due to lack of improvement for {} iterations.", params.maxIterationsWithoutImprovement());
                 break;
             }
         }
 
-        // --- ZMIANA: Usunięto dodawanie macierzy odległości ---
         Map<String, FinalMetricData> finalMetrics = new HashMap<>();
 
         return new ExecutionResult(bestSolution, bestScore, iterationResults, finalMetrics);

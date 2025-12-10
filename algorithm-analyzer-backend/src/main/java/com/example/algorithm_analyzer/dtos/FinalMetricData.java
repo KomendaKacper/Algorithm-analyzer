@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.dto;
+package com.example.algorithm_analyzer.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

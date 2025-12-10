@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.dto;
+package com.example.algorithm_analyzer.dtos;
 
 import com.example.algorithm_analyzer.enums.ParameterType;
 import lombok.AllArgsConstructor;

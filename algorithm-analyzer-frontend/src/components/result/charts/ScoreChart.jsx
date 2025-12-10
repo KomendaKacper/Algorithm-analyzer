@@ -10,7 +10,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         <p className="tooltip-label">{`Iteracja: ${label}`}</p>
         {payload.map((pld, index) => (
           <p key={`item-${index}`} className="tooltip-item" style={{ color: pld.stroke }}>
-            {`${pld.name}: ${pld.value.toFixed(2)}`}
+            {`${pld.name}: ${typeof pld.value === 'number' ? pld.value.toFixed(2) : pld.value}`}
           </p>
         ))}
       </div>

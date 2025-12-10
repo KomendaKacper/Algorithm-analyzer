@@ -2,56 +2,44 @@ package com.example.algorithm_analyzer.problems;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Opcjonalna klasa bazowa dla problemów.
- * Dostarcza wspólną funkcjonalność i walidację.
- */
 public abstract class AbstractProblem implements Problem {
 
     protected boolean initialized = false;
 
-    /**
-     * Sprawdza czy problem został zainicjalizowany
-     */
     protected void checkInitialized() {
         if (!initialized) {
             throw new IllegalStateException(
-                    "Problem '" + getName() + "' nie został zainicjalizowany! " +
-                            "Wywołaj metodę initialize() przed użyciem."
+                    "Problem '" + getName() + "' has not been initialized! " +
+                            "Call initialize() before use."
             );
         }
     }
 
-    /**
-     * Walidacja parametrów inicjalizacji
-     */
     protected void validateParameter(Map<String, Object> parameters, String paramName, Class<?> expectedType) {
         if (!parameters.containsKey(paramName)) {
             throw new IllegalArgumentException(
-                    "Brak wymaganego parametru: " + paramName
+                    "Missing required parameter: " + paramName
             );
         }
 
         Object value = parameters.get(paramName);
         if (value == null) {
             throw new IllegalArgumentException(
-                    "Parametr " + paramName + " nie może być null"
+                    "Parameter " + paramName + " cannot be null"
             );
         }
 
         if (!expectedType.isInstance(value)) {
             throw new IllegalArgumentException(
-                    "Parametr " + paramName + " ma nieprawidłowy typ. " +
-                            "Oczekiwano: " + expectedType.getSimpleName() +
-                            ", otrzymano: " + value.getClass().getSimpleName()
+                    "Parameter " + paramName + " has invalid type. " +
+                            "Expected: " + expectedType.getSimpleName() +
+                            ", received: " + value.getClass().getSimpleName()
             );
         }
     }
 
-    /**
-     * Konwersja mapy z różnymi typami liczbowymi na Map<String, Integer>
-     */
     protected Map<String, Integer> convertToIntegerMap(Map<?, ?> map) {
         java.util.Map<String, Integer> result = new java.util.HashMap<>();
         for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -64,9 +52,6 @@ public abstract class AbstractProblem implements Problem {
         return result;
     }
 
-    /**
-     * Konwersja mapy z różnymi typami liczbowymi na Map<String, Double>
-     */
     protected Map<String, Double> convertToDoubleMap(Map<?, ?> map) {
         java.util.Map<String, Double> result = new java.util.HashMap<>();
         for (Map.Entry<?, ?> entry : map.entrySet()) {
@@ -79,18 +64,12 @@ public abstract class AbstractProblem implements Problem {
         return result;
     }
 
-    /**
-     * Konwersja listy obiektów na listę stringów
-     */
     protected List<String> convertToStringList(List<?> list) {
         return list.stream()
                 .map(Object::toString)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Bezpieczne pobranie parametru z domyślną wartością
-     */
     @SuppressWarnings("unchecked")
     protected <T> T getParameter(Map<String, Object> parameters, String key, T defaultValue) {
         Object value = parameters.get(key);
@@ -101,22 +80,16 @@ public abstract class AbstractProblem implements Problem {
             return (T) value;
         } catch (ClassCastException e) {
             throw new IllegalArgumentException(
-                    "Nieprawidłowy typ parametru '" + key + "': " + e.getMessage()
+                    "Invalid parameter type '" + key + "': " + e.getMessage()
             );
         }
     }
 
-    /**
-     * Domyślna implementacja klucza feromonowego
-     */
     @Override
     public String getPheromoneKey(String from, String to) {
         return (from != null ? from : "START") + "->" + to;
     }
 
-    /**
-     * Domyślnie problemy są minimalizacyjne
-     */
     @Override
     public boolean isMaximization() {
         return false;
@@ -124,6 +97,6 @@ public abstract class AbstractProblem implements Problem {
 
     @Override
     public String toString() {
-        return getName() + " (" + (initialized ? "zainicjalizowany" : "niezainicjalizowany") + ")";
+        return getName() + " (" + (initialized ? "initialized" : "uninitialized") + ")";
     }
 }

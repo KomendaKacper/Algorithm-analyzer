@@ -1,6 +1,6 @@
 package com.example.algorithm_analyzer.controllers;
 
-import com.example.algorithm_analyzer.dto.ProblemInfo;
+import com.example.algorithm_analyzer.dtos.ProblemInfo;
 import com.example.algorithm_analyzer.services.ProblemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

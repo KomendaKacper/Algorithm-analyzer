@@ -1,4 +1,4 @@
-package com.example.algorithm_analyzer.config;
+package com.example.algorithm_analyzer.configs;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
@@ -25,14 +25,22 @@ public class GroovySandboxConfig {
                 "java.math.MathContext",
                 "java.util.Collections",
                 "java.util.Arrays",
-                "java.util.stream.Collectors" // <-- *** POPRAWKA JEST TUTAJ ***
+                "java.util.stream.Collectors",
+                // DTOs and Enums explicitly allowed for direct imports
+                "com.example.algorithm_analyzer.algorithms.AbstractAlgorithm",
+                "com.example.algorithm_analyzer.problems.Problem",
+                "com.example.algorithm_analyzer.problems.AbstractProblem",
+                "com.example.algorithm_analyzer.dtos.IterationResult",
+                "com.example.algorithm_analyzer.dtos.FinalMetricData",
+                "com.example.algorithm_analyzer.dtos.ParameterDefinition",
+                "com.example.algorithm_analyzer.enums.ParameterType"
         ));
 
         // 2. Zezwól na PAKIETY (biała lista)
         customizer.setAllowedStarImports(List.of(
                 "com.example.algorithm_analyzer.algorithms",
                 "com.example.algorithm_analyzer.problems",
-                "com.example.algorithm_analyzer.dto",
+                "com.example.algorithm_analyzer.dtos",
                 "com.example.algorithm_analyzer.enums",
                 "groovy.transform"
         ));

@@ -6,7 +6,7 @@ export default function WelcomeScreen({ onStartTour }) {
     <div className="welcome-screen">
       <div className="welcome-content">
         <div className="welcome-icon">
-          <img src="/appIcon.png" alt="App Icon" style={{ width: '64px', height: '64px' }} />
+          <img src="/appIcon.png" alt="App Icon" style={{ width: '120px', height: '120px' }} />
         </div>
         <h1 className="welcome-title">Algorithm Analyzer</h1>
         <p className="welcome-subtitle">

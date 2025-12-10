@@ -101,7 +101,7 @@ export default function ControlPanel({
           </button>
         </CollapsiblePanel>
         
-        <CollapsiblePanel title="4. Rozszerzenia" startOpen={false}>
+        <CollapsiblePanel title="4. Rozszerzenia" startOpen={false} data-tour="step-extensions">
           <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
             <button 
               onClick={onAddAlgorithmClick}

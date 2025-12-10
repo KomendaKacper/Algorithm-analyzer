@@ -1,13 +1,13 @@
 package com.example.algorithm_analyzer.algorithms;
 
-import com.example.algorithm_analyzer.dto.AlgorithmResult;
-import com.example.algorithm_analyzer.dto.FinalMetricData;
-import com.example.algorithm_analyzer.dto.IterationResult;
+import com.example.algorithm_analyzer.dtos.AlgorithmResult;
+import com.example.algorithm_analyzer.dtos.FinalMetricData;
+import com.example.algorithm_analyzer.dtos.IterationResult;
 import com.example.algorithm_analyzer.problems.Problem;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap; // Ważne dla kolejności wykresów
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -17,6 +17,14 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
     public static final int DEFAULT_TIMEOUT_SECONDS = 30;
 
+    /**
+     * Executes the algorithm on the given problem.
+     *
+     * @param problem             The problem to solve.
+     * @param problemParameters   Parameters for problem initialization.
+     * @param algorithmParameters Parameters for the algorithm execution.
+     * @return The result of the algorithm execution.
+     */
     @Override
     public final AlgorithmResult execute(Problem problem, Map<String, Object> problemParameters, Map<String, Object> algorithmParameters) {
         long startTime = System.currentTimeMillis();
@@ -50,34 +58,37 @@ public abstract class AbstractAlgorithm implements Algorithm {
 
         } catch (TimeoutException e) {
             future.cancel(true);
-            log.warn("Algorytm '{}' przekroczył limit czasu ({}s).", this.getName(), timeout);
-            result.setError("Przekroczono limit czasu (" + timeout + "s).");
+            log.warn("Algorithm '{}' exceeded time limit ({}s).", this.getName(), timeout);
+            result.setError("Time limit exceeded (" + timeout + "s).");
             result.setSuccess(false);
-            // Jeśli mamy jakieś cząstkowe wyniki (niezaimplementowane tutaj, ale możliwe w przyszłości), tu moglibyśmy je dodać
         } catch (InterruptedException e) {
             future.cancel(true);
-            log.warn("Wątek algorytmu '{}' został przerwany.", this.getName(), e);
-            result.setError("Wykonanie przerwane.");
+            log.warn("Algorithm thread '{}' was interrupted.", this.getName(), e);
+            result.setError("Execution interrupted.");
             result.setSuccess(false);
         } catch (Exception e) {
-            log.error("Błąd algorytmu '{}'", this.getName(), e);
+            log.error("Error in algorithm '{}'", this.getName(), e);
             result.setError(e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
             result.setSuccess(false);
         } finally {
             executor.shutdownNow();
         }
 
-        // --- ZMIANA: Ustawiamy etykiety ZAWSZE, nawet po błędzie ---
-        // Dzięki temu frontend wie, jakie wykresy 'powinien' był pokazać
         result.setSpecificMetricLabels(getSpecificMetricLabels());
 
         result.setExecutionDurationMs(System.currentTimeMillis() - startTime);
         return result;
     }
 
+    /**
+     * Solves the problem using the specific algorithm implementation.
+     *
+     * @param problem             The problem to solve.
+     * @param algorithmParameters Parameters for the algorithm.
+     * @return The result of the execution.
+     */
     protected abstract ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters);
 
-    // Domyślna implementacja - pusta mapa (LinkedHashMap dla zachowania kolejności w razie nadpisania)
     protected Map<String, String> getSpecificMetricLabels() {
         return new LinkedHashMap<>();
     }

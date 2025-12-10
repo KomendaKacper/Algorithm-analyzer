@@ -16,9 +16,9 @@
 // Package imports (whitelisted in GroovySandboxConfig)
 import com.example.algorithm_analyzer.algorithms.AbstractAlgorithm
 import com.example.algorithm_analyzer.problems.Problem
-import com.example.algorithm_analyzer.dto.IterationResult
-import com.example.algorithm_analyzer.dto.FinalMetricData
-import com.example.algorithm_analyzer.dto.ParameterDefinition
+import com.example.algorithm_analyzer.dtos.IterationResult
+import com.example.algorithm_analyzer.dtos.FinalMetricData
+import com.example.algorithm_analyzer.dtos.ParameterDefinition
 import com.example.algorithm_analyzer.enums.ParameterType
 
 // Java utility imports (whitelisted in GroovySandboxConfig)
