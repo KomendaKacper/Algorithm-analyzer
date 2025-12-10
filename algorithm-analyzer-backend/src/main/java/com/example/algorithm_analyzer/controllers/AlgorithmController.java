@@ -22,8 +22,7 @@ import java.util.NoSuchElementException;
 @Slf4j
 public class AlgorithmController {
 
-    // private final ProblemService problemService; // <-- USUNIĘTE
-    private final ProblemService problemService; // <-- ZASTĄPIONE
+    private final ProblemService problemService;
     private final AlgorithmService algorithmService;
 
     @GetMapping
@@ -68,20 +67,6 @@ public class AlgorithmController {
             errorResult.setError("Server error: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResult);
         }
-    }
-
-    @PostMapping("/aco/{problemName}/execute")
-    public ResponseEntity<?> executeAco(
-            @PathVariable String problemName,
-            @RequestBody Map<String, Object> parameters
-    ) {
-        log.warn("Deprecated endpoint /aco/{}/execute used. Recommend migrating to new API.", problemName);
-
-        ExecutionRequest request = new ExecutionRequest();
-        request.setAlgorithmParameters(parameters);
-        request.setProblemParameters(parameters);
-
-        return executeAlgorithm("Ant Colony Optimization (ACO)", problemName, request);
     }
 
     @lombok.Data

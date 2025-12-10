@@ -145,7 +145,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
         return mutate(currentSolution);
     }
 
-    @Override
     public List<String> mutate(List<String> solution) {
         checkInitialized();
         List<String> mutated = new ArrayList<>(solution);
@@ -174,57 +173,5 @@ public class TravelingSalesmanProblem extends AbstractProblem {
             j--;
         }
         return mutated;
-    }
-
-    @Override
-    public List<String> crossover(List<String> parent1, List<String> parent2) {
-        checkInitialized();
-        Random rand = ThreadLocalRandom.current();
-        int size = parent1.size();
-
-        // Jeśli rozmiar jest mały, zwróć rodzica
-        if (size < 2) return new ArrayList<>(parent1);
-
-        // --- Logika Order Crossover (OX1) dostosowana do stałego startu ---
-
-        // 1. Dziecko zawsze dziedziczy start po rodzicach (który jest taki sam)
-        List<String> child = new ArrayList<>(Collections.nCopies(size, null));
-        child.set(0, parent1.get(0)); // Sztywny start
-
-        // 2. Punkty cięcia losujemy TYLKO w zakresie [1, size-1]
-        // Zakres losowania: od 1 do size-1 (włącznie)
-        int startCut = rand.nextInt(size - 1) + 1;
-        int endCut = rand.nextInt(size - 1) + 1;
-
-        if (startCut > endCut) {
-            int temp = startCut; startCut = endCut; endCut = temp;
-        }
-
-        Set<String> childSubset = new HashSet<>();
-        childSubset.add(child.get(0)); // Start już jest "odwiedzony"
-
-        // 3. Kopiujemy segment z rodzica 1
-        for (int i = startCut; i <= endCut; i++) {
-            child.set(i, parent1.get(i));
-            childSubset.add(parent1.get(i));
-        }
-
-        // 4. Wypełniamy resztę z rodzica 2 (pomijając start i duplikaty)
-        int childIndex = (endCut + 1) % size;
-        // Jeśli childIndex trafi na 0 (start), przesuń na 1
-        if (childIndex == 0) childIndex = 1;
-
-        for (int i = 0; i < size; i++) {
-            int parentIndex = (endCut + 1 + i) % size;
-            String city = parent2.get(parentIndex);
-
-            // Pomijamy jeśli to miasto już jest w dziecku (obejmuje to też miasto startowe)
-            if (!childSubset.contains(city)) {
-                child.set(childIndex, city);
-                childIndex = (childIndex + 1) % size;
-                if (childIndex == 0) childIndex = 1; // Przeskok przez start
-            }
-        }
-        return child;
     }
 }

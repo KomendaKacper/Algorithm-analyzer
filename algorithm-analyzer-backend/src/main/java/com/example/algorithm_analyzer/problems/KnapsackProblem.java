@@ -104,55 +104,5 @@ public class KnapsackProblem extends AbstractProblem {
         }
         return neighbor;
     }
-
-    private boolean[] toBitmask(List<String> solution) {
-        boolean[] mask = new boolean[elements.size()];
-        for (int i = 0; i < elements.size(); i++) {
-            mask[i] = solution.contains(elements.get(i));
-        }
-        return mask;
-    }
-
-    private List<String> fromBitmask(boolean[] mask) {
-        List<String> solution = new ArrayList<>();
-        for (int i = 0; i < elements.size(); i++) {
-            if (mask[i]) {
-                solution.add(elements.get(i));
-            }
-        }
-        return solution;
-    }
-
-    @Override
-    public List<String> crossover(List<String> parent1, List<String> parent2) {
-        checkInitialized();
-        boolean[] mask1 = toBitmask(parent1);
-        boolean[] mask2 = toBitmask(parent2);
-        boolean[] childMask = new boolean[elements.size()];
-
-        if (elements.isEmpty()) return new ArrayList<>();
-
-        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
-        int crossoverPoint = ThreadLocalRandom.current().nextInt(elements.size());
-
-        for (int i = 0; i < elements.size(); i++) {
-            childMask[i] = (i < crossoverPoint) ? mask1[i] : mask2[i];
-        }
-
-        return fromBitmask(childMask);
-    }
-
-    @Override
-    public List<String> mutate(List<String> solution) {
-        checkInitialized();
-        boolean[] mask = toBitmask(solution);
-        if (mask.length == 0) return solution;
-
-        // --- ZMIANA: Używamy lepszego generatora liczb losowych ---
-        int mutationPoint = ThreadLocalRandom.current().nextInt(mask.length);
-        mask[mutationPoint] = !mask[mutationPoint];
-
-        return fromBitmask(mask);
-    }
 }
 

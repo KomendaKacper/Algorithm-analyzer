@@ -3,9 +3,8 @@ package com.example.algorithm_analyzer.controllers;
 import com.example.algorithm_analyzer.algorithms.Algorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
-// import com.example.algorithm_analyzer.services.ProblemService; // <-- USUNIĘTE
-import com.example.algorithm_analyzer.services.ProblemService; // <-- DODANE
-import com.example.algorithm_analyzer.services.AlgorithmService; // <-- DODANE (z poprzedniej poprawki)
+import com.example.algorithm_analyzer.services.ProblemService;
+import com.example.algorithm_analyzer.services.AlgorithmService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +22,8 @@ import java.util.Map;
 @Slf4j
 public class ComparisonController {
 
-    // private final ProblemService problemService; // <-- USUNIĘTE
-    private final ProblemService problemService; // <-- ZASTĄPIONE
-    private final AlgorithmService algorithmService; // <-- ZASTĄPIONE
+    private final ProblemService problemService;
+    private final AlgorithmService algorithmService;
 
     @PostMapping("/{problemName}/execute")
     public ResponseEntity<List<AlgorithmResult>> executeComparison(

@@ -98,7 +98,7 @@ export default function AlgorithmResultPanel({ result, addPanel, isComparisonMod
           {/* --- SEKCJA 2: ROZWIĄZANIE (Ścieżka) --- */}
           <div className="solution-section">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="p-label small">Najlepsza trasa:</span>
+                <span className="p-label small">Najlepsze rozwiązanie ({config.solutionLabel}):</span>
                 <button 
                     onClick={() => setIsSolutionExpanded(!isSolutionExpanded)}
                     style={{

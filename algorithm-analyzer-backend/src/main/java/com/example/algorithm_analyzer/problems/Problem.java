@@ -27,10 +27,6 @@ public interface Problem {
     List<String> generateRandomSolution();
     List<String> generateNeighborSolution(List<String> currentSolution);
 
-    // Dla Algorytmów Ewolucyjnych (np. Genetycznego) ===
-    List<String> crossover(List<String> parent1, List<String> parent2);
-    List<String> mutate(List<String> solution);
-
     // Metody Pomocnicze
     List<ParameterDefinition> getParameters();
 }
