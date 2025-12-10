@@ -4,8 +4,8 @@ import com.example.algorithm_analyzer.algorithms.Algorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
 // import com.example.algorithm_analyzer.services.ProblemService; // <-- USUNIĘTE
-import com.example.algorithm_analyzer.services.DynamicProblemService; // <-- DODANE
-import com.example.algorithm_analyzer.services.DynamicAlgorithmService; // <-- DODANE (z poprzedniej poprawki)
+import com.example.algorithm_analyzer.services.ProblemService; // <-- DODANE
+import com.example.algorithm_analyzer.services.AlgorithmService; // <-- DODANE (z poprzedniej poprawki)
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/compare")
@@ -25,8 +24,8 @@ import java.util.NoSuchElementException;
 public class ComparisonController {
 
     // private final ProblemService problemService; // <-- USUNIĘTE
-    private final DynamicProblemService dynamicProblemService; // <-- ZASTĄPIONE
-    private final DynamicAlgorithmService dynamicAlgorithmService; // <-- ZASTĄPIONE
+    private final ProblemService problemService; // <-- ZASTĄPIONE
+    private final AlgorithmService algorithmService; // <-- ZASTĄPIONE
 
     @PostMapping("/{problemName}/execute")
     public ResponseEntity<List<AlgorithmResult>> executeComparison(
@@ -36,7 +35,7 @@ public class ComparisonController {
         log.info("Starting comparative analysis for problem: {}", problemName);
 
         // --- POPRAWKA: Użyj nowego serwisu do pobierania problemów ---
-        Problem problem = dynamicProblemService.getProblemByName(problemName);
+        Problem problem = problemService.getProblemByName(problemName);
 
         List<AlgorithmResult> results = new ArrayList<>();
         Map<String, Integer> nameCounts = new HashMap<>();
@@ -50,7 +49,7 @@ public class ComparisonController {
             String originalName = algoRequest.getName();
             log.info("Executing algorithm: {}", originalName);
 
-            Algorithm algorithm = dynamicAlgorithmService.getAlgorithmByName(originalName);
+            Algorithm algorithm = algorithmService.getAlgorithmByName(originalName);
 
             AlgorithmResult result = algorithm.execute(problem, request.getProblemParameters(), algoRequest.getParameters());
 

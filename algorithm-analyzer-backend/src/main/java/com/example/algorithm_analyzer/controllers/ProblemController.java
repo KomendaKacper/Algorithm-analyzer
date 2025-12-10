@@ -1,7 +1,7 @@
 package com.example.algorithm_analyzer.controllers;
 
 import com.example.algorithm_analyzer.dto.ProblemInfo;
-import com.example.algorithm_analyzer.services.DynamicProblemService;
+import com.example.algorithm_analyzer.services.ProblemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,13 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProblemController {
 
-    private final DynamicProblemService dynamicProblemService;
+    private final ProblemService problemService;
 
     /**
      * Zwraca listę wszystkich problemów (wbudowanych + niestandardowych).
      */
     @GetMapping
     public ResponseEntity<List<ProblemInfo>> getAllProblems() {
-        return ResponseEntity.ok(dynamicProblemService.getAllProblemsInfo());
+        return ResponseEntity.ok(problemService.getAllProblemsInfo());
     }
 }

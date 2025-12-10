@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import '../../../App.css'; 
 import { CHART_COLORS_PALETTE } from './chartColors'; 
@@ -13,8 +13,27 @@ const getSolutionId = (solution, problemName) => {
 };
 
 export function SolutionGraphPanel({ results }) {
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
-  const { graphData, algorithmLegend, minMaxScores, isMaximization } = useMemo(() => {
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  const { graphData, algorithmLegend, minMaxScores, isMaximization } = useMemo(() => {
     const MAX_SAMPLED_KEYFRAMES = 200; 
     const nodes = new Map();
     const links = new Map();
@@ -140,31 +159,33 @@ export function SolutionGraphPanel({ results }) {
     );
   }
   
-  return (
-    <div 
-      className="result-buttons-wrapper" 
-      style={{ height: '600px', padding: '16px', position: 'relative' }}
-    >
-      <h3 style={{ textAlign: 'center', marginBottom: '16px' }}>🛰️ Graf Trajektorii Przeszukiwania (Próbkowany)</h3>
-      
-      <div className="graph-legend">
-        <h4>Legenda Algorytmów:</h4>
-        {algorithmLegend.map((entry, index) => (
-          <div key={index} className="legend-item">
-            <span className="legend-color-box" style={{ backgroundColor: entry.color }}></span>
-            {entry.name}
-          </div>
-        ))}
-        <div className="legend-item">
-          <span className="legend-border-box" style={{ borderColor: '#FFD700' }}></span>
-          Globalnie najlepsze rozwiązanie
-        </div>
-      </div>
-      
-      <ForceGraph2D
-        graphData={graphData}
-        
-        // --- USUNIĘTE: Niepotrzebny prop, bo używamy `nodeCanvasObject` ---
+  return (
+    <div 
+      className="result-buttons-wrapper" 
+      style={{ minHeight: '600px', flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', position: 'relative' }}
+    >
+      <h3 style={{ textAlign: 'center', marginBottom: '16px' }}>Graf Trajektorii Przeszukiwania (Próbkowany)</h3>
+      
+      <div className="graph-legend">
+        <h4>Legenda Algorytmów:</h4>
+        {algorithmLegend.map((entry, index) => (
+          <div key={index} className="legend-item">
+            <span className="legend-color-box" style={{ backgroundColor: entry.color }}></span>
+            {entry.name}
+          </div>
+        ))}
+        <div className="legend-item">
+          <span className="legend-border-box" style={{ borderColor: '#FFD700' }}></span>
+          Globalnie najlepsze rozwiązanie
+        </div>
+      </div>
+      
+      <div style={{ flex: 1, width: '100%', minHeight: 0 }} ref={containerRef}>
+        {dimensions.width > 0 && dimensions.height > 0 && (
+          <ForceGraph2D
+            width={dimensions.width}
+            height={dimensions.height}
+            graphData={graphData}        // --- USUNIĘTE: Niepotrzebny prop, bo używamy `nodeCanvasObject` ---
         // nodeVal={...} 
         
         // Tooltip dla węzła
@@ -218,18 +239,20 @@ export function SolutionGraphPanel({ results }) {
           }
         }}
         
-        nodePointerAreaPaint={(node, color, ctx) => {
-          // Upewniamy się, że obszar klikania/hovera odpowiada naszemu ręcznie obliczonemu promieniowi
-          const r = node.isGlobalBest 
-            ? 6 
-            : (2 + Math.log1p(node.visitCount) * 1.5);
-          
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-          ctx.fill();
-        }}
-      />
-    </div>
-  );
+        nodePointerAreaPaint={(node, color, ctx) => {
+          // Upewniamy się, że obszar klikania/hovera odpowiada naszemu ręcznie obliczonemu promieniowi
+          const r = node.isGlobalBest 
+            ? 6 
+            : (2 + Math.log1p(node.visitCount) * 1.5);
+          
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
+          ctx.fill();
+        }}
+      />
+        )}
+      </div>
+    </div>
+  );
 }

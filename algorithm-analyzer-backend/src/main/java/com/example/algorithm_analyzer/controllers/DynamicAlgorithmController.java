@@ -1,6 +1,6 @@
 package com.example.algorithm_analyzer.controllers;
 
-import com.example.algorithm_analyzer.services.DynamicAlgorithmService;
+import com.example.algorithm_analyzer.services.AlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -26,7 +26,7 @@ import java.util.Map; // Upewnij się, że masz ten import
 @Slf4j
 public class DynamicAlgorithmController {
 
-    private final DynamicAlgorithmService algorithmService;
+    private final AlgorithmService algorithmService;
     private final ResourceLoader resourceLoader;
 
     /**

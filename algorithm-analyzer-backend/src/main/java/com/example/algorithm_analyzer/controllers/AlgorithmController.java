@@ -4,9 +4,8 @@ import com.example.algorithm_analyzer.algorithms.Algorithm;
 import com.example.algorithm_analyzer.dto.AlgorithmInfo;
 import com.example.algorithm_analyzer.dto.AlgorithmResult;
 import com.example.algorithm_analyzer.problems.Problem;
-// import com.example.algorithm_analyzer.services.ProblemService; // <-- USUNIĘTE
-import com.example.algorithm_analyzer.services.DynamicProblemService; // <-- DODANE
-import com.example.algorithm_analyzer.services.DynamicAlgorithmService;
+import com.example.algorithm_analyzer.services.ProblemService;
+import com.example.algorithm_analyzer.services.AlgorithmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +23,12 @@ import java.util.NoSuchElementException;
 public class AlgorithmController {
 
     // private final ProblemService problemService; // <-- USUNIĘTE
-    private final DynamicProblemService dynamicProblemService; // <-- ZASTĄPIONE
-    private final DynamicAlgorithmService dynamicAlgorithmService;
+    private final ProblemService problemService; // <-- ZASTĄPIONE
+    private final AlgorithmService algorithmService;
 
     @GetMapping
     public ResponseEntity<List<AlgorithmInfo>> getAllAlgorithms() {
-        return ResponseEntity.ok(dynamicAlgorithmService.getAllAlgorithmsInfo());
+        return ResponseEntity.ok(algorithmService.getAllAlgorithmsInfo());
     }
 
     @PostMapping("/{algorithmName}/problems/{problemName}/execute")
@@ -42,9 +41,9 @@ public class AlgorithmController {
 
         try {
             // --- POPRAWKA: Użyj nowego serwisu do pobierania problemów ---
-            Problem problem = dynamicProblemService.getProblemByName(problemName);
+            Problem problem = problemService.getProblemByName(problemName);
 
-            Algorithm algorithm = dynamicAlgorithmService.getAlgorithmByName(algorithmName);
+            Algorithm algorithm = algorithmService.getAlgorithmByName(algorithmName);
 
             Map<String, Object> problemParams = (request.getProblemParameters() != null)
                     ? request.getProblemParameters() : Collections.emptyMap();

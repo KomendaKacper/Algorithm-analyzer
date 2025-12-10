@@ -130,6 +130,7 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                 iterationsWithoutImprovement++;
             }
 
+            long iterEndTime = System.nanoTime();
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iter)
@@ -137,7 +138,7 @@ public class TabuSearchAlgorithm extends AbstractAlgorithm {
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
                             .currentSolution(new ArrayList<>(currentSolution))
-                            .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
+                            .executionDurationMs((iterEndTime - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
                                     "stagnation", iterationsWithoutImprovement,
                                     "improvements", improvementCount,

@@ -1,6 +1,6 @@
 package com.example.algorithm_analyzer.controllers;
 
-import com.example.algorithm_analyzer.services.DynamicProblemService;
+import com.example.algorithm_analyzer.services.ProblemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -26,7 +26,7 @@ import java.util.Map;
 @Slf4j
 public class DynamicProblemController {
 
-    private final DynamicProblemService problemService;
+    private final ProblemService problemService;
     private final ResourceLoader resourceLoader;
 
     /**

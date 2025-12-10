@@ -91,6 +91,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
             double deltaForProb = problem.isMaximization() ? referenceWorseScore - currentScore : currentScore - referenceWorseScore;
             double acceptanceProbability = Math.exp(deltaForProb / temperature);
 
+            long iterEndTime = System.nanoTime();
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iteration)
@@ -98,7 +99,7 @@ public class SimulatedAnnealingAlgorithm extends AbstractAlgorithm {
                             .bestSolution(new ArrayList<>(bestSolution))
                             .currentScore(currentScore)
                             .currentSolution(new ArrayList<>(currentSolution))
-                            .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
+                            .executionDurationMs((iterEndTime - iterStartTime) / 1_000_000.0)
                             .specificMetrics(Map.of(
                                     "exploration", (double) acceptedWorseMoves,
                                     "stagnation", iteration - lastImprovementIter,

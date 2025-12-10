@@ -23,7 +23,7 @@ export default function AlgorithmOverlay({ isAlgorithmRunning }) {
         setVisible(false);
         setGravity(0);
         setTrigger("none");
-      }, 4000);
+      }, 1500);
       return () => clearTimeout(timeout);
     }
   }, [isAlgorithmRunning, visible]);

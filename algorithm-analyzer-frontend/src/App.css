@@ -117,6 +117,8 @@ body {
   position: relative;
   overflow: auto;
   padding: 32px;
+  display: flex;
+  flex-direction: column;
 }
 
 .app-header {
@@ -358,13 +360,14 @@ input[type=number] {
   border: 1px solid var(--color-primary-static);
 }
 .panel-button.secondary:hover {
-  background-color: var(--color-surface-secondary);
-  border-color: var(--color-primary-static);
-  color: var(--color-primary-static);
-  box-shadow: none;
+  background-image: var(--gradient-primary);
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-md);
 }
 body.dark .panel-button.secondary:hover {
-  background-color: var(--color-surface-secondary);
+  background-image: var(--gradient-primary);
+  background-color: transparent;
 }
 
 
@@ -407,15 +410,16 @@ body.dark .panel-button.secondary:hover {
 .panel-collapsible-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
+  transition: max-height 0.3s ease-out, border-color 0.3s;
   background-color: var(--color-surface);
   border-radius: 0 0 var(--border-radius) var(--border-radius);
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-top: none;
 }
 .panel-collapsible-content.open {
   max-height: 2000px;
-  transition: max-height 0.5s ease-in;
+  transition: max-height 0.5s ease-in, border-color 0.3s;
+  border-color: var(--color-border);
 }
 .panel-content-inner {
   padding: 16px;
@@ -494,6 +498,7 @@ body.dark .panel-button.secondary:hover {
 .panel h4 { margin: 0; font-size: 1.1rem; color: var(--color-text-primary); border-bottom: 1px solid var(--color-border); padding-bottom: 12px; }
 .algorithm-panels-wrapper { display: flex; flex-direction: column; gap: 16px; }
 .tsp-config-container, .knapsack-config-container { display: flex; flex-direction: column; gap: 16px; }
+.tsp-generator, .knapsack-generator { display: flex; flex-direction: column; gap: 16px; }
 .divider { border: none; border-top: 1px solid var(--color-border); margin: 8px 0; }
 .error-message { color: var(--color-error); font-size: 0.8rem; }
 .info-text { font-size: 0.8rem; color: var(--color-text-secondary); text-align: center; padding: 8px; }
@@ -548,6 +553,7 @@ body.dark .panel textarea.json-input {
   gap: 24px; 
   margin-bottom: 24px; 
   align-items: start;
+  flex-shrink: 0;
 }
 .result-panel {
   background: var(--color-surface);
@@ -612,6 +618,9 @@ body.dark .panel textarea.json-input {
   visibility: hidden;
   overflow: hidden;
 }
+.result-panel.minimized {
+  height: auto !important;
+}
 .result-panel.minimized .result-panel-header {
   border-bottom: 1px solid transparent;
 }
@@ -627,13 +636,13 @@ body.dark .panel textarea.json-input {
 .result-metric.full-width { grid-column: 1 / -1; }
 .solution-path { font-family: 'Fira Code', monospace; font-size: 0.9rem !important; background: var(--color-surface-secondary); padding: 8px 12px; border-radius: var(--border-radius); word-break: break-all; }
 .result-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
-.result-button { padding: 8px 16px; border: 1px solid var(--color-primary-static); border-radius: var(--border-radius); font-weight: 500; cursor: pointer; transition: all 0.2s; background-color: rgba(249, 115, 22, 0.1); display: flex; align-items: center; gap: 8px; color: #c2410c; }
+.result-button { padding: 8px 16px; border: 1px solid var(--color-primary-static); border-radius: var(--border-radius); font-weight: 500; cursor: pointer; transition: all 0.2s; background-color: var(--color-surface); display: flex; align-items: center; gap: 8px; color: var(--color-primary-static); }
 .result-button:hover { background-image: var(--gradient-primary); color: white; border-color: transparent; transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 /* --- POPRAWKA: Upewniamy się, że tekst przycisku jest czytelny w trybie ciemnym --- */
 body.dark .result-button {
-  background-color: rgba(251, 146, 60, 0.15);
-  color: #fdba74;
+  background-color: var(--color-surface);
+  color: var(--color-primary-static);
   border-color: var(--color-primary-static);
 }
 body.dark .result-button:hover {
@@ -790,7 +799,25 @@ body.dark tbody tr:hover { background-color: #334155; }
    7. Nakładka "Pracuję..." i Inne
    ========================================================================== */
 
-.algorithm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.7); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+.algorithm-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background: rgba(248, 250, 252, 0.7); 
+  backdrop-filter: blur(4px); 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 9999; 
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+.algorithm-overlay.finished {
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  pointer-events: none;
+}
 body.dark .algorithm-overlay { background: rgba(15, 23, 42, 0.7); }
 
 .falling-text-container { position: relative; z-index: 2100; cursor: pointer; text-align: center; }
@@ -802,6 +829,7 @@ body.dark .algorithm-overlay { background: rgba(15, 23, 42, 0.7); }
 
 .main-content .result-buttons-wrapper {
  margin-bottom: 32px; 
+ flex-shrink: 0;
 }
 
 /* --- POPRAWKA: Używamy zmiennych CSS dla motywu --- */
@@ -1129,8 +1157,8 @@ body.dark .metric-tag {
   font-size: 0.85rem;
   font-weight: 500;
   border: 1px solid var(--color-primary-static);
-  background-color: rgba(249, 115, 22, 0.1);
-  color: #c2410c; /* Ciemniejszy pomarańczowy dla kontrastu w trybie jasnym */
+  background-color: var(--color-surface);
+  color: var(--color-primary-static);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
@@ -1144,8 +1172,8 @@ body.dark .metric-tag {
   min-width: 0; /* Zapobiega wyjeżdżaniu tekstu */
 }
 body.dark .action-btn {
-    background-color: rgba(251, 146, 60, 0.15);
-    color: #fdba74; /* Jaśniejszy pomarańczowy dla kontrastu w trybie ciemnym */
+    background-color: var(--color-surface);
+    color: var(--color-primary-static);
     border-color: var(--color-primary-static);
 }
 

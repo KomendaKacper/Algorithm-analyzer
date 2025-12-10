@@ -103,6 +103,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
 
             List<String> currentBestPath = iterStats.bestSolutionThisIteration() != null ? iterStats.bestSolutionThisIteration().path() : null;
 
+            long iterEndTime = System.nanoTime();
             iterationResults.add(
                     IterationResult.builder()
                             .iteration(iter).bestScore(bestFitnessGlobal)
@@ -110,7 +111,7 @@ public class AntColonyOptimizationAlgorithm extends AbstractAlgorithm {
                             .currentSolution(currentBestPath != null ? problem.convertPathToSolution(currentBestPath) : null)
                             .currentScore(iterStats.bestFitnessThisIteration())
                             .averageScore(iterStats.averageFitness()).worstScore(iterStats.worstFitness())
-                            .executionDurationMs((System.nanoTime() - iterStartTime) / 1_000_000.0)
+                            .executionDurationMs((iterEndTime - iterStartTime) / 1_000_000.0)
                             .specificMetrics(metrics).build());
         }
 
