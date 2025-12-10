@@ -62,6 +62,7 @@ export default function App() {
   const [isAddAlgoModalOpen, setIsAddAlgoModalOpen] = useState(false);
   const [isAddProblemModalOpen, setIsAddProblemModalOpen] = useState(false); // --- NOWY STAN ---
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [backendStatus, setBackendStatus] = useState('loading'); // 'loading', 'connected', 'error'
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");
@@ -98,9 +99,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    refreshAlgorithms();
-    refreshProblems(); // --- POBIERZ PROBLEMY PRZY STARCIE ---
-  }, [refreshAlgorithms, refreshProblems]);
+    const initData = async () => {
+      setBackendStatus('loading');
+      try {
+        const [algoRes, probRes] = await Promise.all([
+            getAlgorithms(),
+            getProblems()
+        ]);
+        setAlgorithms(algoRes.data);
+        setProblems(probRes.data);
+        setBackendStatus('connected');
+      } catch (e) {
+        console.error("Initial data load failed", e);
+        setBackendStatus('error');
+      }
+    };
+    initData();
+  }, []);
   
   const runAnalysis = async (tasksToRun, manageState = true) => {
     if (!problemConfig.name || tasksToRun.length === 0 || tasksToRun.some(t => !t || !t.name)) {
@@ -233,6 +248,27 @@ export default function App() {
     showResultsWrapper &&
     results.every(r => r.success) &&
     results[0].iterationResults?.[0]?.currentSolution;
+
+  if (backendStatus === 'loading') {
+    return (
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <h2>Łączenie z serwerem...</h2>
+        <p>Proszę czekać, trwa pobieranie danych.</p>
+      </div>
+    );
+  }
+
+  if (backendStatus === 'error') {
+    return (
+      <div className="error-screen">
+        <div className="error-icon">⚠️</div>
+        <h2>Błąd połączenia</h2>
+        <p>Nie udało się połączyć z serwerem backendu.</p>
+        <button onClick={() => window.location.reload()}>Spróbuj ponownie</button>
+      </div>
+    );
+  }
 
   return (
     <div className={`App ${isSidebarCollapsed ? "sidebar-collapsed" : ""}`}>
