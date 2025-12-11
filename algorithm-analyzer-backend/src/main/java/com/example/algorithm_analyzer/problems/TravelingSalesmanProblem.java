@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 @Component("travelingSalesmanProblem")
 @Slf4j
@@ -24,7 +23,6 @@ public class TravelingSalesmanProblem extends AbstractProblem {
     public boolean isMaximization() { return false; }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void initialize(Map<String, Object> parameters) {
         log.info("Initializing TravelingSalesmanProblem...");
         try {

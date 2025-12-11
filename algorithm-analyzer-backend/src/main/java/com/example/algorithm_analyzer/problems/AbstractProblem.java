@@ -17,29 +17,6 @@ public abstract class AbstractProblem implements Problem {
         }
     }
 
-    protected void validateParameter(Map<String, Object> parameters, String paramName, Class<?> expectedType) {
-        if (!parameters.containsKey(paramName)) {
-            throw new IllegalArgumentException(
-                    "Missing required parameter: " + paramName
-            );
-        }
-
-        Object value = parameters.get(paramName);
-        if (value == null) {
-            throw new IllegalArgumentException(
-                    "Parameter " + paramName + " cannot be null"
-            );
-        }
-
-        if (!expectedType.isInstance(value)) {
-            throw new IllegalArgumentException(
-                    "Parameter " + paramName + " has invalid type. " +
-                            "Expected: " + expectedType.getSimpleName() +
-                            ", received: " + value.getClass().getSimpleName()
-            );
-        }
-    }
-
     protected Map<String, Integer> convertToIntegerMap(Map<?, ?> map) {
         java.util.Map<String, Integer> result = new java.util.HashMap<>();
         for (Map.Entry<?, ?> entry : map.entrySet()) {
