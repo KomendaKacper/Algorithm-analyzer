@@ -1,178 +1,94 @@
-package templates;/* ========================================================================
- * CUSTOM PROBLEM TEMPLATE (Groovy/Java)
- * ========================================================================
- * CONTRACT:
- * 1. Must extend 'AbstractProblem'.
- * 2. Must implement all abstract methods from 'Problem' interface.
- * (getName, getDescription, initialize, evaluateSolution, etc.)
- * 3. Must implement methods for the algorithm types you want to support:
- * - For Local Search (SA, TS):
- * -> generateRandomSolution()
- * -> mutate(List<String> solution)
- * - For ACO:
- * -> getPossibleNextElements(), isSolutionComplete(), etc.
- * ========================================================================
- */
-
-// Package imports (whitelisted in GroovySandboxConfig)
 import com.example.algorithm_analyzer.problems.AbstractProblem
 import com.example.algorithm_analyzer.dtos.ParameterDefinition
 import com.example.algorithm_analyzer.enums.ParameterType
 
-// Java utility imports (whitelisted in GroovySandboxConfig)
 import java.util.Map
 import java.util.List
 import java.util.ArrayList
 import java.util.Arrays
 import java.util.Random
 import java.util.Collections
-import java.util.stream.Collectors
+import java.util.HashMap
 
-/**
- * A simple "OneMax" problem template.
- * Goal: Maximize the number of "1"s in a binary string.
- * Supports Local Search and Evolutionary algorithms.
- */
 public class MyCustomProblem extends AbstractProblem {
 
-    private final Random random = new Random()
-    private int bitStringLength = 10; // Default value
-    private List<String> elements = ["0", "1"] // All possible elements
-
-    // --- 1. Basic Info ---
-    
-    @Override
-    public String getName() { return "My Custom OneMax Problem" }
+    // Define problem data structures here
+    // private List<String> items = new ArrayList<>()
 
     @Override
-    public String getDescription() { return "Custom problem: Maximize the number of '1's in a binary string." }
+    public String getName() { return "Mój Własny Problem" }
 
     @Override
-    public boolean isMaximization() { return true }
+    public String getDescription() { return "Opis problemu." }
 
-    // --- 2. Parameters & Initialization ---
-    
+    @Override
+    public boolean isMaximization() { return true } // or false for minimization
+
     @Override
     public List<ParameterDefinition> getParameters() {
         return Arrays.asList(
-            new ParameterDefinition(
-                "length", "Bit String Length", ParameterType.INTEGER, 
-                20, 5, 1000, "The length of the binary string.", true
-            )
+            // Define problem parameters here
+            // new ParameterDefinition("size", "Rozmiar Problemu", ParameterType.INTEGER, 10, 1, 100, "Opis rozmiaru", true)
         )
     }
 
     @Override
     public void initialize(Map<String, Object> parameters) {
-        // Use the helper method from AbstractProblem
-        this.bitStringLength = (Integer) getParameter(parameters, "length", 20)
+        // Initialize your problem data here based on parameters
+        // int size = getParameter(parameters, "size", 10)
+        
         this.initialized = true
     }
-
-    // --- 3. Core Logic ---
 
     @Override
     public double evaluateSolution(List<String> solution) {
         checkInitialized()
-        if (solution == null) return 0.0
-        // The score is simply the count of "1"s
-        return solution.stream().filter(bit -> bit.equals("1")).count()
+        // Calculate and return the score of the solution
+        return 0.0
     }
 
     @Override
     public boolean isValidSolution(List<String> solution) {
-        // In this simple problem, all solutions of the correct length are valid
-        return solution != null && solution.size() == this.bitStringLength
-    }
-
-    @Override
-    public List<String> getAllElements() {
-        // This is tricky for OneMax. We'll return the indices as strings.
-        List<String> indices = new ArrayList<>()
-        for (int i = 0; i < bitStringLength; i++) {
-            indices.add(String.valueOf(i))
-        }
-        return indices
-    }
-
-    // --- 4. Methods for Local Search (SA, TS, Custom Random Walk) ---
-    
-    @Override
-    public List<String> generateRandomSolution() {
-        checkInitialized()
-        List<String> solution = new ArrayList<>()
-        for (int i = 0; i < this.bitStringLength; i++) {
-            solution.add(random.nextBoolean() ? "1" : "0")
-        }
-        return solution
-    }
-    
-    public List<String> mutate(List<String> solution) {
-        checkInitialized()
-        List<String> neighbor = new ArrayList<>(solution)
-        if (neighbor.isEmpty()) return neighbor
-
-        // Flip one random bit
-        int indexToFlip = random.nextInt(this.bitStringLength)
-        String currentBit = neighbor.get(indexToFlip)
-        neighbor.set(indexToFlip, currentBit.equals("1") ? "0" : "1")
-        
-        return neighbor
-    }
-
-    // --- 5. Methods for other algorithm types (NOT IMPLEMENTED) ---
-    // We must provide implementations, even if they are empty/throw errors,
-    // to satisfy the 'Problem' interface contract.
-    
-    @Override
-    public List<String> generateNeighborSolution(List<String> currentSolution) {
-        // For this problem, mutate() is the neighbor function
-        return mutate(currentSolution)
-    }
-
-    public List<String> crossover(List<String> parent1, List<String> parent2) {
-        // Standard one-point crossover
-        checkInitialized()
-        int crossoverPoint = random.nextInt(this.bitStringLength)
-        List<String> child = new ArrayList<>()
-        for (int i = 0; i < this.bitStringLength; i++) {
-            child.add(i < crossoverPoint ? parent1.get(i) : parent2.get(i))
-        }
-        return child
-    }
-
-    // --- 6. Unused methods (can be empty/default) ---
-
-    @Override
-    public Map<String, Object> getProblemData() { return Map.of() }
-
-    @Override
-    public List<String> getPossibleNextElements(String current, List<String> visited) { 
-        // Not applicable for this problem type
-        return Collections.emptyList()
-    }
-    
-    @Override
-    public boolean isSolutionComplete(List<String> path) {
-        // Not applicable
+        // Check if the solution satisfies constraints
         return true
     }
 
     @Override
-    public double getHeuristicValue(String from, String to) { 
-        // Not applicable
-        return 1.0 
+    public List<String> generateRandomSolution() {
+        checkInitialized()
+        // Generate a valid random solution
+        return new ArrayList<>()
     }
+
+    @Override
+    public List<String> generateNeighborSolution(List<String> currentSolution) {
+        checkInitialized()
+        // Generate a neighbor solution (mutation)
+        return new ArrayList<>(currentSolution)
+    }
+
+    // --- Methods for ACO / Constructive Algorithms (Optional if only using Local Search) ---
+
+    @Override
+    public List<String> getAllElements() { return new ArrayList<>() }
+
+    @Override
+    public List<String> getPossibleNextElements(String current, List<String> path) {
+        return new ArrayList<>()
+    }
+
+    @Override
+    public boolean isSolutionComplete(List<String> path) { return false }
+
+    @Override
+    public double getHeuristicValue(String current, String next) { return 1.0 }
+
+    @Override
+    public List<String> convertPathToSolution(List<String> path) { return path }
     
     @Override
-    public String getStartElement() { 
-        // Not applicable
-        return null 
-    }
+    public String getStartElement() { return null }
     
     @Override
-    public List<String> convertPathToSolution(List<String> path) { 
-        // This problem doesn't use paths, the solution *is* the path
-        return path
-    }
+    public Map<String, Object> getProblemData() { return Map.of() }
 }

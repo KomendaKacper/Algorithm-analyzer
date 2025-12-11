@@ -6,6 +6,141 @@ import ImplementationGuide from '../view/ImplementationGuide';
 // Użyjemy tych samych stylów co AddAlgorithmModal
 // import './AddAlgorithmModal.css'; 
 
+const EXAMPLE_PROBLEM_CODE = `import com.example.algorithm_analyzer.problems.AbstractProblem
+import com.example.algorithm_analyzer.dtos.ParameterDefinition
+import com.example.algorithm_analyzer.enums.ParameterType
+
+import java.util.Map
+import java.util.List
+import java.util.ArrayList
+import java.util.Arrays
+import java.util.Random
+import java.util.Collections
+import java.util.HashMap
+
+public class NumberPartitioningProblem extends AbstractProblem {
+
+    private List<String> elements = new ArrayList<>()
+    private Map<String, Integer> values = new HashMap<>()
+    private Random random = new Random()
+
+    @Override
+    public String getName() { return "Problem Podziału Liczb (Number Partitioning)" }
+
+    @Override
+    public String getDescription() { 
+        return "Problem podziału zbioru liczb na dwa podzbiory o jak najbardziej zbliżonych sumach." 
+    }
+
+    @Override
+    public boolean isMaximization() { return false }
+
+    @Override
+    public List<ParameterDefinition> getParameters() {
+        return Arrays.asList(
+            new ParameterDefinition("numbers", "Liczby", ParameterType.INTEGER, 
+                10, 5, 50, "Liczba elementów do podziału", true)
+        )
+    }
+
+    private int totalSum = 0
+
+    @Override
+    public void initialize(Map<String, Object> parameters) {
+        int count = getParameter(parameters, "numbers", 10)
+        
+        this.elements.clear()
+        this.values.clear()
+        this.totalSum = 0
+        
+        for (int i = 0; i < count; i++) {
+            String elem = "N" + i
+            int val = random.nextInt(100) + 1
+            this.elements.add(elem)
+            this.values.put(elem, val)
+            this.totalSum += val
+        }
+        
+        this.initialized = true
+    }
+
+    @Override
+    public double evaluateSolution(List<String> solution) {
+        checkInitialized()
+        int sum1 = solution.stream().mapToInt(e -> values.getOrDefault(e, 0)).sum()
+        // Sum2 to reszta
+        int sum2 = totalSum - sum1
+        return Math.abs(sum1 - sum2)
+    }
+
+    @Override
+    public boolean isValidSolution(List<String> solution) {
+        return solution != null && solution.size() <= elements.size()
+    }
+
+    @Override
+    public List<String> getAllElements() { return new ArrayList<>(elements) }
+
+    @Override
+    public List<String> generateRandomSolution() {
+        checkInitialized()
+        List<String> solution = new ArrayList<>(elements)
+        Collections.shuffle(solution, random)
+        return solution.subList(0, random.nextInt(solution.size() + 1))
+    }
+
+    @Override
+    public List<String> generateNeighborSolution(List<String> currentSolution) {
+        checkInitialized()
+        List<String> neighbor = new ArrayList<>(currentSolution)
+        
+        if (random.nextBoolean() && !neighbor.isEmpty()) {
+            neighbor.remove(random.nextInt(neighbor.size()))
+        } else {
+            List<String> candidates = new ArrayList<>(elements)
+            candidates.removeAll(neighbor)
+            if (!candidates.isEmpty()) {
+                neighbor.add(candidates.get(random.nextInt(candidates.size())))
+            }
+        }
+        
+        return neighbor
+    }
+
+    @Override
+    public List<String> convertPathToSolution(List<String> path) { return path }
+
+    @Override
+    public String getStartElement() { return null }
+
+    @Override
+    public List<String> getPossibleNextElements(String current, List<String> path) {
+        // ACO: Zwracamy elementy, które nie są jeszcze w zbiorze A
+        // Ograniczamy wybór, aby nie przekroczyć połowy sumy (heurystyka konstrukcyjna)
+        int currentSum = path.stream().mapToInt(e -> values.getOrDefault(e, 0)).sum()
+        int target = totalSum / 2
+        
+        if (currentSum >= target) return new ArrayList<>() // Stop if we reached half
+        
+        List<String> candidates = new ArrayList<>(elements)
+        candidates.removeAll(path)
+        return candidates
+    }
+
+    @Override
+    public boolean isSolutionComplete(List<String> path) {
+        // ACO: Rozwiązanie jest kompletne, gdy osiągnęliśmy cel (połowę sumy) lub brak elementów
+        int currentSum = path.stream().mapToInt(e -> values.getOrDefault(e, 0)).sum()
+        return currentSum >= (totalSum / 2) || getPossibleNextElements(null, path).isEmpty()
+    }
+
+    @Override
+    public double getHeuristicValue(String current, String next) { return 1.0 }
+
+    @Override
+    public Map<String, Object> getProblemData() { return Map.of("values", this.values) }
+}`;
+
 /**
  * Modal do dodawania niestandardowego problemu.
  * @param {object} props
@@ -20,6 +155,7 @@ export default function AddProblemModal({ isOpen, onClose, onProblemAdded }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [showExample, setShowExample] = useState(false);
 
   // 1. Pobierz szablon, gdy modal się otwiera
   useEffect(() => {
@@ -80,7 +216,7 @@ export default function AddProblemModal({ isOpen, onClose, onProblemAdded }) {
           onClose={() => setShowGuide(false)} 
         />
       )}
-      <div className="modal-content">
+      <div className="modal-content" style={showExample ? { maxWidth: '95vw', width: '95vw' } : {}}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h2>Dodaj własny problem (Groovy/Java)</h2>
@@ -91,21 +227,46 @@ export default function AddProblemModal({ isOpen, onClose, onProblemAdded }) {
             >
               Jak zaimplementować?
             </button>
+            <button 
+              className="panel-button small-button" 
+              onClick={() => setShowExample(!showExample)}
+              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+            >
+              {showExample ? "Ukryj przykład" : "Pokaż przykład"}
+            </button>
           </div>
           <button onClick={onClose} className="modal-close-btn">&times;</button>
         </div>
 
-        <div className="modal-body">
+        <div className="modal-body" style={showExample ? { display: 'flex', gap: '1rem' } : {}}>
           {isLoadingTemplate ? (
             <p>Ładowanie szablonu...</p>
           ) : (
-            <CodeMirror
-              value={code}
-              height="50vh"
-              extensions={[java()]}
-              onChange={(value) => setCode(value)}
-              theme={editorTheme}
-            />
+            <>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                {showExample && <h3>Twój kod</h3>}
+                <CodeMirror
+                  value={code}
+                  height="50vh"
+                  extensions={[java()]}
+                  onChange={(value) => setCode(value)}
+                  theme={editorTheme}
+                />
+              </div>
+
+              {showExample && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <h3>Przykład (Tylko do odczytu)</h3>
+                  <CodeMirror 
+                    value={EXAMPLE_PROBLEM_CODE} 
+                    readOnly={true} 
+                    extensions={[java()]} 
+                    theme={editorTheme}
+                    height="50vh" 
+                  />
+                </div>
+              )}
+            </>
           )}
         </div>
 
