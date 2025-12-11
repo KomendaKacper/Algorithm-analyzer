@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { java } from '@codemirror/lang-java';
 import { getAlgorithmTemplate, compileAlgorithm } from '../../api/customAlgorithmApi';
-import ImplementationGuide from '../view/ImplementationGuide';
+import { AlgorithmGuideText, ABSTRACT_ALGORITHM_CODE } from './GuideContent';
 import '../../App.css'; // Stworzymy ten plik w kroku 6
 
 const EXAMPLE_ALGORITHM_CODE = `import com.example.algorithm_analyzer.algorithms.AbstractAlgorithm
@@ -124,8 +124,7 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
   const [isCompiling, setIsCompiling] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [showGuide, setShowGuide] = useState(false);
-  const [showExample, setShowExample] = useState(false);
+  const [rightPanelTab, setRightPanelTab] = useState('guide'); // null, 'example', 'guide', 'abstraction'
 
   // 1. Pobierz szablon, gdy modal się otwiera
   useEffect(() => {
@@ -133,6 +132,7 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
       // Zresetuj stany
       setError(null);
       setSuccess(null);
+      setRightPanelTab('guide');
       setCode('');
       setIsLoadingTemplate(true);
 
@@ -187,41 +187,53 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
 
   return (
     <div className="modal-overlay">
-      {showGuide && (
-        <ImplementationGuide 
-          type="algorithm" 
-          onClose={() => setShowGuide(false)} 
-        />
-      )}
-      <div className="modal-content" style={showExample ? { maxWidth: '95vw', width: '95vw' } : {}}>
+      <div className="modal-content" style={rightPanelTab ? { maxWidth: '95vw', width: '95vw' } : {}}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h2>Dodaj własny algorytm (Groovy/Java)</h2>
-            <button 
-              className="panel-button small-button" 
-              onClick={() => setShowGuide(true)}
-              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
-            >
-              Jak zaimplementować?
-            </button>
-            <button 
-              className="panel-button small-button" 
-              onClick={() => setShowExample(!showExample)}
-              style={{ fontSize: '0.8rem', padding: '4px 8px' }}
-            >
-              {showExample ? "Ukryj przykład" : "Pokaż przykład"}
-            </button>
-          </div>
-          <button onClick={onClose} className="modal-close-btn">&times;</button>
+            <button onClick={onClose} className="modal-close-btn">&times;</button>
         </div>
 
-        <div className="modal-body" style={showExample ? { display: 'flex', gap: '1rem' } : {}}>
+        <div className="modal-toolbar" style={{ 
+            padding: '10px 20px', 
+            borderBottom: '1px solid var(--color-border)', 
+            display: 'flex', 
+            gap: '10px', 
+            alignItems: 'center',
+            backgroundColor: 'var(--color-surface-secondary)'
+        }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '500', color: 'var(--color-text-secondary)' }}>Pomoc i Narzędzia:</span>
+            <div className="button-group" style={{ display: 'flex', gap: '5px' }}>
+                <button 
+                  className={`panel-button small-button ${rightPanelTab === 'guide' ? 'active' : ''}`}
+                  onClick={() => setRightPanelTab(rightPanelTab === 'guide' ? null : 'guide')}
+                  style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+                >
+                  Przewodnik
+                </button>
+                <button 
+                  className={`panel-button small-button ${rightPanelTab === 'example' ? 'active' : ''}`}
+                  onClick={() => setRightPanelTab(rightPanelTab === 'example' ? null : 'example')}
+                  style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+                >
+                  Przykład
+                </button>
+                <button 
+                  className={`panel-button small-button ${rightPanelTab === 'abstraction' ? 'active' : ''}`}
+                  onClick={() => setRightPanelTab(rightPanelTab === 'abstraction' ? null : 'abstraction')}
+                  style={{ fontSize: '0.85rem', padding: '6px 12px' }}
+                >
+                  Abstrakcja
+                </button>
+            </div>
+        </div>
+
+        <div className="modal-body" style={rightPanelTab ? { display: 'flex', gap: '1rem' } : {}}>
           {isLoadingTemplate ? (
             <p>Ładowanie szablonu...</p>
           ) : (
             <>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                {showExample && <h3>Twój kod</h3>}
+                {rightPanelTab && <h3>Twój kod</h3>}
                 <CodeMirror
                   value={code}
                   height="50vh" // Ważne: ustaw wysokość edytora
@@ -231,16 +243,39 @@ export default function AddAlgorithmModal({ isOpen, onClose, onAlgorithmAdded })
                 />
               </div>
               
-              {showExample && (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <h3>Przykład (Tylko do odczytu)</h3>
-                  <CodeMirror 
-                    value={EXAMPLE_ALGORITHM_CODE} 
-                    readOnly={true} 
-                    extensions={[java()]} 
-                    theme={editorTheme}
-                    height="50vh" 
-                  />
+              {rightPanelTab && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <h3>
+                    {rightPanelTab === 'example' && "Przykład (Tylko do odczytu)"}
+                    {rightPanelTab === 'guide' && "Przewodnik"}
+                    {rightPanelTab === 'abstraction' && "Klasa Bazowa (AbstractAlgorithm)"}
+                  </h3>
+                  
+                  {rightPanelTab === 'example' && (
+                    <CodeMirror 
+                        value={EXAMPLE_ALGORITHM_CODE} 
+                        readOnly={true} 
+                        extensions={[java()]} 
+                        theme={editorTheme}
+                        height="50vh" 
+                    />
+                  )}
+
+                  {rightPanelTab === 'guide' && (
+                    <div className="guide-scroll" style={{ height: '50vh', overflowY: 'auto', padding: '0 10px' }}>
+                        <AlgorithmGuideText />
+                    </div>
+                  )}
+
+                  {rightPanelTab === 'abstraction' && (
+                    <CodeMirror 
+                        value={ABSTRACT_ALGORITHM_CODE} 
+                        readOnly={true} 
+                        extensions={[java()]} 
+                        theme={editorTheme}
+                        height="50vh" 
+                    />
+                  )}
                 </div>
               )}
             </>

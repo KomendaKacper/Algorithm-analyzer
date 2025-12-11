@@ -1,19 +1,161 @@
-import React from 'react';
+import React, { useState } from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { java } from '@codemirror/lang-java';
 import '../../App.css';
+
+const ABSTRACT_ALGORITHM_CODE = `package com.example.algorithm_analyzer.algorithms;
+
+import com.example.algorithm_analyzer.dtos.AlgorithmResult;
+import com.example.algorithm_analyzer.dtos.FinalMetricData;
+import com.example.algorithm_analyzer.dtos.IterationResult;
+import com.example.algorithm_analyzer.problems.Problem;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
+
+@Slf4j
+public abstract class AbstractAlgorithm implements Algorithm {
+
+    public static final int DEFAULT_TIMEOUT_SECONDS = 30;
+
+    @Override
+    public final AlgorithmResult execute(Problem problem, Map<String, Object> problemParameters, Map<String, Object> algorithmParameters) {
+        // ... (logika uruchamiania, obsługi czasu i wątków) ...
+        // Ta metoda wywołuje Twoją metodę solve()
+    }
+
+    /**
+     * To jest metoda, którą musisz zaimplementować.
+     */
+    protected abstract ExecutionResult solve(Problem problem, Map<String, Object> algorithmParameters);
+
+    protected Map<String, String> getSpecificMetricLabels() {
+        return new LinkedHashMap<>();
+    }
+
+    // Rekord wyniku, który musisz zwrócić
+    protected record ExecutionResult(
+            List<String> bestSolution,
+            double bestScore,
+            List<IterationResult> iterationResults,
+            Map<String, FinalMetricData> finalMetrics
+    ) {
+        public ExecutionResult(List<String> bestSolution, double bestScore, List<IterationResult> iterationResults) {
+            this(bestSolution, bestScore, iterationResults, Map.of());
+        }
+    }
+}`;
+
+const ABSTRACT_PROBLEM_CODE = `package com.example.algorithm_analyzer.problems;
+
+import java.util.List;
+import java.util.Map;
+
+public abstract class AbstractProblem implements Problem {
+
+    protected boolean initialized = false;
+
+    // Sprawdza czy wywołano initialize()
+    protected void checkInitialized() {
+        if (!initialized) {
+            throw new IllegalStateException("Problem not initialized!");
+        }
+    }
+
+    // Metody pomocnicze do konwersji parametrów
+    protected Map<String, Integer> convertToIntegerMap(Map<?, ?> map) { ... }
+    protected Map<String, Double> convertToDoubleMap(Map<?, ?> map) { ... }
+    protected List<String> convertToStringList(List<?> list) { ... }
+    
+    protected <T> T getParameter(Map<String, Object> parameters, String key, T defaultValue) {
+        // Bezpieczne pobieranie parametru z rzutowaniem
+    }
+
+    @Override
+    public String getPheromoneKey(String from, String to) {
+        return (from != null ? from : "START") + "->" + to;
+    }
+
+    @Override
+    public boolean isMaximization() {
+        return false; // Domyślnie minimalizacja
+    }
+}`;
+
+const PROBLEM_INTERFACE_CODE = `public interface Problem {
+    // Metody informacyjne
+    String getName();
+    String getDescription();
+    boolean isMaximization();
+    List<ParameterDefinition> getParameters();
+
+    // Inicjalizacja
+    void initialize(Map<String, Object> parameters);
+
+    // Ocena i walidacja
+    double evaluateSolution(List<String> solution);
+    boolean isValidSolution(List<String> solution);
+
+    // Dla algorytmów lokalnego przeszukiwania (SA, TS)
+    List<String> generateRandomSolution();
+    List<String> generateNeighborSolution(List<String> currentSolution);
+
+    // Dla algorytmów konstrukcyjnych (ACO)
+    List<String> getAllElements();
+    List<String> getPossibleNextElements(String current, List<String> visited);
+    boolean isSolutionComplete(List<String> path);
+    double getHeuristicValue(String from, String to);
+    String getStartElement();
+    String getPheromoneKey(String from, String to);
+    List<String> convertPathToSolution(List<String> path);
+    
+    Map<String, Object> getProblemData();
+}`;
 
 export default function ImplementationGuide({ type, onClose }) {
   const isAlgorithm = type === 'algorithm';
+  const [activeTab, setActiveTab] = useState('guide'); // 'guide', 'abstraction', 'interface'
+
+  const editorTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
 
   return (
     <div className="modal-overlay" style={{ zIndex: 1100 }}>
-      <div className="modal-content guide-modal">
+      <div className="modal-content guide-modal" style={{ width: '800px', maxWidth: '95vw' }}>
         <div className="modal-header">
           <h2>{isAlgorithm ? "Przewodnik: Implementacja Algorytmu" : "Przewodnik: Implementacja Problemu"}</h2>
           <button onClick={onClose} className="modal-close-btn">&times;</button>
         </div>
         
+        <div className="tabs-header" style={{ padding: '0 20px', borderBottom: '1px solid var(--border-color)' }}>
+            <button 
+                className={`tab-button ${activeTab === 'guide' ? 'active' : ''}`}
+                onClick={() => setActiveTab('guide')}
+            >
+                Przewodnik
+            </button>
+            <button 
+                className={`tab-button ${activeTab === 'abstraction' ? 'active' : ''}`}
+                onClick={() => setActiveTab('abstraction')}
+            >
+                {isAlgorithm ? 'AbstractAlgorithm.java' : 'AbstractProblem.java'}
+            </button>
+            {!isAlgorithm && (
+                <button 
+                    className={`tab-button ${activeTab === 'interface' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('interface')}
+                >
+                    Problem.java (Interfejs)
+                </button>
+            )}
+        </div>
+        
         <div className="modal-body guide-content">
-          {isAlgorithm ? (
+          {activeTab === 'guide' && (
+            isAlgorithm ? (
             <>
               <h3>Wymagania dla Algorytmu</h3>
               <p>Twój algorytm musi być napisany w języku <strong>Groovy</strong> (składnia kompatybilna z Java) i spełniać następujące warunki:</p>
@@ -86,6 +228,32 @@ export default function ImplementationGuide({ type, onClose }) {
                 <li>Dla ciągłych (np. Funkcja Sfery): <code>["3.14", "-1.5", "0.0", ...]</code></li>
               </ul>
             </>
+          ))}
+
+          {activeTab === 'abstraction' && (
+            <div style={{ marginTop: '1rem' }}>
+                <p>Poniżej znajduje się kod klasy bazowej, którą rozszerzasz. Zawiera ona metody pomocnicze i strukturę, której musisz przestrzegać.</p>
+                <CodeMirror 
+                    value={isAlgorithm ? ABSTRACT_ALGORITHM_CODE : ABSTRACT_PROBLEM_CODE} 
+                    readOnly={true} 
+                    extensions={[java()]} 
+                    theme={editorTheme}
+                    height="60vh" 
+                />
+            </div>
+          )}
+
+          {activeTab === 'interface' && !isAlgorithm && (
+            <div style={{ marginTop: '1rem' }}>
+                <p>To jest interfejs, który implementuje <code>AbstractProblem</code>. Twoja klasa musi dostarczyć implementację dla metod abstrakcyjnych.</p>
+                <CodeMirror 
+                    value={PROBLEM_INTERFACE_CODE} 
+                    readOnly={true} 
+                    extensions={[java()]} 
+                    theme={editorTheme}
+                    height="60vh" 
+                />
+            </div>
           )}
           
           <div className="guide-footer">
