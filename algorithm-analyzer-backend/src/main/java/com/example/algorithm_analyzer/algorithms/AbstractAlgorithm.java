@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 @Slf4j
 public abstract class AbstractAlgorithm implements Algorithm {
 
-    public static final int DEFAULT_TIMEOUT_SECONDS = 30;
+    public static final int DEFAULT_TIMEOUT_SECONDS = 120;
 
     /**
      * Executes the algorithm on the given problem.

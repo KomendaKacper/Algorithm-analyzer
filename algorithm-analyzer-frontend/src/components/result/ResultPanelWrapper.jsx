@@ -33,7 +33,7 @@ export default function ResultPanelWrapper({
       {/* Panel Narzędzi (Wspólny dla obu trybów) */}
       <div className={`result-buttons-wrapper ${isComparisonMinimized ? "minimized" : ""}`}>
           <div className="result-panel-header">
-            <h3>{isComparison ? "Narzędzia Porównawcze" : "Panel Analizy"}</h3>
+            <h3>Panel Analizy</h3>
             <button onClick={toggleComparisonMinimize} className="panel-minimize-button">
               {isComparisonMinimized ? '⤢' : '—'}
             </button>
