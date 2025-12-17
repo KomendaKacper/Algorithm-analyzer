@@ -1,9 +1,7 @@
 import React from 'react';
-// --- POPRAWKA: Dodajemy import 'Cell' ---
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { CHART_COLORS_PALETTE } from './chartColors';
 
-// --- NOWY KUSTOMOWY TOOLTIP (lepiej obsługuje nazwy) ---
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const relevantPayload = payload.filter(pld => pld.value > 0);
@@ -48,7 +46,6 @@ export function SpikeChart({ results, dataKey, name }) {
   const maxIterations = Math.max(...results.map(r => r.iterationResults?.length || 0));
   const chartData = [];
 
-  // --- Logika budowania danych ---
   for (let i = 0; i < maxIterations; i++) {
     const dataPoint = { iteration: i };
     results.forEach(result => {
@@ -63,7 +60,6 @@ export function SpikeChart({ results, dataKey, name }) {
     chartData.push(dataPoint);
   }
   
-  // --- Logika filtrowania ---
   const filteredData = chartData.filter(d => Object.keys(d).length > 1);
 
   if (filteredData.length === 0) {

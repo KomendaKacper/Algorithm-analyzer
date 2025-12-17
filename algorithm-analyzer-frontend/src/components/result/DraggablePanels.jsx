@@ -1,4 +1,3 @@
-// src/components/result/DraggablePanels.jsx
 import React, { useRef, useCallback } from "react";
 import IterationTable from "./IterationTable";
 import { MetricChart } from "./charts/MetricChart";
@@ -33,7 +32,6 @@ export default function DraggablePanels({
   const interactionInfo = useRef(null);
   const panelRefs = useRef({});
 
-  // --- Logika Drag & Drop i Resize ---
   const handleInteractionStart = useCallback((e, id, type) => {
     if (e.target.closest('button')) return; // Nie uruchamiaj przeciągania na przyciskach
     e.preventDefault();
@@ -90,7 +88,6 @@ export default function DraggablePanels({
     window.removeEventListener("mouseup", handleMouseUp);
   }, [setPanelPositions]);
 
-  // --- Rendering Paneli ---
   return (
     <>
       {openPanels.map((panel) => {

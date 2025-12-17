@@ -1,4 +1,3 @@
-// src/components/result/charts/ScatterPlotChart.jsx
 import React from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CHART_COLORS_PALETTE } from './chartColors';

@@ -1,7 +1,6 @@
-// src/components/result/ResultPanelWrapper.jsx
 import React from "react";
 import AlgorithmResultPanel from "./AlgorithmResultPanel";
-import '../../App.css'; 
+import '../../App.css';  
 
 export default function ResultPanelWrapper({ 
   results, 
@@ -23,10 +22,6 @@ export default function ResultPanelWrapper({
     { type: "charts-relative-improvement", label: "Skoki Poprawy" },
     { type: "charts-stagnation", label: "Stagnacja" },
   ];
-
-  // --- LOGIKA DLA POJEDYNCZEGO WYNIKU ---
-  // W tym wariancie używamy tych samych przycisków co w trybie porównawczym
-  // aby zachować spójność interfejsu.
 
   return (
     <>

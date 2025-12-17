@@ -1,6 +1,5 @@
-// src/components/AlgorithmOverlay.jsx
 import { useEffect, useState } from "react";
-import FallingText from "../../uiComponents/FallingText"; // Upewnij się, że masz ten komponent
+import FallingText from "../../uiComponents/FallingText";
 
 export default function AlgorithmOverlay({ isAlgorithmRunning }) {
   const [gravity, setGravity] = useState(0);

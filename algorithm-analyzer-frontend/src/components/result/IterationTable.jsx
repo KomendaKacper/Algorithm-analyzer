@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 
-// --- ZAKTUALIZOWANA, PANCERNA FUNKCJA FORMATUJĄCA ---
 const formatValue = (value) => {
     if (value === undefined || value === null) {
         return '—'; // Znak braku danych

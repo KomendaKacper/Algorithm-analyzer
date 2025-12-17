@@ -11,18 +11,15 @@ export default function InputField({
   step,
   min,
   max,
-  // --- ZMIANA: Prop do obsługi checkboxa ---
   isCheckbox = false,
 }) {
   return (
-    // --- ZMIANA: Dynamiczna klasa dla grupy checkboxa ---
     <div className={`form-group ${isCheckbox ? 'checkbox-group' : ''}`}>
       <label>
         {label}
         {description && <span className="tooltip" data-tooltip={description}>?</span>}
       </label>
       
-      {/* --- ZMIANA: Logika renderowania checkboxa --- */}
       {isCheckbox ? (
         <input
           type="checkbox"

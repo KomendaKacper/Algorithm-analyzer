@@ -7,7 +7,7 @@ import ThemeToggle from "../../uiComponents/ThemeToggle";
 
 export default function ControlPanel({ 
   algorithms, 
-  problems, // --- NOWY PROP ---
+  problems,
   tasks, 
   setTasks, 
   problemConfig, 
@@ -19,7 +19,7 @@ export default function ControlPanel({
   isDarkMode, 
   toggleDarkMode,
   onAddAlgorithmClick,
-  onAddProblemClick // --- NOWY PROP ---
+  onAddProblemClick
 }) {
 
   const [runCount, setRunCount] = useState(10);

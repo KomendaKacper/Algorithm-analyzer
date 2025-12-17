@@ -1,4 +1,3 @@
-// src/components/result/charts/MetricChart.jsx
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CHART_COLORS_PALETTE } from './chartColors';

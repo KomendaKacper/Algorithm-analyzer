@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { getAlgorithms, executeComparison } from "./api/algorithmApi";
-import { getProblems } from "./api/problemApi"; // --- NOWY IMPORT ---
+import { getProblems } from "./api/problemApi";
 
 import ControlPanel from "./components/input/ControlPanel";
 import DraggablePanels from "./components/result/DraggablePanels";
@@ -8,7 +8,7 @@ import AlgorithmOverlay from "./components/result/AlgorithmOverlay";
 import ResultPanelWrapper from "./components/result/ResultPanelWrapper";
 import { SolutionGraphPanel } from "./components/result/charts/SolutionGraphPanel";
 import AddAlgorithmModal from './components/input/AddAlgorithmModal';
-import AddProblemModal from './components/input/AddProblemModal'; // --- NOWY IMPORT ---
+import AddProblemModal from './components/input/AddProblemModal';
 import WelcomeScreen from "./components/view/WelcomeScreen";
 import TourGuide from "./components/view/TourGuide";
 import "./App.css";
@@ -43,7 +43,7 @@ const TOUR_STEPS = [
 
 export default function App() {
   const [algorithms, setAlgorithms] = useState([]);
-  const [problems, setProblems] = useState([]); // --- NOWY STAN ---
+  const [problems, setProblems] = useState([]);
   const [results, setResults] = useState([]);
   const [isAlgorithmRunning, setIsAlgorithmRunning] = useState(false);
   
@@ -60,7 +60,7 @@ export default function App() {
   const [isComparisonMinimized, setIsComparisonMinimized] = useState(false);
   
   const [isAddAlgoModalOpen, setIsAddAlgoModalOpen] = useState(false);
-  const [isAddProblemModalOpen, setIsAddProblemModalOpen] = useState(false); // --- NOWY STAN ---
+  const [isAddProblemModalOpen, setIsAddProblemModalOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState('loading'); // 'loading', 'connected', 'error'
 
@@ -90,7 +90,6 @@ export default function App() {
       .catch(err => console.error("Błąd ładowania algorytmów:", err));
   }, []);
 
-  // --- NOWA FUNKCJA DO POBIERANIA PROBLEMÓW ---
   const refreshProblems = useCallback(() => {
     console.log("Odświeżanie listy problemów...");
     getProblems()
@@ -275,7 +274,7 @@ export default function App() {
         <div className="sidebar">
             <ControlPanel
               algorithms={algorithms}
-              problems={problems} // --- PRZEKAŻ PROBLEMY ---
+              problems={problems}
               tasks={tasks} setTasks={setTasks}
               problemConfig={problemConfig} setProblemConfig={setProblemConfig}
               isAlgorithmRunning={isAlgorithmRunning}
@@ -285,7 +284,7 @@ export default function App() {
               isDarkMode={isDarkMode}
               toggleDarkMode={toggleDarkMode}
               onAddAlgorithmClick={() => setIsAddAlgoModalOpen(true)}
-              onAddProblemClick={() => setIsAddProblemModalOpen(true)} // --- PRZEKAŻ NOWY HANDLER ---
+              onAddProblemClick={() => setIsAddProblemModalOpen(true)}
             />
             <button className="sidebar-toggle" onClick={() => setIsSidebarCollapsed(prev => !prev)} title={isSidebarCollapsed ? "Rozwiń panel" : "Zwiń panel"}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>

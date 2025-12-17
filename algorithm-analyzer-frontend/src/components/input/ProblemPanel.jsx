@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import InputField from "../../uiComponents/InputField"; // Upewnij się, że ścieżka jest poprawna
+import InputField from "../../uiComponents/InputField";
 
-// --- Twój stary sub-komponent TspConfig (Przywrócony) ---
 const TspConfig = ({ onConfigChange }) => {
   const [inputMode, setInputMode] = useState('json'); // 'json' lub 'generate'
   const [cities, setCities] = useState('["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52"]');
@@ -162,7 +161,6 @@ const TspConfig = ({ onConfigChange }) => {
   );
 };
 
-// --- Twój stary sub-komponent KnapsackConfig (Przywrócony) ---
 const KnapsackConfig = ({ onConfigChange }) => {
   const [inputMode, setInputMode] = useState('json'); // 'json' lub 'generate'
   const [capacity, setCapacity] = useState(50);
@@ -286,7 +284,6 @@ const KnapsackConfig = ({ onConfigChange }) => {
   );
 };
 
-// --- Pomocnik do parsowania wartości na podstawie typu ---
 const parseValue = (value, type) => {
   switch (type) {
     case "INTEGER":
@@ -300,7 +297,6 @@ const parseValue = (value, type) => {
   }
 };
 
-// --- NOWY, GŁÓWNY KOMPONENT HYBRYDOWY ---
 export default function ProblemPanel({ problems = [], setProblemConfig }) {
   const [selectedProblemName, setSelectedProblemName] = useState("");
   const [dynamicParams, setDynamicParams] = useState({});
@@ -353,7 +349,6 @@ export default function ProblemPanel({ problems = [], setProblemConfig }) {
     setProblemConfig(prev => ({ ...prev, name: selectedProblemName, parameters: newParams }));
   };
 
-  // --- Renderowanie dynamicznego formularza dla problemów niestandardowych ---
   const renderDynamicForm = () => {
     if (!selectedProblem || !selectedProblem.parameters || selectedProblem.parameters.length === 0) {
       return <p className="info-text">Ten problem nie wymaga dodatkowej konfiguracji.</p>;

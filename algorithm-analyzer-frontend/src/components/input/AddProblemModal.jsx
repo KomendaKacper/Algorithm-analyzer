@@ -3,8 +3,6 @@ import CodeMirror from '@uiw/react-codemirror';
 import {java} from '@codemirror/lang-java';
 import { getProblemTemplate, compileProblem } from '../../api/customProblemApi';
 import { ProblemGuideText, ABSTRACT_PROBLEM_CODE, PROBLEM_INTERFACE_CODE } from './GuideContent';
-// Użyjemy tych samych stylów co AddAlgorithmModal
-// import './AddAlgorithmModal.css'; 
 
 const EXAMPLE_PROBLEM_CODE = `import com.example.algorithm_analyzer.problems.AbstractProblem
 import com.example.algorithm_analyzer.dtos.ParameterDefinition

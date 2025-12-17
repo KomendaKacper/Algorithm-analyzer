@@ -1,5 +1,3 @@
-// src/components/result/charts/chartColors.js
-
 export const CHART_COLORS_PALETTE = [
   { line: '#4CAF50', fill: 'rgba(76, 175, 80, 0.2)' }, // Zielony
   { line: '#2196F3', fill: 'rgba(33, 150, 243, 0.2)' }, // Niebieski

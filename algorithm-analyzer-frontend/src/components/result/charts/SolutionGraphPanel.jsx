@@ -3,7 +3,6 @@ import ForceGraph2D from 'react-force-graph-2d';
 import '../../../App.css'; 
 import { CHART_COLORS_PALETTE } from './chartColors'; 
 
-// --- Funkcje pomocnicze (bez zmian) ---
 const getSolutionId = (solution, problemName) => {
   if (!solution || solution.length === 0) return "empty_solution";
   if (problemName === "Knapsack Problem") {
@@ -185,7 +184,7 @@ export function SolutionGraphPanel({ results }) {
           <ForceGraph2D
             width={dimensions.width}
             height={dimensions.height}
-            graphData={graphData}        // --- USUNIĘTE: Niepotrzebny prop, bo używamy `nodeCanvasObject` ---
+            graphData={graphData}
         // nodeVal={...} 
         
         // Tooltip dla węzła
@@ -218,9 +217,7 @@ export function SolutionGraphPanel({ results }) {
         
         backgroundColor="var(--color-surface)"
 
-        // --- POPRAWIONY RENDERER DLA WĘZŁÓW ---
         nodeCanvasObject={(node, ctx, globalScale) => {
-          // --- TUTAJ JEST POPRAWKA: ---
           // Obliczamy promień 'r' ręcznie, na podstawie visitCount.
           // `node.val` nie jest ustawiany, gdy używamy `nodeCanvasObject`.
           const r = node.isGlobalBest 

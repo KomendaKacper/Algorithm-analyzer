@@ -1,4 +1,3 @@
-// src/components/result/AlgorithmResultPanel.jsx
 import React, { useState } from "react";
 import '../../App.css';
 
@@ -8,7 +7,6 @@ const problemConfig = {
   default: { isMaximization: true, solutionLabel: "Rozwiązanie", scoreLabel: "Wynik", unit: "", icon: "🏆", format: (solution) => solution && solution.length > 0 ? solution.join(", ") : "Brak danych" }
 };
 
-// --- ULEPSZONY FORMATTER (NAPRAWIA ZLANE TEKSTY) ---
 const formatMetricValue = (value) => {
     if (value === null || value === undefined) return null;
 

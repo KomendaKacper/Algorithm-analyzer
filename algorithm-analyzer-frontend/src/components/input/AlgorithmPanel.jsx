@@ -24,7 +24,6 @@ export default function AlgorithmPanel({ panelId, algorithms, tasks, setTasks, p
       algo.parameters.forEach(p => {
         initialAlgoParams[p.name] = p.type === "INTEGER" ? parseInt(p.defaultValue ?? 0, 10) :
                                    p.type === "DOUBLE" ? parseFloat(p.defaultValue ?? 0) :
-                                   // --- ZMIANA: Poprawna obsługa typu BOOLEAN ---
                                    p.type === "BOOLEAN" ? p.defaultValue ?? false :
                                    p.defaultValue ?? "";
       });
@@ -43,7 +42,6 @@ export default function AlgorithmPanel({ panelId, algorithms, tasks, setTasks, p
   const handleParamChange = (name, value, type) => {
     const v = type === "INTEGER" ? parseInt(value, 10) || 0 :
               type === "DOUBLE" ? parseFloat(value) || 0.0 :
-              // --- ZMIANA: Poprawna obsługa typu BOOLEAN ---
               type === "BOOLEAN" ? value :
               value;
     
@@ -91,7 +89,6 @@ export default function AlgorithmPanel({ panelId, algorithms, tasks, setTasks, p
           step={param.type === "DOUBLE" ? 0.1 : 1}
           min={param.minValue}
           max={param.maxValue}
-          // --- ZMIANA: Przekazujemy prop do obsługi checkboxa ---
           isCheckbox={param.type === "BOOLEAN"}
           onChange={(value) => handleParamChange(param.name, value, param.type)}
         />
