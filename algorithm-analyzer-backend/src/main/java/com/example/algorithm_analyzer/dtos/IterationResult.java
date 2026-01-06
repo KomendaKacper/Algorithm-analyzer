@@ -1,4 +1,3 @@
-// src/main/java/com/example/algorithm_analyzer/dto/IterationResult.java
 package com.example.algorithm_analyzer.dtos;
 
 import lombok.Builder;

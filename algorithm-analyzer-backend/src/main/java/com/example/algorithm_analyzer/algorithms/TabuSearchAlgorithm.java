@@ -1,4 +1,3 @@
-// src/main/java/com/example/algorithm_analyzer/algorithms/TabuSearchAlgorithm.java
 package com.example.algorithm_analyzer.algorithms;
 
 import com.example.algorithm_analyzer.dtos.FinalMetricData;
